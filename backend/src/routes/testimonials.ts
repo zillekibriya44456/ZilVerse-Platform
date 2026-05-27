@@ -1,0 +1,76 @@
+import { Router, Request, Response } from 'express';
+import { PrismaClient } from '@prisma/client';
+
+const router = Router();
+const prisma = new PrismaClient();
+
+const INITIAL_TESTIMONIALS = [
+  { stars: 5, text: "Got my e-commerce site built within a week! The team was professional and delivered exactly what I needed.", name: "Rahul Kapoor", role: "Buyer · Retail Business Owner, Delhi", initials: "RK", color: "#3b82f6" },
+  { stars: 5, text: "Sold 3 of my source code projects within the first month. The marketplace is clean, buyers are real. Best platform for student devs.", name: "Anjali Joshi", role: "Seller · CSE Student, Pune", initials: "AJ", color: "#10b981" },
+  { stars: 5, text: "As a freelancer, I've landed 5 clients through ZilVerse in 2 months. My income doubled this quarter!", name: "Mohammed Hassan", role: "Freelancer · Full-Stack Dev, Hyderabad", initials: "MH", color: "#a855f7" },
+  { stars: 5, text: "Found a hospital management system for my final year project with full documentation and viva support. Absolute lifesaver!", name: "Priya Sharma", role: "Buyer · BCA Student, Bengaluru", initials: "PS", color: "#f59e0b" },
+  { stars: 5, text: "Hired a React developer within 24 hours for my startup MVP. The quality was excellent. ZilVerse saved me weeks of searching.", name: "Zara Noor", role: "Buyer · Startup Founder, Dubai", initials: "ZN", color: "#ef4444" },
+  { stars: 5, text: "The job board helped me find a remote internship in under a week. The interface is clean and applying is super simple!", name: "Karan Patel", role: "Jobseeker · IT Graduate, Mumbai", initials: "KP", color: "#ec4899" },
+];
+
+// GET testimonials
+router.get('/', async (req: Request, res: Response): Promise<any> => {
+  try {
+    let testimonials = await prisma.testimonial.findMany({
+      orderBy: { createdAt: 'desc' }
+    });
+
+    if (testimonials.length === 0) {
+      await prisma.testimonial.createMany({
+        data: INITIAL_TESTIMONIALS
+      });
+      testimonials = await prisma.testimonial.findMany({
+        orderBy: { createdAt: 'desc' }
+      });
+    }
+
+    res.json(testimonials);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error fetching testimonials' });
+  }
+});
+
+// POST a new testimonial
+router.post('/', async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { stars, text, name, role } = req.body;
+
+    if (!text || !name || !role) {
+      return res.status(400).json({ error: 'Please provide feedback message, your name, and your role.' });
+    }
+
+    const initials = name
+      .split(' ')
+      .map((n: string) => n[0])
+      .join('')
+      .substring(0, 2)
+      .toUpperCase() || 'U';
+
+    const colors = ['#3b82f6', '#10b981', '#a855f7', '#f59e0b', '#ef4444', '#ec4899'];
+    const randomColor = colors[Math.floor(Math.random() * colors.length)] as string;
+
+    const newTestimonial = await prisma.testimonial.create({
+      data: {
+        stars: stars ? parseInt(stars) : 5,
+        text,
+        name,
+        role,
+        initials,
+        color: randomColor
+      }
+    });
+
+    res.status(201).json(newTestimonial);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error creating testimonial' });
+  }
+});
+
+export default router;

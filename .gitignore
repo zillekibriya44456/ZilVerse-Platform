@@ -1,0 +1,28 @@
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Local databases
+*.db
+*.db-journal
+
+# Ephemeral uploads
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build outputs
+.next/
+dist/
+build/
+out/
