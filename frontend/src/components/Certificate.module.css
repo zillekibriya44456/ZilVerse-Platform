@@ -1,0 +1,264 @@
+.certificateContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  width: 100%;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+}
+
+.printArea {
+  width: 100%;
+  overflow-x: auto;
+  display: flex;
+  justify-content: center;
+  padding: 1rem;
+}
+
+/* 
+  The Canvas is strictly styled to look like a premium paper certificate.
+  We force light mode colors here so it prints beautifully as a physical document.
+*/
+.certificateCanvas {
+  width: 1120px; /* A4 Landscape rough ratio */
+  height: 792px;
+  background: #fdfbf7; /* Very subtle warm paper white */
+  color: #1a1a1a;
+  padding: 40px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  position: relative;
+  flex-shrink: 0;
+  font-family: "Georgia", serif;
+}
+
+.borderInner {
+  border: 12px double #d4af37; /* Premium Gold Border */
+  height: 100%;
+  width: 100%;
+  padding: 40px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-30deg);
+  font-size: 150px;
+  color: rgba(0, 0, 0, 0.03);
+  font-weight: bold;
+  pointer-events: none;
+  font-family: sans-serif;
+  letter-spacing: 20px;
+  z-index: 0;
+}
+
+.header {
+  position: relative;
+  z-index: 1;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: 800;
+  color: #111;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 20px;
+  font-family: sans-serif;
+}
+
+.logo span {
+  color: #a855f7;
+}
+
+.certType {
+  font-size: 50px;
+  font-style: italic;
+  color: #d4af37; /* Gold */
+  margin-top: 10px;
+  letter-spacing: 2px;
+}
+
+.body {
+  position: relative;
+  z-index: 1;
+}
+
+.presentedTo {
+  font-size: 20px;
+  color: #555;
+  margin-bottom: 30px;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+}
+
+.studentName {
+  font-size: 64px;
+  font-weight: normal;
+  color: #111;
+  border-bottom: 2px solid #ddd;
+  display: inline-block;
+  padding: 0 40px 10px;
+  margin-bottom: 30px;
+  font-family: 'Times New Roman', Times, serif;
+}
+
+.reason {
+  font-size: 20px;
+  color: #555;
+  margin-bottom: 20px;
+  font-style: italic;
+}
+
+.courseTitle {
+  font-size: 36px;
+  font-weight: bold;
+  color: #222;
+  margin-bottom: 30px;
+  font-family: sans-serif;
+}
+
+.date {
+  font-size: 18px;
+  color: #555;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  position: relative;
+  z-index: 1;
+  padding: 0 40px;
+}
+
+.signatureBlock {
+  text-align: center;
+  width: 250px;
+}
+
+.signatureText {
+  font-family: 'Brush Script MT', 'Lucida Handwriting', cursive;
+  font-size: 32px;
+  color: #000;
+  height: 50px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.signatureLine {
+  border-bottom: 1px solid #333;
+  margin-bottom: 10px;
+}
+
+.signatureBlock p {
+  font-size: 14px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.instructorName {
+  font-weight: bold;
+  color: #111;
+  margin-top: 5px;
+}
+
+.verificationBlock {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.mockQr {
+  width: 80px;
+  height: 80px;
+  background: #fff;
+  border: 2px solid #111;
+  margin-bottom: 10px;
+  position: relative;
+  padding: 4px;
+}
+
+.qrCornerTopLeft,
+.qrCornerTopRight,
+.qrCornerBottomLeft {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 4px solid #111;
+}
+.qrCornerTopLeft { top: 6px; left: 6px; }
+.qrCornerTopRight { top: 6px; right: 6px; }
+.qrCornerBottomLeft { bottom: 6px; left: 6px; }
+
+.qrCenter {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 30px;
+  height: 30px;
+  background: repeating-linear-gradient(
+    45deg,
+    #111,
+    #111 4px,
+    transparent 4px,
+    transparent 8px
+  );
+}
+
+.verificationBlock p {
+  font-size: 12px;
+  color: #666;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.certId {
+  font-size: 14px;
+  font-family: monospace;
+  font-weight: bold;
+  color: #111;
+}
+
+/* 
+  Print Media Query:
+  When printing, we hide the rest of the webpage and make the canvas take up the whole printed page.
+*/
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .certificateContainer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    margin: 0;
+    padding: 0;
+  }
+  .certificateCanvas, .certificateCanvas * {
+    visibility: visible;
+  }
+  .certificateCanvas {
+    box-shadow: none;
+    padding: 0;
+  }
+  @page {
+    size: landscape;
+    margin: 0;
+  }
+}

@@ -1,0 +1,395 @@
+.page {
+  min-height: 100vh;
+  padding-bottom: 4rem;
+}
+
+.header {
+  background: linear-gradient(180deg, rgba(168, 85, 247, 0.05) 0%, transparent 100%);
+  padding: 4rem 0 0;
+  text-align: center;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.header h1 {
+  font-size: 3.5rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+  background: linear-gradient(to right, var(--primary), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.header p {
+  color: #a1a1aa;
+  font-size: 1.2rem;
+  max-width: 600px;
+  margin: 0 auto 3rem;
+}
+
+.tabContainer {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  transform: translateY(50%);
+}
+
+.tabBtn {
+  padding: 1rem 3rem;
+  border-radius: 30px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: #111114;
+  color: #a1a1aa;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.tabBtn:hover {
+  background: rgba(255,255,255,0.05);
+  color: #fff;
+}
+
+.activeTab {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+  box-shadow: 0 10px 20px rgba(168, 85, 247, 0.3);
+}
+
+/* Learn Section */
+.learnSection {
+  margin-top: 6rem;
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.learnToolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255,255,255,0.02);
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.05);
+  margin-bottom: 2rem;
+}
+
+.toolbarInfo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: #e4e4e7;
+}
+
+.flag {
+  font-size: 1.5rem;
+}
+
+.countrySelect {
+  background: rgba(0,0,0,0.5);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+  outline: none;
+}
+
+.coursesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.courseCard {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.courseCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 0 1px rgba(168, 85, 247, 0.2);
+}
+
+.courseImageWrapper {
+  position: relative;
+  width: 100%;
+  height: 160px;
+  background: #09090b;
+}
+
+.courseImage {
+  object-fit: cover;
+  opacity: 0.8;
+}
+
+.courseCategory {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(168, 85, 247, 0.9);
+  color: #fff;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  z-index: 10;
+}
+
+.courseContent {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.courseContent h3 {
+  font-size: 1.25rem;
+  color: #fff;
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.instructor {
+  color: #a1a1aa;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.courseMeta {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.85rem;
+  color: #d4d4d8;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.courseFooter {
+  margin-top: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  padding-top: 1rem;
+}
+
+.price {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 4rem 0;
+  color: #a1a1aa;
+}
+
+.emptyState p {
+  margin-bottom: 1.5rem;
+}
+
+/* Teach Section */
+.teachSection {
+  margin-top: 6rem;
+  animation: fadeIn 0.4s ease;
+}
+
+.teachHero {
+  text-align: center;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 24px;
+  padding: 4rem 2rem;
+  margin-bottom: 4rem;
+}
+
+.teachHero h2 {
+  font-size: 2.5rem;
+  color: #fff;
+  margin-bottom: 1rem;
+}
+
+.teachHero p {
+  color: #a1a1aa;
+  font-size: 1.1rem;
+  max-width: 600px;
+  margin: 0 auto 3rem;
+}
+
+.teachStats {
+  display: flex;
+  justify-content: center;
+  gap: 4rem;
+  margin-bottom: 3rem;
+}
+
+.statBox h4 {
+  font-size: 2.5rem;
+  color: var(--primary);
+  margin-bottom: 0.5rem;
+}
+
+.statBox span {
+  color: #d4d4d8;
+  font-weight: 500;
+}
+
+.ctaLarge {
+  padding: 1rem 3rem;
+  font-size: 1.1rem;
+}
+
+.teachSteps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+
+.step {
+  background: #111114;
+  border: 1px solid rgba(255,255,255,0.05);
+  padding: 2rem;
+  border-radius: 16px;
+  text-align: center;
+  position: relative;
+}
+
+.stepNum {
+  width: 40px;
+  height: 40px;
+  background: var(--primary);
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.2rem;
+  margin: 0 auto 1.5rem;
+}
+
+.step h3 {
+  color: #fff;
+  margin-bottom: 1rem;
+}
+
+.step p {
+  color: #a1a1aa;
+  line-height: 1.6;
+}
+
+/* Earn Section */
+.earnSection {
+  margin-top: 6rem;
+  animation: fadeIn 0.4s ease;
+}
+
+.earnPipeline {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(10, 10, 14, 1));
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  border-radius: 24px;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.earnPipeline h2 {
+  font-size: 2.5rem;
+  color: #fff;
+  margin-bottom: 1rem;
+}
+
+.earnPipeline p {
+  color: #a1a1aa;
+  font-size: 1.1rem;
+  max-width: 600px;
+  margin: 0 auto 4rem;
+}
+
+.pipelineSteps {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.pipeStep {
+  flex: 1;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.05);
+  padding: 2rem;
+  border-radius: 16px;
+  position: relative;
+}
+
+.pipeIcon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.pipeStep h3 {
+  color: #fff;
+  margin-bottom: 1rem;
+}
+
+.pipeStep p {
+  color: #a1a1aa;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.pipeLink {
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.pipeLink:hover {
+  text-decoration: underline;
+}
+
+.pipeArrow {
+  font-size: 2rem;
+  color: rgba(255,255,255,0.2);
+  padding: 0 1rem;
+}
+
+@media (max-width: 900px) {
+  .pipelineSteps {
+    flex-direction: column;
+    gap: 2rem;
+  }
+  .pipeArrow {
+    transform: rotate(90deg);
+    padding: 1rem 0;
+  }
+  .teachSteps {
+    grid-template-columns: 1fr;
+  }
+  .teachStats {
+    flex-direction: column;
+    gap: 2rem;
+  }
+  .learnToolbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .countrySelect {
+    width: 100%;
+  }
+}

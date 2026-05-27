@@ -1,0 +1,289 @@
+.mapSection {
+  padding: 5rem 0;
+  position: relative;
+  background: radial-gradient(circle at center, rgba(168, 85, 247, 0.05) 0%, transparent 70%);
+  overflow: hidden;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.header h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  background: linear-gradient(to right, #fff, #a1a1aa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.header p {
+  color: #a1a1aa;
+  font-size: 1.1rem;
+}
+
+.mapContainer {
+  position: relative;
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  aspect-ratio: 2 / 1;
+  border-radius: 24px;
+}
+
+.mapBase {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 10, 14, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+.mapGraphic {
+  position: absolute;
+  inset: 0;
+  /* Very subtle dotted grid to look like a digital canvas */
+  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
+  opacity: 0.6;
+}
+
+.canvasOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 8;
+}
+
+/* Nodes */
+.node {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  cursor: pointer;
+}
+
+.dot {
+  width: 100%;
+  height: 100%;
+  background: #8b5cf6;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #8b5cf6;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 2;
+}
+
+.node:hover .dot,
+.nodeActive .dot {
+  background: #fff;
+  transform: scale(1.5);
+  box-shadow: 0 0 20px #fff, 0 0 40px #8b5cf6;
+}
+
+.pulseRing {
+  position: absolute;
+  inset: -15px;
+  border: 2px solid #8b5cf6;
+  border-radius: 50%;
+  opacity: 0;
+  z-index: 1;
+}
+
+.nodeActive .pulseRing {
+  animation: pulse 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.5); opacity: 0.8; }
+  70% { transform: scale(2); opacity: 0; }
+  100% { transform: scale(2); opacity: 0; }
+}
+
+/* Tooltip */
+.tooltip {
+  position: absolute;
+  bottom: 25px;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(139, 92, 246, 0.4);
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
+  width: max-content;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 30;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+}
+
+.node:hover .tooltip,
+.nodeActive .tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+.tooltip::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 6px 6px 0;
+  border-style: solid;
+  border-color: rgba(139, 92, 246, 0.4) transparent transparent transparent;
+}
+
+.tooltipName {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.tooltipLocation {
+  font-size: 0.72rem;
+  color: #a1a1aa;
+}
+
+.tooltipStatus {
+  font-size: 0.68rem;
+  color: #22d3ee;
+  margin-top: 0.2rem;
+  font-weight: 600;
+}
+
+/* Scanning Line */
+.scanLine {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(to right, transparent, #8b5cf6, transparent);
+  box-shadow: 0 0 20px #8b5cf6;
+  opacity: 0.25;
+  animation: scan 5s linear infinite;
+  z-index: 5;
+}
+
+@keyframes scan {
+  0% { top: 0; }
+  100% { top: 100%; }
+}
+
+/* Logger Overlay styling */
+.loggerOverlay {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  width: 320px;
+  background: rgba(10, 10, 12, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 16px;
+  padding: 0.8rem 1rem;
+  z-index: 20;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  pointer-events: auto;
+}
+
+.loggerTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 0.4rem;
+}
+
+.loggerTitle h4 {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pulseIndicator {
+  width: 8px;
+  height: 8px;
+  background: #10b981;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #10b981;
+  animation: logPulse 1.5s infinite;
+}
+
+@keyframes logPulse {
+  0% { transform: scale(0.85); opacity: 0.6; }
+  50% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(0.85); opacity: 0.6; }
+}
+
+.loggerContent {
+  max-height: 120px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  scrollbar-width: none;
+}
+
+.loggerContent::-webkit-scrollbar {
+  display: none;
+}
+
+.logItem {
+  font-size: 0.72rem;
+  line-height: 1.35;
+  display: flex;
+  gap: 0.4rem;
+  align-items: flex-start;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.logTime {
+  color: #52525b;
+  font-family: monospace;
+  white-space: nowrap;
+}
+
+.logType {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.logText {
+  color: #e4e4e7;
+}
+
+@media (max-width: 768px) {
+  .mapContainer {
+    aspect-ratio: 1.2 / 1;
+  }
+  .loggerOverlay {
+    width: calc(100% - 2rem);
+    bottom: 0.5rem;
+    left: 1rem;
+  }
+}

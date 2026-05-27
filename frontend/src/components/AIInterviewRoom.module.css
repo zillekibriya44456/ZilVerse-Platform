@@ -1,0 +1,519 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: #09090b;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Inter', sans-serif;
+  color: #fff;
+}
+
+.loaderBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  gap: 1rem;
+  background: #09090b;
+}
+
+.spinner {
+  animation: spin 1.5s linear infinite;
+  color: #a855f7;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.8rem 2rem;
+  background: rgba(10, 10, 14, 0.85);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.roundBanner {
+  font-size: 0.85rem;
+  color: #c084fc;
+  background: rgba(168, 85, 247, 0.1);
+  border: 1px solid rgba(168, 85, 247, 0.25);
+  padding: 0.35rem 0.9rem;
+  border-radius: 6px;
+  font-weight: 700;
+}
+
+/* Double Grid Video Layout */
+.mainScreen {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr;
+  padding: 1.5rem 2rem;
+  gap: 1.5rem;
+  overflow-y: auto;
+}
+
+.splitCodingMode {
+  grid-template-columns: 1.1fr 1fr;
+}
+
+.roomCol {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.videoGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+.videoCard {
+  position: relative;
+  aspect-ratio: 1.6 / 1;
+  background: #0d0d12;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.videoStream {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+
+/* Recruiter avatar representation */
+.avatarVideoWrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, rgba(9, 9, 11, 0.8) 100%);
+  overflow: hidden;
+}
+
+.portraitImg {
+  height: 75%;
+  max-width: 60%;
+  object-fit: contain;
+  transition: all 0.3s ease;
+  z-index: 2;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.05);
+}
+
+.avatarSpeaking .portraitImg {
+  transform: scale(1.05);
+  border-color: #a855f7;
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+}
+
+.livePortraitGlow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.05) 0%, transparent 60%);
+  z-index: 1;
+  animation: pulseGlow 3s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* Sound waves styling */
+.soundWaves {
+  position: absolute;
+  bottom: 1.5rem;
+  display: flex;
+  gap: 3px;
+  z-index: 3;
+}
+
+.soundWaves span {
+  width: 4px;
+  height: 16px;
+  background: #a855f7;
+  border-radius: 2px;
+  animation: soundScale 0.7s ease-in-out infinite;
+}
+
+.soundWaves span:nth-child(2) { animation-delay: 0.1s; }
+.soundWaves span:nth-child(3) { animation-delay: 0.2s; }
+.soundWaves span:nth-child(4) { animation-delay: 0.3s; }
+.soundWaves span:nth-child(5) { animation-delay: 0.4s; }
+
+@keyframes soundScale {
+  0%, 100% { transform: scaleY(0.4); }
+  50% { transform: scaleY(1.8); }
+}
+
+.videoLabel {
+  position: absolute;
+  bottom: 0.75rem;
+  left: 0.75rem;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.75rem;
+  z-index: 3;
+}
+
+.voiceIndicatorBadge {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 0.25rem 0.6rem;
+  border-radius: 99px;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #34d399;
+  z-index: 3;
+}
+
+.recordingDot {
+  width: 6px;
+  height: 6px;
+  background: #ef4444;
+  border-radius: 50%;
+  animation: blinkDot 1s infinite;
+}
+
+@keyframes blinkDot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* Grammar corrections panel */
+.grammarAlertCard {
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 12px;
+  padding: 0.8rem 1.25rem;
+  animation: slideInGrammar 0.3s ease-out;
+}
+
+@keyframes slideInGrammar {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.grammarAlertHead {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #fbbf24;
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+}
+
+.grammarAlertCard p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #fff;
+  line-height: 1.4;
+}
+
+.grammarAlertCard strong {
+  color: #34d399;
+}
+
+.reasonText {
+  color: #a1a1aa;
+  font-size: 0.72rem;
+  margin-left: 0.5rem;
+}
+
+.questionPanel {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+}
+
+.questionText {
+  margin: 0;
+  font-size: 0.98rem;
+  line-height: 1.5;
+  color: #e4e4e7;
+}
+
+/* Aptitude Round options selector */
+.aptitudeOptionsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.optionBtn {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 1rem;
+  border-radius: 12px;
+  color: #e4e4e7;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.88rem;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.optionBtn:hover {
+  background: rgba(168, 85, 247, 0.06);
+  border-color: rgba(168, 85, 247, 0.3);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+/* Resume scanning logs panel styling */
+.scanLogsContainer {
+  background: #060608;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  width: 100%;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-family: monospace;
+}
+
+.scanLogItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  color: #34d399;
+}
+
+.camBlocked {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: #71717a;
+  font-size: 0.8rem;
+}
+
+/* Call Control Buttons strip */
+.controlsStrip {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 0.8rem;
+  border-radius: 16px;
+  margin-top: 0.5rem;
+}
+
+.controlBtn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #e4e4e7;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.controlBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.controlBtnActive {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #f87171;
+}
+
+.endCallBtn {
+  background: #ef4444;
+  border: none;
+  border-radius: 99px;
+  padding: 0.5rem 1.5rem;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.endCallBtn:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+}
+
+.textInputBox {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.textInputBox textarea {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 0.8rem 1.2rem;
+  color: #fff;
+  font-size: 0.92rem;
+  outline: none;
+  resize: none;
+  transition: border-color 0.2s ease;
+}
+
+.textInputBox textarea:focus {
+  border-color: #a855f7;
+}
+
+.nextBtn {
+  background: linear-gradient(135deg, #a855f7 0%, #3b82f6 100%);
+  border: none;
+  border-radius: 12px;
+  padding: 0.8rem 1.5rem;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.nextBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(168, 85, 247, 0.25);
+}
+
+.nextBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Coding Sandbox Panel */
+.editorPanel {
+  background: rgba(10, 10, 14, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.editorHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.75rem 1.25rem;
+}
+
+.runBtn {
+  background: rgba(168, 85, 247, 0.1);
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  padding: 0.35rem 0.8rem;
+  border-radius: 6px;
+  color: #c084fc;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: all 0.2s ease;
+}
+
+.runBtn:hover {
+  background: rgba(168, 85, 247, 0.2);
+}
+
+.codeTextarea {
+  flex: 1;
+  background: #09090b;
+  color: #a7f3d0;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.88rem;
+  padding: 1.25rem;
+  border: none;
+  outline: none;
+  resize: none;
+  line-height: 1.5;
+  tab-size: 2;
+}
+
+.consoleWrapper {
+  background: #060608;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  height: 120px;
+}
+
+.consolePre {
+  margin: 0;
+  padding: 0.75rem 1.25rem;
+  overflow-y: auto;
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: #e4e4e7;
+  white-space: pre-wrap;
+}
+
+.editorFooter {
+  padding: 0.8rem 1.25rem;
+  background: rgba(255, 255, 255, 0.02);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 768px) {
+  .videoGrid {
+    grid-template-columns: 1fr;
+  }
+  .aptitudeOptionsGrid {
+    grid-template-columns: 1fr;
+  }
+}

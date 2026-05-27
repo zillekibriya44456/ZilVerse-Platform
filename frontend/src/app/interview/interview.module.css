@@ -1,0 +1,676 @@
+.portal {
+  min-height: 100vh;
+  background: #09090b;
+  color: #fafafa;
+  padding: 5rem 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.bgGlow {
+  position: absolute;
+  top: 5%;
+  left: 25%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.08) 0%, transparent 70%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.hero {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.badgeLine {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(168, 85, 247, 0.1);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  border-radius: 99px;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  color: #c084fc;
+  font-weight: 500;
+  margin-bottom: 1.5rem;
+}
+
+.hero h1 {
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+  background: linear-gradient(to right, #ffffff, #a1a1aa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero p {
+  color: #a1a1aa;
+  max-width: 700px;
+  margin: 0 auto;
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 3rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 1rem;
+}
+
+.tabBtn {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  color: #a1a1aa;
+  cursor: pointer;
+  padding: 0.5rem 1.5rem;
+  border-radius: 8px;
+  transition: all 0.25s ease;
+  font-weight: 500;
+}
+
+.tabBtn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.tabBtnActive {
+  color: #fff;
+  background: rgba(168, 85, 247, 0.15);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.1);
+}
+
+/* Grid Layout */
+.grid {
+  display: grid;
+  grid-template-columns: 2.2fr 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+/* Cards */
+.card {
+  background: rgba(18, 18, 24, 0.6);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.cardHeader {
+  margin-bottom: 2rem;
+}
+
+.cardHeader h3 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 0.4rem;
+}
+
+.cardHeader p {
+  color: #71717a;
+  font-size: 0.9rem;
+}
+
+/* Form Fields */
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.field label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #a1a1aa;
+}
+
+.field input, .field select, .field textarea {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 0.8rem 1rem;
+  color: #fff;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.field input:focus, .field select:focus, .field textarea:focus {
+  border-color: rgba(168, 85, 247, 0.5);
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.15);
+}
+
+/* Interviewer Persona Selection */
+.interviewerGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.interviewerCard {
+  display: flex;
+  gap: 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 14px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.interviewerCard img {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.interviewerCard h5 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 0.1rem;
+}
+
+.interviewerCard h6 {
+  font-size: 0.72rem;
+  color: #a1a1aa;
+  font-weight: 500;
+  margin-bottom: 0.4rem;
+}
+
+.interviewerCard p {
+  font-size: 0.68rem;
+  color: #71717a;
+  line-height: 1.3;
+}
+
+.interviewerCard:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.interviewerCardActive {
+  background: rgba(168, 85, 247, 0.08);
+  border-color: rgba(168, 85, 247, 0.5);
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.1);
+}
+
+.launchBtn {
+  background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%);
+  border: none;
+  border-radius: 14px;
+  padding: 1rem;
+  color: #fff;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 20px rgba(139, 92, 246, 0.2);
+}
+
+.launchBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 30px rgba(139, 92, 246, 0.35);
+}
+
+/* Marketplace styles */
+.marketplaceGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.expertCard {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.5rem;
+  transition: all 0.2s ease;
+}
+
+.expertCard:hover {
+  border-color: rgba(168, 85, 247, 0.3);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.expertHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.expertHead h4 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 0.25rem;
+}
+
+.expertTag {
+  font-size: 0.72rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 99px;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+}
+
+.expertRate {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #10b981;
+}
+
+.expertFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  color: #a1a1aa;
+}
+
+.bookBtn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0.4rem 1rem;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bookBtn:hover {
+  background: #fff;
+  color: #000;
+}
+
+.registerBtn {
+  background: none;
+  border: 1px dashed rgba(168, 85, 247, 0.5);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  color: #c084fc;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.registerBtn:hover {
+  background: rgba(168, 85, 247, 0.1);
+}
+
+/* History Row list */
+.resultsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.historyRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.historyRow:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.historyMeta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.historyScore {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #c084fc;
+  background: rgba(168, 85, 247, 0.1);
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+}
+
+.historyMeta h5 {
+  font-size: 0.9rem;
+  color: #fff;
+  margin: 0;
+}
+
+.historyMeta p {
+  font-size: 0.75rem;
+  color: #71717a;
+  margin: 0;
+}
+
+.viewReportBtn {
+  background: none;
+  border: none;
+  color: #8b5cf6;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Detailed Report Card */
+.reportCard {
+  background: rgba(18, 18, 24, 0.8);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 0 30px rgba(168, 85, 247, 0.05);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.reportScoresGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.scoreMetric {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
+}
+
+.scoreMetric span {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 0.2rem;
+}
+
+.scoreMetric label {
+  font-size: 0.7rem;
+  color: #71717a;
+  text-transform: uppercase;
+}
+
+.reportMeta {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.metaBadge {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+  color: #e4e4e7;
+}
+
+.reportDetails h5 {
+  font-size: 0.95rem;
+  color: #fff;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.reportDetails ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.reportDetails li {
+  font-size: 0.85rem;
+  color: #a1a1aa;
+  margin-bottom: 0.4rem;
+}
+
+/* Transcript Exchanges */
+.transcriptSection {
+  margin-top: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 1.5rem;
+}
+
+.transcriptExchange {
+  background: rgba(255, 255, 255, 0.01);
+  border-left: 2px solid rgba(168, 85, 247, 0.5);
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+  border-radius: 0 8px 8px 0;
+}
+
+.transcriptQuestion {
+  font-size: 0.8rem;
+  color: #c084fc;
+  margin-bottom: 0.25rem;
+}
+
+.transcriptAnswer {
+  font-size: 0.8rem;
+  color: #e4e4e7;
+}
+
+/* Sidebar Columns */
+.sideCol {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.sideCard {
+  background: rgba(18, 18, 24, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 1.5rem;
+}
+
+.sideCard h4 {
+  font-size: 1rem;
+  color: #fff;
+  margin-bottom: 1rem;
+}
+
+.xpHead {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.xpHead h4 {
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.rankLevel {
+  font-size: 0.75rem;
+  color: #c084fc;
+}
+
+.xpBar {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 0.4rem;
+}
+
+.xpProgress {
+  height: 100%;
+  background: linear-gradient(to right, #8b5cf6, #3b82f6);
+}
+
+.xpLabel {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: #71717a;
+}
+
+.streakBox {
+  margin-top: 1.25rem;
+  background: rgba(234, 179, 8, 0.1);
+  border: 1px solid rgba(234, 179, 8, 0.2);
+  border-radius: 8px;
+  padding: 0.4rem 0.8rem;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #fef08a;
+  font-weight: 600;
+}
+
+.badgeGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+.badgeItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+}
+
+.badgeEmoji {
+  font-size: 1.2rem;
+  margin-bottom: 0.2rem;
+}
+
+.badgeItem h5 {
+  font-size: 0.8rem;
+  color: #fff;
+  margin: 0;
+}
+
+.badgeItem p {
+  font-size: 0.68rem;
+  color: #71717a;
+  margin: 0;
+}
+
+/* Modals styling */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: #0d0d12;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 20px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 10px 40px rgba(139, 92, 246, 0.1);
+}
+
+.modal h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 0.5rem;
+}
+
+.modal p {
+  font-size: 0.85rem;
+  color: #a1a1aa;
+  margin-bottom: 1.5rem;
+  line-height: 1.4;
+}
+
+.modalFields {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.modalFields input, .modalFields textarea {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  color: #fff;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.modalFields input:focus, .modalFields textarea:focus {
+  border-color: #8b5cf6;
+}
+
+@media (max-width: 992px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .row {
+    grid-template-columns: 1fr;
+  }
+  .interviewerGrid {
+    grid-template-columns: 1fr;
+  }
+  .marketplaceGrid {
+    grid-template-columns: 1fr;
+  }
+  .reportScoresGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}

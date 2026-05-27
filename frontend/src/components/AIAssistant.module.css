@@ -1,0 +1,294 @@
+/* ===== Trigger Button ===== */
+.trigger {
+  position: fixed;
+  bottom: 2rem;
+  left: 2rem;
+  z-index: 9990;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(15, 15, 20, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  border-radius: 50px;
+  padding: 0.55rem 1rem 0.55rem 0.6rem;
+  cursor: pointer;
+  color: #fff;
+  transition: all 0.3s ease;
+}
+
+.trigger:hover {
+  border-color: rgba(168, 85, 247, 0.7);
+  box-shadow: 0 0 30px rgba(168, 85, 247, 0.35), 0 0 60px rgba(168, 85, 247, 0.15);
+  transform: translateY(-2px);
+}
+
+.triggerCore {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.triggerPulse {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(168, 85, 247, 0.4);
+  animation: pulseRing 2.5s ease-in-out infinite;
+}
+
+@keyframes pulseRing {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50%       { transform: scale(1.35); opacity: 0; }
+}
+
+.triggerIcon {
+  width: 22px;
+  height: 22px;
+  color: var(--primary);
+  filter: drop-shadow(0 0 6px rgba(168,85,247,0.5));
+}
+
+.triggerLabel {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #a855f7, #3b82f6);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: 0.08em;
+}
+
+/* ===== Chat Window ===== */
+.window {
+  position: fixed;
+  bottom: 5.5rem;
+  left: 2rem;
+  width: 380px;
+  max-height: 520px;
+  background: rgba(12, 12, 16, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  border-radius: 20px;
+  z-index: 9991;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(168,85,247,0.1), 0 0 40px rgba(168,85,247,0.1);
+  animation: windowIn 0.25s ease;
+  overflow: hidden;
+}
+
+@keyframes windowIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  background: linear-gradient(135deg, rgba(168,85,247,0.08), rgba(59,130,246,0.06));
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.aiDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--secondary);
+  box-shadow: 0 0 8px rgba(16,185,129,0.6);
+  animation: dotPulse 2s infinite;
+}
+
+@keyframes dotPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.headerTitle {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  background: linear-gradient(to right, #a855f7, #3b82f6);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.headerStatus {
+  font-size: 0.7rem;
+  color: #71717a;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  color: #71717a;
+  cursor: pointer;
+  padding: 0.3rem;
+  border-radius: 8px;
+  transition: all 0.15s;
+}
+.closeBtn:hover {
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+}
+
+/* Messages */
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 340px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(168,85,247,0.2) transparent;
+}
+
+.messages::-webkit-scrollbar { width: 3px; }
+.messages::-webkit-scrollbar-thumb { background: rgba(168,85,247,0.2); border-radius: 3px; }
+
+.msg {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.msgUser {
+  flex-direction: row-reverse;
+}
+
+.msgAvatar {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.msgBubble {
+  max-width: 85%;
+  padding: 0.6rem 0.9rem;
+  border-radius: 14px;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  word-break: break-word;
+}
+
+.msgAI .msgBubble {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.07);
+  color: #d4d4d8;
+  border-bottom-left-radius: 4px;
+}
+
+.msgUser .msgBubble {
+  background: linear-gradient(135deg, rgba(168,85,247,0.25), rgba(59,130,246,0.2));
+  border: 1px solid rgba(168,85,247,0.3);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+
+/* Typing dots */
+.typingDots {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  padding: 0.2rem 0;
+}
+
+.typingDots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--primary);
+  animation: typeBounce 1.2s infinite;
+}
+
+.typingDots span:nth-child(2) { animation-delay: 0.15s; }
+.typingDots span:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes typeBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-6px); opacity: 1; }
+}
+
+/* Input */
+.inputRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  background: rgba(0,0,0,0.2);
+}
+
+.input {
+  flex: 1;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 0.6rem 0.85rem;
+  color: #fafafa;
+  font-size: 0.85rem;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input:focus {
+  border-color: rgba(168,85,247,0.5);
+}
+
+.input::placeholder { color: #52525b; }
+
+.sendBtn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.sendBtn:hover:not(:disabled) {
+  transform: scale(1.08);
+  box-shadow: 0 4px 16px rgba(168,85,247,0.4);
+}
+
+.sendBtn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .window {
+    left: 1rem;
+    right: 1rem;
+    width: auto;
+    bottom: 5rem;
+  }
+  .trigger {
+    bottom: 1.2rem;
+    left: 1.2rem;
+  }
+}

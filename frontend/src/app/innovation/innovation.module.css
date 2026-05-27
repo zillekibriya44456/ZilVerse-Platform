@@ -1,0 +1,338 @@
+.page {
+  min-height: 100vh;
+  padding-bottom: 5rem;
+}
+
+.toast {
+  position: fixed;
+  top: 100px;
+  right: 20px;
+  background: var(--primary);
+  color: white;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(168, 85, 247, 0.4);
+  z-index: 1000;
+  animation: slideIn 0.3s ease-out;
+  font-weight: 600;
+  max-width: 400px;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.header {
+  background: linear-gradient(180deg, rgba(236, 72, 153, 0.05) 0%, transparent 100%);
+  padding: 5rem 0 0;
+  text-align: center;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.badgeLabel {
+  display: inline-block;
+  background: rgba(236, 72, 153, 0.1);
+  color: #f472b6;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(236, 72, 153, 0.3);
+}
+
+.header h1 {
+  font-size: 3.5rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+  background: linear-gradient(to right, #f472b6, var(--primary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.header p {
+  color: #a1a1aa;
+  font-size: 1.2rem;
+  max-width: 600px;
+  margin: 0 auto 3rem;
+}
+
+.tabContainer {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  transform: translateY(50%);
+}
+
+.tabBtn {
+  padding: 1rem 2.5rem;
+  border-radius: 30px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: #111114;
+  color: #a1a1aa;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.tabBtn:hover {
+  background: rgba(255,255,255,0.05);
+  color: #fff;
+}
+
+.activeTab {
+  background: #ec4899; /* Pink accent */
+  border-color: #ec4899;
+  color: #fff;
+  box-shadow: 0 10px 20px rgba(236, 72, 153, 0.3);
+}
+
+.section {
+  margin-top: 7rem;
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.sectionHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.sectionHeader h2 {
+  font-size: 2.5rem;
+  color: #fff;
+  margin-bottom: 1rem;
+}
+
+.sectionHeader p {
+  color: #a1a1aa;
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+  max-width: 600px;
+}
+
+/* Challenges Grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 2rem;
+}
+
+.card {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 0 1px rgba(236, 72, 153, 0.3);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.companyBadge {
+  background: rgba(255,255,255,0.05);
+  padding: 0.3rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: #d4d4d8;
+}
+
+.statusBadge {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.card h3 {
+  font-size: 1.3rem;
+  color: #fff;
+  margin-bottom: 1rem;
+  line-height: 1.4;
+}
+
+.desc {
+  color: #a1a1aa;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+  flex: 1;
+}
+
+.skillsBox {
+  background: rgba(0,0,0,0.3);
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.skillsBox strong {
+  display: block;
+  font-size: 0.85rem;
+  color: #71717a;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tag {
+  background: rgba(236, 72, 153, 0.1);
+  color: #f472b6;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  border: 1px solid rgba(236, 72, 153, 0.2);
+}
+
+.cardFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.rewardInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.rewardLabel {
+  font-size: 0.75rem;
+  color: #71717a;
+  text-transform: uppercase;
+}
+
+.rewardValue {
+  color: #10b981;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+/* Showcase Grid */
+.showcaseGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 3rem;
+}
+
+.showcaseCard {
+  padding: 0;
+  overflow: hidden;
+  transition: transform 0.3s;
+}
+
+.showcaseCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+}
+
+.showcaseImageWrapper {
+  position: relative;
+  height: 250px;
+  background: #111;
+}
+
+.showcaseImage {
+  object-fit: cover;
+  opacity: 0.7;
+}
+
+.solverBadge {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  background: rgba(0,0,0,0.8);
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: 1px solid rgba(255,255,255,0.1);
+  z-index: 10;
+}
+
+.showcaseContent {
+  padding: 2rem;
+}
+
+.showcaseContent h3 {
+  font-size: 1.5rem;
+  color: #fff;
+  margin-bottom: 0.5rem;
+}
+
+.showcaseCompany {
+  color: #a1a1aa;
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.showcaseDesc {
+  color: #d4d4d8;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.impactMetrics {
+  background: rgba(16, 185, 129, 0.05);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  padding: 1.5rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.metricIcon {
+  font-size: 2rem;
+}
+
+.impactMetrics strong {
+  display: block;
+  color: #10b981;
+  margin-bottom: 0.2rem;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+}
+
+.impactMetrics p {
+  color: #fff;
+  font-weight: 600;
+  font-size: 1.1rem;
+  line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+  .header h1 { font-size: 2.5rem; }
+  .tabContainer { flex-direction: column; gap: 0.5rem; }
+  .showcaseGrid { grid-template-columns: 1fr; }
+  .cardFooter { flex-direction: column; align-items: stretch; gap: 1rem; }
+}
