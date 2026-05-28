@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -6,7 +7,7 @@ import axios from "axios";
 import styles from "./services.module.css";
 import { useAuth } from "@/context/AuthContext";
 
-const API = "http://localhost:5002/api/services";
+const API = `${API_BASE}/api/services`;
 
 const MOCK_SERVICES = [
   {

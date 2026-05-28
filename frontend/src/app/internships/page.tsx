@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -38,7 +39,7 @@ export default function InternshipsPage() {
 
   const fetchInternships = async () => {
     try {
-      const res = await axios.get("http://localhost:5002/api/jobs");
+      const res = await axios.get(`${API_BASE}/api/jobs`);
       setDbJobs(res.data);
     } catch (err) {
       console.error("Failed to load internships", err);
@@ -52,7 +53,7 @@ export default function InternshipsPage() {
   const handlePostInternship = async () => {
     setIsUploading(true);
     try {
-      await axios.post("http://localhost:5002/api/jobs/create", {
+      await axios.post(`${API_BASE}/api/jobs/create`, {
         ...newInternship,
         type: "Internship"
       });
@@ -85,7 +86,7 @@ export default function InternshipsPage() {
   const handleApplySubmit = async () => {
     setIsApplying(true);
     try {
-      await axios.post("http://localhost:5002/api/jobs/apply", {
+      await axios.post(`${API_BASE}/api/jobs/apply`, {
         jobId: selectedJobId,
         resumeUrl: applicationData.resumeUrl,
         coverLetter: applicationData.coverLetter

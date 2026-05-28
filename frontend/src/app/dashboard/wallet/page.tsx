@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
@@ -54,19 +55,19 @@ export default function WalletPage() {
   const loadData = async () => {
     if (!user) return;
     try {
-      const wRes = await axios.get(`http://localhost:5002/api/payments/wallet?userId=${user.id}`);
+      const wRes = await axios.get(`${API_BASE}/api/payments/wallet?userId=${user.id}`);
       setWallet(wRes.data);
 
-      const tRes = await axios.get(`http://localhost:5002/api/payments/transactions?userId=${user.id}`);
+      const tRes = await axios.get(`${API_BASE}/api/payments/transactions?userId=${user.id}`);
       setTransactions(tRes.data);
 
-      const eRes = await axios.get(`http://localhost:5002/api/payments/escrows?userId=${user.id}`);
+      const eRes = await axios.get(`${API_BASE}/api/payments/escrows?userId=${user.id}`);
       setEscrows(eRes.data);
 
-      const wrRes = await axios.get(`http://localhost:5002/api/payments/withdrawals?userId=${user.id}`);
+      const wrRes = await axios.get(`${API_BASE}/api/payments/withdrawals?userId=${user.id}`);
       setWithdrawals(wrRes.data);
 
-      const invRes = await axios.get(`http://localhost:5002/api/payments/invoices?userId=${user.id}`);
+      const invRes = await axios.get(`${API_BASE}/api/payments/invoices?userId=${user.id}`);
       setInvoices(invRes.data);
     } catch (err) {
       console.error(err);
@@ -117,7 +118,7 @@ export default function WalletPage() {
       const rate = EXCHANGE_RATES[selectedCurrency] || 1.0;
       const usdAmount = parseFloat(depositData.amount) / rate;
 
-      await axios.post("http://localhost:5002/api/payments/deposit", {
+      await axios.post(`${API_BASE}/api/payments/deposit`, {
         userId: user?.id,
         amount: usdAmount,
         currency: "USD",
@@ -148,7 +149,7 @@ export default function WalletPage() {
       const rate = EXCHANGE_RATES[selectedCurrency] || 1.0;
       const usdAmount = parseFloat(withdrawData.amount) / rate;
 
-      await axios.post("http://localhost:5002/api/payments/withdraw", {
+      await axios.post(`${API_BASE}/api/payments/withdraw`, {
         userId: user?.id,
         amount: usdAmount,
         currency: "USD",
@@ -179,7 +180,7 @@ export default function WalletPage() {
       const rate = EXCHANGE_RATES[selectedCurrency] || 1.0;
       const usdAmount = parseFloat(escrowData.amount) / rate;
 
-      await axios.post("http://localhost:5002/api/payments/escrow/create", {
+      await axios.post(`${API_BASE}/api/payments/escrow/create`, {
         userId: user?.id,
         freelancerId: escrowData.freelancerId,
         amount: usdAmount,
@@ -202,7 +203,7 @@ export default function WalletPage() {
   const handleReleaseEscrow = async (escrowId: string) => {
     if (!confirm("Are you sure you want to release these escrow funds to the freelancer?")) return;
     try {
-      await axios.post("http://localhost:5002/api/payments/escrow/release", { escrowId });
+      await axios.post(`${API_BASE}/api/payments/escrow/release`, { escrowId });
       showToast("Escrow funds released successfully to the freelancer!");
       loadData();
     } catch {
@@ -214,7 +215,7 @@ export default function WalletPage() {
     const reason = prompt("Describe the reason for filing this dispute:");
     if (!reason) return;
     try {
-      await axios.post("http://localhost:5002/api/payments/escrow/dispute", {
+      await axios.post(`${API_BASE}/api/payments/escrow/dispute`, {
         escrowId,
         reason,
         raisedBy: user?.id

@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -19,7 +20,7 @@ export default function RegisterPage() {
     setLoading(true);
     setError("");
     try {
-      await axios.post("http://localhost:5002/api/auth/register", { name, email, password, role });
+      await axios.post(`${API_BASE}/api/auth/register`, { name, email, password, role });
       router.push("/login?registered=true");
     } catch (err: any) {
       setError(err.response?.data?.message || "Registration failed. Please try again.");

@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import styles from "./jobs.module.css";
@@ -32,7 +33,7 @@ export default function JobsPage() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    axios.get('http://localhost:5002/api/jobs')
+    axios.get(`${API_BASE}/api/jobs`)
       .then(res => setDbJobs(res.data))
       .catch(err => console.error("Failed to load DB jobs", err));
   }, []);
@@ -40,9 +41,9 @@ export default function JobsPage() {
   const handlePostJob = async () => {
     setIsUploading(true);
     try {
-      await axios.post('http://localhost:5002/api/jobs/create', newJob);
+      await axios.post(`${API_BASE}/api/jobs/create`, newJob);
       setIsModalOpen(false);
-      const res = await axios.get('http://localhost:5002/api/jobs');
+      const res = await axios.get(`${API_BASE}/api/jobs`);
       setDbJobs(res.data);
     } catch (err) {
       console.error(err);
@@ -59,7 +60,7 @@ export default function JobsPage() {
   const handleApplySubmit = async () => {
     setIsApplying(true);
     try {
-      await axios.post('http://localhost:5002/api/jobs/apply', {
+      await axios.post(`${API_BASE}/api/jobs/apply`, {
         jobId: selectedJobId,
         resumeUrl: applicationData.resumeUrl,
         coverLetter: applicationData.coverLetter

@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -22,7 +23,7 @@ export default function DiscussionsPage() {
   const [isReplying, setIsReplying] = useState(false);
 
   useEffect(() => {
-    axios.get('http://localhost:5002/api/discussions')
+    axios.get(`${API_BASE}/api/discussions`)
       .then(res => setDbPosts(res.data))
       .catch(err => console.error("Failed to fetch discussions", err));
   }, []);
@@ -30,9 +31,9 @@ export default function DiscussionsPage() {
   const handlePost = async () => {
     setIsUploading(true);
     try {
-      await axios.post('http://localhost:5002/api/discussions/create', newPost);
+      await axios.post(`${API_BASE}/api/discussions/create`, newPost);
       setIsModalOpen(false);
-      const res = await axios.get('http://localhost:5002/api/discussions');
+      const res = await axios.get(`${API_BASE}/api/discussions`);
       setDbPosts(res.data);
     } catch (err) {
       console.error(err);
@@ -45,13 +46,13 @@ export default function DiscussionsPage() {
     if (!replyContent.trim()) return;
     setIsReplying(true);
     try {
-      await axios.post('http://localhost:5002/api/discussions/reply', {
+      await axios.post(`${API_BASE}/api/discussions/reply`, {
         postId,
         content: replyContent
       });
       setReplyingToId(null);
       setReplyContent('');
-      const res = await axios.get('http://localhost:5002/api/discussions');
+      const res = await axios.get(`${API_BASE}/api/discussions`);
       setDbPosts(res.data);
     } catch (err) {
       console.error(err);

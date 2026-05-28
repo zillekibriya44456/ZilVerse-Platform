@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
@@ -44,7 +45,7 @@ export default function PaymentModal({ projectTitle, price, onClose, onSuccess }
       if (user) {
         // Convert base price (INR) to USD
         const usdAmount = price * RATES.USD.rate;
-        await axios.post("http://localhost:5002/api/payments/deposit", {
+        await axios.post(`${API_BASE}/api/payments/deposit`, {
           userId: user.id,
           amount: usdAmount,
           currency: "USD",

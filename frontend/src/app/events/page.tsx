@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 
 import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
@@ -32,7 +33,7 @@ export default function EventsPage() {
   // Load events
   const fetchEvents = async () => {
     try {
-      const res = await axios.get("http://localhost:5002/api/events");
+      const res = await axios.get(`${API_BASE}/api/events`);
       setDbEvents(res.data);
     } catch (err) {
       console.error("Failed to load events from DB", err);
@@ -56,7 +57,7 @@ export default function EventsPage() {
   const handleSubmitEvent = async () => {
     setIsUploading(true);
     try {
-      await axios.post("http://localhost:5002/api/events/create", newEvent);
+      await axios.post(`${API_BASE}/api/events/create`, newEvent);
       setIsSubmitModalOpen(false);
       setNewEvent({
         title: "",

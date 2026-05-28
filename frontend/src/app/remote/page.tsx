@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -39,7 +40,7 @@ export default function RemoteWorkPage() {
 
   const fetchRemoteJobs = async () => {
     try {
-      const res = await axios.get("http://localhost:5002/api/jobs");
+      const res = await axios.get(`${API_BASE}/api/jobs`);
       setDbJobs(res.data);
     } catch (err) {
       console.error("Failed to fetch remote jobs", err);
@@ -53,7 +54,7 @@ export default function RemoteWorkPage() {
   const handlePostJob = async () => {
     setIsUploading(true);
     try {
-      await axios.post("http://localhost:5002/api/jobs/create", {
+      await axios.post(`${API_BASE}/api/jobs/create`, {
         ...newJob,
         location: newJob.location.toLowerCase().includes("remote") ? newJob.location : `Remote (${newJob.location})`
       });
@@ -86,7 +87,7 @@ export default function RemoteWorkPage() {
   const handleApplySubmit = async () => {
     setIsApplying(true);
     try {
-      await axios.post("http://localhost:5002/api/jobs/apply", {
+      await axios.post(`${API_BASE}/api/jobs/apply`, {
         jobId: selectedJobId,
         resumeUrl: applicationData.resumeUrl,
         coverLetter: applicationData.coverLetter

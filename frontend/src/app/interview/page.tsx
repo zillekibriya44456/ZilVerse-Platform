@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -54,7 +55,7 @@ export default function InterviewPortal() {
   // Fetch results from backend
   const fetchResults = async () => {
     try {
-      const res = await axios.get("http://localhost:5002/api/interview");
+      const res = await axios.get(`${API_BASE}/api/interview`);
       // If we need the results of the specific user, or fallback
       if (res.data && Array.isArray(res.data)) {
         // filter or set

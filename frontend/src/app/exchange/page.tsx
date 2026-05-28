@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -23,7 +24,7 @@ export default function ExchangePage() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    axios.get('http://localhost:5002/api/exchange')
+    axios.get(`${API_BASE}/api/exchange`)
       .then(res => setDbTrades(res.data))
       .catch(err => console.error("Failed to fetch exchange listings", err));
   }, []);
@@ -31,9 +32,9 @@ export default function ExchangePage() {
   const handlePostTrade = async () => {
     setIsUploading(true);
     try {
-      await axios.post('http://localhost:5002/api/exchange/create', newTrade);
+      await axios.post(`${API_BASE}/api/exchange/create`, newTrade);
       setIsModalOpen(false);
-      const res = await axios.get('http://localhost:5002/api/exchange');
+      const res = await axios.get(`${API_BASE}/api/exchange`);
       setDbTrades(res.data);
     } catch (err) {
       console.error(err);
@@ -50,7 +51,7 @@ export default function ExchangePage() {
   const handleProposeSubmit = async () => {
     setIsProposing(true);
     try {
-      await axios.post('http://localhost:5002/api/exchange/propose', {
+      await axios.post(`${API_BASE}/api/exchange/propose`, {
         listingId: selectedTradeId,
         message: proposalMessage
       });

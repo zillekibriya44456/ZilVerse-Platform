@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 
 import { useState, useRef } from "react";
 import axios from "axios";
@@ -27,7 +28,7 @@ export default function ZilPortfolioAI() {
     } else if (step === 4) {
       setIsPublishing(true);
       try {
-        await axios.post('http://localhost:5002/api/portfolio/generate', {
+        await axios.post(`${API_BASE}/api/portfolio/generate`, {
           theme: selectedTheme,
           bioText: "A highly motivated and adaptable professional with a strong foundation in modern technologies. Proven track record of excellence, demonstrating the ability to quickly master new skills and contribute to high-impact projects globally.",
           skills: "Leadership, Project Management, Problem Solving, Data Analysis, Global Communication",

@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -45,7 +46,7 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await axios.post("http://localhost:5002/api/auth/login", { email, password });
+      const res = await axios.post(`${API_BASE}/api/auth/login`, { email, password });
       login(res.data.user, res.data.token);
       router.push("/dashboard");
     } catch (err: any) {
@@ -56,7 +57,7 @@ export default function LoginPage() {
   };
 
   const handleSocial = (provider: string) => {
-    window.location.href = `http://localhost:5002/api/auth/${provider.toLowerCase()}`;
+    window.location.href = `${API_BASE}/api/auth/${provider.toLowerCase()}`;
   };
 
   return (

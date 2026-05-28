@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -50,8 +51,8 @@ export default function FreelancerRegisterPage() {
   const handleSubmit = async () => {
     setLoading(true); setError("");
     try {
-      await axios.post("http://localhost:5002/api/auth/register", { name, email, password, role: "FREELANCER" });
-      const loginRes = await axios.post("http://localhost:5002/api/auth/login", { email, password });
+      await axios.post(`${API_BASE}/api/auth/register`, { name, email, password, role: "FREELANCER" });
+      const loginRes = await axios.post(`${API_BASE}/api/auth/login`, { email, password });
       login(loginRes.data.user, loginRes.data.token);
       const fd = new FormData();
       fd.append("phone", phone); fd.append("city", city); fd.append("bio", bio);
@@ -60,7 +61,7 @@ export default function FreelancerRegisterPage() {
       fd.append("github", github); fd.append("linkedin", linkedin); fd.append("portfolio", portfolio);
       if (profilePhoto) fd.append("profilePhoto", profilePhoto);
       if (resume) fd.append("resume", resume);
-      await axios.post("http://localhost:5002/api/profiles/freelancer", fd, {
+      await axios.post(`${API_BASE}/api/profiles/freelancer`, fd, {
         headers: { "Authorization": `Bearer ${loginRes.data.token}`, "Content-Type": "multipart/form-data" },
       }).catch(() => {});
       router.push("/dashboard");

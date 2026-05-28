@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 import { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
 import axios from "axios";
@@ -6,7 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { MOCK_REELS, REEL_CATEGORIES, ReelCategory } from "@/data/reels";
 import styles from "./reels.module.css";
 
-const API = "http://localhost:5002/api/reels";
+const API = `${API_BASE}/api/reels`;
 
 function formatCount(n: number) {
   if (n >= 1000000) return (n / 1000000).toFixed(1) + "M";
@@ -74,7 +75,7 @@ export default function InnoReelsPage() {
   // Format reels
   const allReels = (() => {
     const db = dbReels.map((r: any) => ({
-      id: r.id, videoUrl: `http://localhost:5002${r.videoUrl}`, title: r.title,
+      id: r.id, videoUrl: `${API_BASE}${r.videoUrl}`, title: r.title,
       description: r.description || "", creator: r.creator?.name || "Anonymous",
       creatorId: r.creatorId || r.creator?.id, handle: "@user",
       avatar: r.creator?.avatar || "/avatars/avatar_1.png", verified: r.creator?.verified,

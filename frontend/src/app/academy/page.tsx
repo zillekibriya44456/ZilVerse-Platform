@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 
 import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
@@ -35,7 +36,7 @@ export default function AcademyPage() {
 
   // Load backend courses
   useEffect(() => {
-    axios.get("http://localhost:5002/api/academy")
+    axios.get(`${API_BASE}/api/academy`)
       .then(res => setDbCourses(res.data))
       .catch(err => console.error("Failed to load courses from DB", err));
   }, []);
@@ -86,7 +87,7 @@ export default function AcademyPage() {
         rating: (Math.random() * 0.8 + 4.2).toFixed(1),
         image: `/avatars/avatar_${Math.floor(Math.random() * 2) + 1}.png`
       };
-      await axios.post("http://localhost:5002/api/academy/create", payload);
+      await axios.post(`${API_BASE}/api/academy/create`, payload);
       setIsCreateModalOpen(false);
       setNewCourse({
         title: "",
@@ -100,7 +101,7 @@ export default function AcademyPage() {
         countryCode: selectedCountry.code || "US"
       });
       // reload
-      const res = await axios.get("http://localhost:5002/api/academy");
+      const res = await axios.get(`${API_BASE}/api/academy`);
       setDbCourses(res.data);
     } catch (err) {
       console.error(err);

@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -46,7 +47,7 @@ export default function FreelancersPage() {
 
   useEffect(() => {
     // Load freelancers from backend
-    axios.get('http://localhost:5002/api/freelancers')
+    axios.get(`${API_BASE}/api/freelancers`)
       .then(res => setDbFreelancers(res.data))
       .catch(err => console.error("Failed to load DB freelancers", err));
   }, []);
@@ -54,8 +55,8 @@ export default function FreelancersPage() {
   useEffect(() => {
     // Load client wallet details if logged in
     const url = user?.id 
-      ? `http://localhost:5002/api/payments/wallet?userId=${user.id}`
-      : 'http://localhost:5002/api/payments/wallet';
+      ? `${API_BASE}/api/payments/wallet?userId=${user.id}`
+      : `${API_BASE}/api/payments/wallet`;
 
     axios.get(url)
       .then(res => setWalletBalance(res.data.availableBalance))
@@ -103,7 +104,7 @@ export default function FreelancersPage() {
     const targetFreelancerId = selectedFreelancer.userId || "fallback-freelancer-id";
 
     try {
-      const response = await axios.post("http://localhost:5002/api/payments/escrow/create", {
+      const response = await axios.post(`${API_BASE}/api/payments/escrow/create`, {
         userId: user?.id,
         freelancerId: targetFreelancerId,
         amount: budget,

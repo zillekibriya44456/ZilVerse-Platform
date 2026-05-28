@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -18,7 +19,7 @@ export default function CreatorsPage() {
   const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
-    axios.get('http://localhost:5002/api/creators')
+    axios.get(`${API_BASE}/api/creators`)
       .then(res => setDbCreators(res.data))
       .catch(err => console.error("Failed to fetch creators", err));
   }, []);
@@ -26,9 +27,9 @@ export default function CreatorsPage() {
   const handleJoin = async () => {
     setIsUploading(true);
     try {
-      await axios.post('http://localhost:5002/api/creators/register', newCreator);
+      await axios.post(`${API_BASE}/api/creators/register`, newCreator);
       setIsModalOpen(false);
-      const res = await axios.get('http://localhost:5002/api/creators');
+      const res = await axios.get(`${API_BASE}/api/creators`);
       setDbCreators(res.data);
     } catch (err) {
       console.error(err);

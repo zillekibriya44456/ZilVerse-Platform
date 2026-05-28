@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 
 import Image from "next/image";
 
@@ -247,7 +248,7 @@ export default function ProjectsPage() {
         formData.append('video', file);
         
         const token = localStorage.getItem('zilverse_token');
-        const response = await axios.post('http://localhost:5002/api/projects/upload-video', formData, {
+        const response = await axios.post(`${API_BASE}/api/projects/upload-video`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
             'Authorization': `Bearer ${token}`
@@ -259,7 +260,7 @@ export default function ProjectsPage() {
           }
         });
         
-        const uploadedUrl = `http://localhost:5002${response.data.videoUrl}`;
+        const uploadedUrl = `${API_BASE}${response.data.videoUrl}`;
         setNewProject(prev => ({ ...prev, videoUrl: uploadedUrl }));
       } catch (err: any) {
         alert("Video upload failed: " + (err.response?.data?.error || err.message));
@@ -282,7 +283,7 @@ export default function ProjectsPage() {
         formData.append('video', file);
         
         const token = localStorage.getItem('zilverse_token');
-        const response = await axios.post('http://localhost:5002/api/projects/upload-video', formData, {
+        const response = await axios.post(`${API_BASE}/api/projects/upload-video`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
             'Authorization': `Bearer ${token}`
@@ -294,7 +295,7 @@ export default function ProjectsPage() {
           }
         });
         
-        const uploadedUrl = `http://localhost:5002${response.data.videoUrl}`;
+        const uploadedUrl = `${API_BASE}${response.data.videoUrl}`;
         setNewSpotlight(prev => ({ ...prev, videoUrl: uploadedUrl }));
       } catch (err: any) {
         alert("Spotlight video upload failed: " + (err.response?.data?.error || err.message));
@@ -309,7 +310,7 @@ export default function ProjectsPage() {
     setIsUploading(true);
     try {
       const token = localStorage.getItem('zilverse_token');
-      await axios.post('http://localhost:5002/api/projects', {
+      await axios.post(`${API_BASE}/api/projects`, {
         title: newProject.title,
         description: newProject.description,
         price: newProject.price,
@@ -322,7 +323,7 @@ export default function ProjectsPage() {
       setNewProject({ title: '', description: '', price: 99, videoUrl: '' });
       setVideoFile(null);
       setIsUploadModalOpen(false);
-      const res = await axios.get('http://localhost:5002/api/projects');
+      const res = await axios.get(`${API_BASE}/api/projects`);
       setDbProjects(res.data);
     } catch (err: any) {
       alert("Error posting project: " + (err.response?.data?.error || err.message));
@@ -334,7 +335,7 @@ export default function ProjectsPage() {
   const handleUploadSpotlight = async () => {
     try {
       const token = localStorage.getItem('zilverse_token');
-      await axios.post('http://localhost:5002/api/spotlights', {
+      await axios.post(`${API_BASE}/api/spotlights`, {
         name: newSpotlight.name,
         role: newSpotlight.role,
         pitch: newSpotlight.pitch,
@@ -348,7 +349,7 @@ export default function ProjectsPage() {
       setNewSpotlight({ name: '', role: '', pitch: '', videoUrl: '', project: '' });
       setSpotlightFile(null);
       setIsSpotlightModalOpen(false);
-      const res = await axios.get('http://localhost:5002/api/spotlights');
+      const res = await axios.get(`${API_BASE}/api/spotlights`);
       setDbSpotlights(res.data);
     } catch (err: any) {
       alert("Error submitting spotlight: " + (err.response?.data?.error || err.message));
@@ -356,11 +357,11 @@ export default function ProjectsPage() {
   };
 
   useEffect(() => {
-    axios.get('http://localhost:5002/api/projects')
+    axios.get(`${API_BASE}/api/projects`)
       .then(res => setDbProjects(res.data))
       .catch(err => console.error("Failed to load DB projects", err));
 
-    axios.get('http://localhost:5002/api/spotlights')
+    axios.get(`${API_BASE}/api/spotlights`)
       .then(res => setDbSpotlights(res.data))
       .catch(err => console.error("Failed to load DB spotlights", err));
   }, []);

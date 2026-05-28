@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/utils/api";
+
 import { useState } from "react";
 import Link from "next/link";
 import { Terminal, Copy, Check, Shield, BookOpen, Cpu, DollarSign } from "lucide-react";
@@ -102,7 +104,7 @@ export default function ApiDocsPage() {
             <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.5rem' }}>Base Endpoint URL</h3>
             <p style={{ color: '#71717a', fontSize: '0.88rem', lineHeight: '1.5' }}>
               For development use our secure local pipeline proxy: <br />
-              <code style={{ color: '#60a5fa', background: 'rgba(255,255,255,0.04)', padding: '0.2rem 0.4rem', borderRadius: '4px', display: 'inline-block', marginTop: '0.4rem' }}>http://localhost:5002/api</code>
+              <code style={{ color: '#60a5fa', background: 'rgba(255,255,255,0.04)', padding: '0.2rem 0.4rem', borderRadius: '4px', display: 'inline-block', marginTop: '0.4rem' }}>{API_BASE}/api</code>
             </p>
           </div>
         </div>

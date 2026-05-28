@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -57,7 +58,7 @@ export default function ResearchPage() {
 
   const fetchPapers = async () => {
     try {
-      const res = await axios.get("http://localhost:5002/api/research");
+      const res = await axios.get(`${API_BASE}/api/research`);
       setDbPapers(res.data);
     } catch (err) {
       console.error("Failed to load research papers", err);
@@ -83,7 +84,7 @@ export default function ResearchPage() {
     }
 
     try {
-      await axios.post(`http://localhost:5002/api/research/${id}/upvote`);
+      await axios.post(`${API_BASE}/api/research/${id}/upvote`);
       fetchPapers();
       setToastMessage("Upvoted successfully!");
       setTimeout(() => setToastMessage(null), 3000);
@@ -97,7 +98,7 @@ export default function ResearchPage() {
   const handlePublish = async () => {
     setIsPublishing(true);
     try {
-      await axios.post("http://localhost:5002/api/research/create", {
+      await axios.post(`${API_BASE}/api/research/create`, {
         ...newPaper,
         userId: user?.id
       });

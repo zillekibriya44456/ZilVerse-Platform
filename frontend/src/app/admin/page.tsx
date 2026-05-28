@@ -1,10 +1,11 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import styles from "./admin.module.css";
 import { socket } from "@/utils/socket";
 
-const API = "http://localhost:5002/api/admin";
+const API = `${API_BASE}/api/admin`;
 
 const DEMO_USERS = [
   { id: "u1", name: "Alex Chen", email: "alex@example.com", role: "Freelancer", status: "Active", joined: "2026-01-12" },
@@ -72,7 +73,7 @@ export default function AdminDashboard() {
         .then(r => setContacts(r.data)).catch(() => {});
       axios.get(`${API}/notifications`)
         .then(r => setSentNotifs(r.data)).catch(() => {});
-      axios.get("http://localhost:5002/api/payments/admin/summary")
+      axios.get(`${API_BASE}/api/payments/admin/summary`)
         .then(r => setPaySummary(r.data)).catch(() => {});
     };
 
@@ -81,7 +82,7 @@ export default function AdminDashboard() {
     // Socket listeners for real-time admin sync
     const handlePayUpdate = () => {
       console.log("[SOCKET] Payment action triggered, reloading summary...");
-      axios.get("http://localhost:5002/api/payments/admin/summary")
+      axios.get(`${API_BASE}/api/payments/admin/summary`)
         .then(r => setPaySummary(r.data)).catch(() => {});
     };
 
@@ -139,13 +140,13 @@ export default function AdminDashboard() {
   };
 
   const handleLoadPaySummary = () => {
-    axios.get("http://localhost:5002/api/payments/admin/summary")
+    axios.get(`${API_BASE}/api/payments/admin/summary`)
       .then(r => setPaySummary(r.data)).catch(() => {});
   };
 
   const handleApproveWithdrawal = async (id: string) => {
     try {
-      await axios.post(`http://localhost:5002/api/payments/admin/withdrawals/${id}/approve`);
+      await axios.post(`${API_BASE}/api/payments/admin/withdrawals/${id}/approve`);
       showToast("Withdrawal approved successfully!");
       handleLoadPaySummary();
     } catch {
@@ -155,7 +156,7 @@ export default function AdminDashboard() {
 
   const handleRejectWithdrawal = async (id: string) => {
     try {
-      await axios.post(`http://localhost:5002/api/payments/admin/withdrawals/${id}/reject`);
+      await axios.post(`${API_BASE}/api/payments/admin/withdrawals/${id}/reject`);
       showToast("Withdrawal rejected & refunded!");
       handleLoadPaySummary();
     } catch {
@@ -165,7 +166,7 @@ export default function AdminDashboard() {
 
   const handleResolveDispute = async (id: string, resolution: string) => {
     try {
-      await axios.post(`http://localhost:5002/api/payments/admin/disputes/${id}/resolve`, { resolution });
+      await axios.post(`${API_BASE}/api/payments/admin/disputes/${id}/resolve`, { resolution });
       showToast(`Dispute resolved in favor of ${resolution.toLowerCase()}!`);
       handleLoadPaySummary();
     } catch {

@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 
 import { useState, useEffect, useRef } from "react";
 import { generateCompleteFlow, CompleteInterviewFlow, InterviewQuestion } from "@/constants/interviewQuestions";
@@ -346,7 +347,7 @@ export default function AIInterviewRoom({
       ];
 
       const token = localStorage.getItem('zilverse_token');
-      const response = await axios.post("http://localhost:5002/api/interview/sandbox/run", {
+      const response = await axios.post(`${API_BASE}/api/interview/sandbox/run`, {
         code: codeValue,
         testCases
       }, {
@@ -410,7 +411,7 @@ export default function AIInterviewRoom({
 
     try {
       const token = localStorage.getItem('zilverse_token');
-      await axios.post("http://localhost:5002/api/interview", {
+      await axios.post(`${API_BASE}/api/interview`, {
         score: finalScore,
         feedback: assessmentReport
       }, {

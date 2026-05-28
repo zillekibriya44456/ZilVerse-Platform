@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -104,7 +105,7 @@ export default function Home() {
   const [newFeedback, setNewFeedback] = useState({ text: '', name: '', role: '', stars: 5 });
 
   useEffect(() => {
-    axios.get('http://localhost:5002/api/testimonials')
+    axios.get(`${API_BASE}/api/testimonials`)
       .then(res => setDbTestimonials(res.data))
       .catch(err => {
         console.error("Failed to load testimonials", err);
@@ -119,11 +120,11 @@ export default function Home() {
       return;
     }
     try {
-      await axios.post('http://localhost:5002/api/testimonials', newFeedback);
+      await axios.post(`${API_BASE}/api/testimonials`, newFeedback);
       alert("Feedback submitted successfully!");
       setNewFeedback({ text: '', name: '', role: '', stars: 5 });
       setIsFeedbackModalOpen(false);
-      const refreshRes = await axios.get('http://localhost:5002/api/testimonials');
+      const refreshRes = await axios.get(`${API_BASE}/api/testimonials`);
       setDbTestimonials(refreshRes.data);
     } catch (err: any) {
       alert("Error submitting feedback: " + (err.response?.data?.error || err.message));

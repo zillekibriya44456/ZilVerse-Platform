@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { socket } from "../utils/socket";
@@ -23,7 +24,7 @@ export default function GlobalNotificationBar() {
 
   useEffect(() => {
     // Initial fetch
-    axios.get("http://localhost:5002/api/admin/notifications")
+    axios.get(`${API_BASE}/api/admin/notifications`)
       .then(r => setNotifications(r.data))
       .catch(() => {});
 

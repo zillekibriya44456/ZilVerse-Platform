@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import Image from "next/image";
@@ -41,7 +42,7 @@ export default function ChatPage() {
   const fetchContacts = async () => {
     if (!user) return;
     try {
-      const res = await axios.get(`http://localhost:5002/api/chat/contacts?userId=${user.id}`);
+      const res = await axios.get(`${API_BASE}/api/chat/contacts?userId=${user.id}`);
       setContacts(res.data);
     } catch (err) {
       console.error("Failed to load chat contacts", err);
@@ -52,7 +53,7 @@ export default function ChatPage() {
   const fetchHistory = async (partnerId: string) => {
     if (!user) return;
     try {
-      const res = await axios.get(`http://localhost:5002/api/chat/history/${partnerId}?userId=${user.id}`);
+      const res = await axios.get(`${API_BASE}/api/chat/history/${partnerId}?userId=${user.id}`);
       setMessages(res.data);
     } catch (err) {
       console.error("Failed to load message history", err);
@@ -115,7 +116,7 @@ export default function ChatPage() {
     setInputText("");
 
     try {
-      await axios.post("http://localhost:5002/api/chat/send", {
+      await axios.post(`${API_BASE}/api/chat/send`, {
         userId: user.id,
         receiverId: activeContact.id,
         content: text

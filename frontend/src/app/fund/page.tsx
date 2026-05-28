@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -27,7 +28,7 @@ export default function FundHubPage() {
   const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
-    axios.get('http://localhost:5002/api/funds')
+    axios.get(`${API_BASE}/api/funds`)
       .then(res => setDbGrants(res.data))
       .catch(err => console.error("Failed to load DB grants", err));
   }, []);
@@ -35,7 +36,7 @@ export default function FundHubPage() {
   const handlePostGrant = async () => {
     setIsUploading(true);
     try {
-      await axios.post('http://localhost:5002/api/funds/create', {
+      await axios.post(`${API_BASE}/api/funds/create`, {
         title: newGrant.title,
         organization: newGrant.organization,
         amount: newGrant.amount,
@@ -45,7 +46,7 @@ export default function FundHubPage() {
       setToastMessage("Successfully created your Grant on the global network!");
       setIsUploadModalOpen(false);
       // Refresh DB Grants
-      const res = await axios.get('http://localhost:5002/api/funds');
+      const res = await axios.get(`${API_BASE}/api/funds`);
       setDbGrants(res.data);
     } catch (err: any) {
       setToastMessage("Error posting grant: " + (err.response?.data?.error || err.message));

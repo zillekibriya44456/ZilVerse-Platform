@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
@@ -82,7 +83,7 @@ export default function Navbar() {
 
   useEffect(() => {
     // Initial load
-    axios.get("http://localhost:5002/api/admin/notifications")
+    axios.get(`${API_BASE}/api/admin/notifications`)
       .then(r => setNotifications(r.data))
       .catch(() => {});
 
