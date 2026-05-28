@@ -1,29 +1,11 @@
 import { Router, Response } from 'express';
-// @ts-ignore
-import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
 import { authenticateToken, AuthenticatedRequest } from '../middleware/auth';
+import { uploadImage, getFileUrl } from '../config/cloudinary';
 
 const router = Router();
 
-const uploadsDir = path.join(process.cwd(), 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (_req: any, _file: any, cb: any) => cb(null, uploadsDir),
-  filename: (_req: any, file: any, cb: any) => {
-    const unique = Date.now() + '-' + Math.round(Math.random() * 1e6);
-    cb(null, unique + path.extname(file.originalname));
-  },
-});
-
-const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
-
 // POST /api/profiles/freelancer (Secure freelancer profile creation)
-router.post('/freelancer', authenticateToken, upload.fields([
+router.post('/freelancer', authenticateToken, uploadImage.fields([
   { name: 'resume', maxCount: 1 },
   { name: 'profilePhoto', maxCount: 1 },
 ]), (req: any, res: Response): any => {
@@ -40,8 +22,8 @@ router.post('/freelancer', authenticateToken, upload.fields([
     const data = {
       ...req.body,
       userId,
-      resumeUrl: resumeFile ? `/uploads/${resumeFile.filename}` : null,
-      photoUrl: photoFile ? `/uploads/${photoFile.filename}` : null,
+      resumeUrl: resumeFile ? getFileUrl(resumeFile) : null,
+      photoUrl: photoFile ? getFileUrl(photoFile) : null,
       savedAt: new Date().toISOString(),
     };
     
@@ -54,7 +36,7 @@ router.post('/freelancer', authenticateToken, upload.fields([
 });
 
 // POST /api/profiles/apply (Secure job/internship application)
-router.post('/apply', authenticateToken, upload.single('resume'), (req: any, res: Response): any => {
+router.post('/apply', authenticateToken, uploadImage.single('resume'), (req: any, res: Response): any => {
   try {
     const applicantId = (req as any).user?.id;
     if (!applicantId) {
@@ -65,7 +47,7 @@ router.post('/apply', authenticateToken, upload.single('resume'), (req: any, res
     const data = {
       ...req.body,
       applicantId,
-      resumeUrl: resumeFile ? `/uploads/${resumeFile.filename}` : null,
+      resumeUrl: resumeFile ? getFileUrl(resumeFile) : null,
       appliedAt: new Date().toISOString(),
     };
     

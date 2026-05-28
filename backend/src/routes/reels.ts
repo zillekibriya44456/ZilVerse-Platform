@@ -1,49 +1,11 @@
 // @ts-nocheck
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
-// @ts-ignore
-import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
-import { authenticateToken, AuthenticatedRequest } from '../middleware/auth';
+import { uploadVideo, getFileUrl } from '../config/cloudinary';
+import { authenticateToken } from '../middleware/auth';
 
 const router = express.Router();
 const prisma = new PrismaClient();
-
-// Helper: safely extract query/param values as string
-const qp = (val: any): string => (Array.isArray(val) ? val[0] : val) || '';
-const qpOpt = (val: any): string | undefined => { const v = qp(val); return v || undefined; };
-
-const uploadsDir = path.join(process.cwd(), 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-// Configure multer for video uploads
-const storage = multer.diskStorage({
-  destination: function (req: any, file: any, cb: any) {
-    cb(null, uploadsDir);
-  },
-  filename: function (req: any, file: any, cb: any) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const prefix = file.fieldname === 'video' ? 'reel' : 'story';
-    cb(null, prefix + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-const upload = multer({
-  storage,
-  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB limit
-  fileFilter: (req: any, file: any, cb: any) => {
-    const allowed = /mp4|mov|webm|avi|mkv|jpg|jpeg|png|gif/;
-    const ext = allowed.test(path.extname(file.originalname).toLowerCase());
-    const mime = allowed.test(file.mimetype.split('/')[1]);
-    if (ext || mime) { cb(null, true); }
-    else { cb(new Error('Only video and image files are allowed.')); }
-  }
-});
-
-// ───────────────────────────────────────────────
 // REELS CRUD
 // ───────────────────────────────────────────────
 
@@ -113,7 +75,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Upload new reel
-router.post('/upload', authenticateToken, upload.single('video'), async (req: express.Request, res: any) => {
+router.post('/upload', authenticateToken, uploadVideo.single('video'), async (req: express.Request, res: any) => {
   try {
     const creatorId = (req as any).user?.id;
     if (!creatorId) return res.status(401).json({ error: 'Unauthorized' });
@@ -125,7 +87,7 @@ router.post('/upload', authenticateToken, upload.single('video'), async (req: ex
       data: {
         title: title || 'New Reel',
         description: description || '',
-        videoUrl: `/uploads/${req.file.filename}`,
+        videoUrl: getFileUrl(req.file),
         category: category || 'For You',
         tags: tags || 'tech,startup',
         creatorId
@@ -473,7 +435,7 @@ router.get('/stories/all', async (req, res) => {
 });
 
 // Upload story
-router.post('/stories/upload', authenticateToken, upload.single('media'), async (req: express.Request, res: any) => {
+router.post('/stories/upload', authenticateToken, uploadVideo.single('media'), async (req: express.Request, res: any) => {
   try {
     const userId = (req as any).user?.id;
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
@@ -484,7 +446,7 @@ router.post('/stories/upload', authenticateToken, upload.single('media'), async 
 
     const story = await prisma.story.create({
       data: {
-        mediaUrl: `/uploads/${req.file.filename}`,
+        mediaUrl: getFileUrl(req.file),
         mediaType,
         caption: req.body.caption || null,
         userId,
