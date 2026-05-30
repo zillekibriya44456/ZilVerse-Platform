@@ -4,17 +4,15 @@ import styles from "./Footer.module.css";
 const PHONE = "7091780179";
 const WA_LINK = `https://wa.me/91${PHONE}`;
 
-const EMAIL = "zillekibriya44456@gmail.com";
+const EMAIL = "zilverse01@gmail.com";
 
 const socialLinks = [
   { label: "WhatsApp", href: WA_LINK, icon: "💬", color: "#25D366" },
-  { label: "LinkedIn", href: "https://in.linkedin.com/in/zille-kibriya-3168b91a7", icon: "💼", color: "#0A66C2" },
-  { label: "X (Twitter)", href: "https://x.com/kibriya_zille", icon: "🐦", color: "#1DA1F2" },
-  { label: "YouTube", href: "https://youtube.com/@technicalilahi5323", icon: "▶️", color: "#FF0000" },
+  { label: "LinkedIn", href: "https://www.linkedin.com/company/zilverse/", icon: "💼", color: "#0A66C2" },
+  { label: "X (Twitter)", href: "https://x.com/zilverse01gmai", icon: "🐦", color: "#1DA1F2" },
+  { label: "YouTube", href: "https://www.youtube.com/@TheZilVerse", icon: "▶️", color: "#FF0000" },
   { label: "Facebook", href: "https://m.facebook.com/zille.kibriya.3", icon: "📘", color: "#1877F2" },
-  { label: "Medium", href: "https://medium.com/@zillekibriya", icon: "✍️", color: "#fff" },
-  { label: "Blog", href: "https://technicalilahi.blogspot.com/?m=1", icon: "🌐", color: "#f59e0b" },
-  { label: "Gmail", href: `mailto:${EMAIL}`, icon: "📧", color: "#EA4335" },
+  { label: "Medium", href: "https://medium.com/@zilverse01", icon: "✍️", color: "#fff" },
 ];
 
 const navLinks = [
