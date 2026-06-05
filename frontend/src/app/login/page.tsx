@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "@/lib/auth-client";
 import styles from "./auth.module.css";
-import { Loader2 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { API_BASE } from "@/utils/api";
 
 const SOCIAL_PROVIDERS = [
   { id: "google", name: "Google", icon: "G", color: "#EA4335", bg: "rgba(234,67,53,0.1)", border: "rgba(234,67,53,0.25)" },
@@ -17,6 +18,29 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { login } = useAuth();
+
+  // Check if we just returned from Render's Social Login
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+    const userStr = params.get("user");
+    const errorParam = params.get("error");
+
+    if (errorParam) {
+      setError("OAuth authentication failed. Please try again.");
+    }
+
+    if (token && userStr) {
+      try {
+        const user = JSON.parse(decodeURIComponent(userStr));
+        login(user, token);
+        router.push("/dashboard");
+      } catch (err) {
+        console.error("Failed to parse user from URL", err);
+      }
+    }
+  }, [login, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,20 +67,10 @@ export default function LoginPage() {
     }
   };
 
-  const handleSocial = async (providerId: "google" | "github") => {
+  const handleSocial = (providerId: "google" | "github") => {
     setError("");
-    try {
-      const res = await signIn.social({
-        provider: providerId,
-        callbackURL: "/dashboard" // Redirect automatically after OAuth
-      });
-      if (res?.error) {
-        setError(`OAuth Error: ${res.error.message || JSON.stringify(res.error)}`);
-      }
-    } catch (e: any) {
-      console.error("Social login error:", e);
-      setError(`Failed to initialize ${providerId} login. Please check environment variables (GOOGLE_CLIENT_ID, NEXT_PUBLIC_APP_URL, BETTER_AUTH_URL). Error: ${e.message}`);
-    }
+    // Redirect directly to the Render backend for passport.js OAuth
+    window.location.href = `${API_BASE}/api/auth/${providerId}`;
   };
 
   return (
