@@ -63,16 +63,30 @@ export default function PaymentModal({ projectTitle, price, onClose, onSuccess }
           }
         };
 
-        // Convert base price (INR) to paise (multiplying by 100)
-        // Ensure price is at least 1 INR (100 paise)
-        const paiseAmount = Math.max(100, Math.round(price * 100));
+        // Compute converted price based on the selected currency dropdown
+        let finalAmount = price; // Default to INR
+        let finalCurrency = "INR";
+
+        if (currency === "USD") {
+          finalAmount = price * RATES.USD.rate;
+          finalCurrency = "USD";
+        } else if (currency === "EUR") {
+          finalAmount = price * RATES.EUR.rate;
+          finalCurrency = "EUR";
+        } else if (currency === "GBP") {
+          finalAmount = price * RATES.GBP.rate;
+          finalCurrency = "GBP";
+        }
+
+        // Smallest unit of selected currency (cents / paise / etc.)
+        const smallestUnitAmount = Math.max(100, Math.round(finalAmount * 100));
 
         // 1. Create order on the backend
         const orderRes = await axios.post(
           `${API_BASE}/api/payments/razorpay/create-order`,
           {
-            amount: paiseAmount,
-            currency: "INR", // Razorpay sandbox test accounts use INR base
+            amount: smallestUnitAmount,
+            currency: finalCurrency,
             receipt: `project_${Date.now()}`
           },
           config
@@ -98,8 +112,8 @@ export default function PaymentModal({ projectTitle, price, onClose, onSuccess }
                   razorpay_payment_id: response.razorpay_payment_id,
                   razorpay_order_id: response.razorpay_order_id,
                   razorpay_signature: response.razorpay_signature,
-                  amount: price,
-                  currency: "INR"
+                  amount: finalAmount,
+                  currency: finalCurrency
                 },
                 config
               );
