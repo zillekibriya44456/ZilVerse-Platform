@@ -3,6 +3,7 @@ import { API_BASE } from "@/utils/api";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Script from "next/script";
 import axios from "axios";
 import styles from "./services.module.css";
 import { useAuth } from "@/context/AuthContext";
@@ -76,22 +77,10 @@ export default function ServicesPage() {
   const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
-    // Dynamically load the Razorpay checkout script
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.async = true;
-    document.body.appendChild(script);
-
     // Fetch DB services
     axios.get(API)
       .then(res => setDbServices(res.data))
       .catch(err => console.error("Failed to load DB services", err));
-
-    return () => {
-      try {
-        document.body.removeChild(script);
-      } catch (e) {}
-    };
   }, []);
 
   // Pre-fill name/email from auth
@@ -157,15 +146,18 @@ export default function ServicesPage() {
   };
 
   const handleServiceCheckout = async () => {
+    console.log("Initiating service checkout payment...");
     if (!purchaseForm.name || !purchaseForm.email || !purchaseForm.requirements) {
-      setToast("Please fill in Name, Email, and Requirements.");
+      alert("⚠️ Validation Failed: Please fill in Name, Email, and Requirements.");
+      setToast("⚠️ Please fill in Name, Email, and Requirements.");
       setTimeout(() => setToast(null), 3000);
       return;
     }
 
     const activeToken = token || localStorage.getItem("zilverse_token") || "";
     if (!activeToken) {
-      setToast("Authentication context lost. Please log in.");
+      alert("⚠️ Auth Context Lost: Please log in to proceed.");
+      setToast("❌ Authentication context lost. Please log in.");
       setTimeout(() => setToast(null), 3500);
       return;
     }
@@ -186,6 +178,8 @@ export default function ServicesPage() {
       const baseTotalInr = baseInrPrice + (baseInrPrice * 0.02);
       const paiseAmount = Math.max(100, Math.round(baseTotalInr * 100));
 
+      console.log(`Creating Razorpay order on backend. baseUSD: ${basePriceUsd}, baseTotalINR: ${baseTotalInr}, paiseAmount: ${paiseAmount}`);
+
       // 1. Create order on the backend
       const orderRes = await axios.post(
         `${API_BASE}/api/payments/razorpay/create-order`,
@@ -198,6 +192,7 @@ export default function ServicesPage() {
       );
 
       const { order_id, amount: orderAmount, currency: orderCurrency } = orderRes.data;
+      console.log(`Backend order created successfully. order_id: ${order_id}`);
 
       // 2. Configure Razorpay checkout options
       const options = {
@@ -209,6 +204,7 @@ export default function ServicesPage() {
         order_id: order_id,
         handler: async function (response: any) {
           setIsSubmitting(true);
+          console.log("Razorpay payment authorized by user. Verifying signature on backend...", response);
           try {
             // 3. Verify Payment on Backend
             await axios.post(
@@ -223,6 +219,8 @@ export default function ServicesPage() {
               config
             );
 
+            console.log("Payment verification successful. Registering quote entry...");
+
             // 4. Create Service Quote with status PAID
             await axios.post(`${API_BASE}/api/services/quote`, {
               serviceTitle: selectedService.title,
@@ -236,11 +234,14 @@ export default function ServicesPage() {
             }, config);
 
             setSelectedService(null);
+            alert("✅ Payment successful! Your service order has been initiated.");
             setToast("✅ Payment successful! Service order has been initiated.");
             setTimeout(() => setToast(null), 5000);
           } catch (err: any) {
             console.error("Verification error:", err);
-            setToast("❌ Verification failed: " + (err.response?.data?.error || err.message));
+            const errMsg = err.response?.data?.error || err.message;
+            alert("❌ Payment verification failed: " + errMsg);
+            setToast("❌ Verification failed: " + errMsg);
             setTimeout(() => setToast(null), 4000);
           } finally {
             setIsSubmitting(false);
@@ -256,22 +257,33 @@ export default function ServicesPage() {
         },
         modal: {
           ondismiss: function () {
+            console.log("Checkout modal dismissed by user.");
             setIsSubmitting(false);
           }
         }
       };
 
       if ((window as any).Razorpay) {
+        console.log("Opening Razorpay checkout frame...");
         const rzp = new (window as any).Razorpay(options);
+        rzp.on('payment.failed', function (resp: any) {
+          console.error("Razorpay Payment failed event:", resp.error);
+          alert(`❌ Payment failed: ${resp.error.description}`);
+          setIsSubmitting(false);
+        });
         rzp.open();
       } else {
+        console.error("window.Razorpay SDK is not loaded.");
+        alert("❌ Razorpay SDK is not loaded. Please wait a moment for the page script to load and try again.");
         setToast("❌ Razorpay SDK not loaded.");
         setTimeout(() => setToast(null), 3000);
         setIsSubmitting(false);
       }
     } catch (err: any) {
-      console.error("Order creation error:", err);
-      setToast("❌ Order initiation failed: " + (err.response?.data?.error || err.message));
+      console.error("Order creation failed on backend:", err);
+      const errMsg = err.response?.data?.error || err.message;
+      alert("❌ Order initiation failed: " + errMsg);
+      setToast("❌ Order initiation failed: " + errMsg);
       setTimeout(() => setToast(null), 4000);
       setIsSubmitting(false);
     }
@@ -279,10 +291,11 @@ export default function ServicesPage() {
 
   return (
     <div className={styles.page}>
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       {/* Toast */}
       {toast && (
         <div style={{
-          position: "fixed", top: 20, right: 20, zIndex: 99999,
+          position: "fixed", top: 20, right: 20, zIndex: 999999,
           background: toast.startsWith("✅") ? "#10b981" : toast.startsWith("❌") ? "#ef4444" : "#0ea5e9",
           color: "#fff", padding: "1rem 1.5rem", borderRadius: "12px",
           fontWeight: 600, fontSize: "0.9rem", boxShadow: "0 8px 30px rgba(0,0,0,0.3)",
