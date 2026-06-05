@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
 import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
-import { MOCK_REELS, REEL_CATEGORIES, ReelCategory } from "@/data/reels";
+import { REEL_CATEGORIES, ReelCategory } from "@/data/reels";
 import styles from "./reels.module.css";
 
 const API = `${API_BASE}/api/reels`;
@@ -23,13 +23,7 @@ function timeAgo(date: string) {
   return Math.floor(s / 86400) + "d ago";
 }
 
-const MOCK_STORIES = [
-  { user: { id: "s1", name: "Zille", avatar: "/avatars/avatar_1.png" }, stories: [{ id: "ms1", mediaUrl: "", mediaType: "image" }] },
-  { user: { id: "s2", name: "Aisha", avatar: "/creators/creator_1.png" }, stories: [{ id: "ms2", mediaUrl: "", mediaType: "image" }] },
-  { user: { id: "s3", name: "Kenji", avatar: "/avatars/hr_1.png" }, stories: [{ id: "ms3", mediaUrl: "", mediaType: "image" }] },
-  { user: { id: "s4", name: "Maria", avatar: "/creators/creator_3.png" }, stories: [{ id: "ms4", mediaUrl: "", mediaType: "image" }] },
-  { user: { id: "s5", name: "Amadi", avatar: "/avatars/avatar_2.png" }, stories: [{ id: "ms5", mediaUrl: "", mediaType: "image" }] },
-];
+const MOCK_STORIES: any[] = [];
 
 export default function InnoReelsPage() {
   const { user } = useAuth();
@@ -37,6 +31,7 @@ export default function InnoReelsPage() {
   const [activeIdx, setActiveIdx] = useState(0);
   const [dbReels, setDbReels] = useState<any[]>([]);
   const [likedSet, setLikedSet] = useState<Set<string>>(new Set());
+  const [savedSet, setSavedSet] = useState<Set<string>>(new Set());
   const [heartBurst, setHeartBurst] = useState<string | null>(null);
   const [floatingEmojis, setFloatingEmojis] = useState<{ id: number; emoji: string }[]>([]);
 
@@ -46,7 +41,10 @@ export default function InnoReelsPage() {
   const [commentText, setCommentText] = useState("");
   const [shareOpen, setShareOpen] = useState<string | null>(null);
   const [donateOpen, setDonateOpen] = useState<any>(null);
-  const [donateAmount, setDonateAmount] = useState(5);
+  const [creatorProfileOpen, setCreatorProfileOpen] = useState<any>(null);
+  const [creatorProfileReels, setCreatorProfileReels] = useState<any[]>([]);
+  const [isFollowingCreator, setIsFollowingCreator] = useState(false);
+  const [donateAmount, setDonateAmount] = useState<number>(5);
   const [donateMsg, setDonateMsg] = useState("");
   const [uploadOpen, setUploadOpen] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
@@ -56,41 +54,46 @@ export default function InnoReelsPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [storyViewer, setStoryViewer] = useState<any>(null);
 
+  const [dashboardOpen, setDashboardOpen] = useState(false);
+  const [creatorStats, setCreatorStats] = useState<any>(null);
+
+  const [dbStories, setDbStories] = useState<any[]>([]);
   const feedRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const videoRefs = useRef<Map<string, HTMLVideoElement>>(new Map());
   const lastTap = useRef<{ time: number; id: string }>({ time: 0, id: "" });
   let emojiId = useRef(0);
 
-  // Fetch reels
+  // Fetch reels and stories
   useEffect(() => {
     (async () => {
       try {
-        const r = await axios.get(`${API}?category=${activeCategory}`);
-        setDbReels(r.data.reels || r.data || []);
-      } catch { setDbReels([]); }
+        const [reelsRes, storiesRes] = await Promise.all([
+          axios.get(`${API}?category=${activeCategory}`),
+          axios.get(`${API}/stories/all`) // Use public or auth endpoint based on login status later
+        ]);
+        setDbReels(reelsRes.data.reels || reelsRes.data || []);
+        setDbStories(storiesRes.data || []);
+      } catch { 
+        setDbReels([]); 
+        setDbStories([]);
+      }
     })();
   }, [activeCategory]);
 
   // Format reels
   const allReels = (() => {
-    const db = dbReels.map((r: any) => ({
-      id: r.id, videoUrl: `${API_BASE}${r.videoUrl}`, title: r.title,
+    let db = dbReels.map((r: any) => ({
+      id: r.id, videoUrl: r.videoUrl.startsWith('http') ? r.videoUrl : `${API_BASE}${r.videoUrl}`, title: r.title,
       description: r.description || "", creator: r.creator?.name || "Anonymous",
-      creatorId: r.creatorId || r.creator?.id, handle: "@user",
+      creatorId: r.creatorId || r.creator?.id, handle: "@" + (r.creator?.name || "user").replace(/\s+/g,'').toLowerCase(),
       avatar: r.creator?.avatar || "/avatars/avatar_1.png", verified: r.creator?.verified,
       likes: r.likes || 0, comments: r.comments || 0, shares: r.shares || 0,
       views: r.views || 0, saves: r.saves || 0,
       category: r.category, tags: (r.tags || "").split(",").filter(Boolean),
       gradient: "linear-gradient(135deg, #18181b, #000)", icon: "🎥", isReal: true,
     }));
-    const mock = MOCK_REELS.map((r: any) => ({
-      ...r, creatorId: "mock", verified: false, views: Math.floor(Math.random() * 50000),
-      saves: Math.floor(Math.random() * 500), isReal: false,
-    }));
-    const combined: any[] = [...db, ...mock];
-    if (activeCategory === "For You") return combined;
-    return combined.filter((r: any) => r.category === activeCategory);
+    return db;
   })();
 
   // Autoplay on scroll
@@ -136,6 +139,23 @@ export default function InnoReelsPage() {
     }
   };
 
+  // Toggle Save
+  const toggleSave = async (reelId: string) => {
+    const token = localStorage.getItem("zilverse_token");
+    const wasSaved = savedSet.has(reelId);
+    setSavedSet(prev => {
+      const next = new Set(prev);
+      wasSaved ? next.delete(reelId) : next.add(reelId);
+      return next;
+    });
+    if (token) {
+      try { await axios.post(`${API}/${reelId}/save`, {}, { headers: { Authorization: `Bearer ${token}` } }); }
+      catch { setSavedSet(prev => { const next = new Set(prev); wasSaved ? next.add(reelId) : next.delete(reelId); return next; }); }
+    } else {
+        alert("Login required to save");
+    }
+  };
+
   // Comments
   const openComments = async (reelId: string) => {
     setCommentsOpen(reelId);
@@ -154,10 +174,19 @@ export default function InnoReelsPage() {
   };
 
   // Share
-  const copyLink = (reelId: string) => {
+  const recordShare = async (reelId: string) => {
+    try {
+      await axios.post(`${API}/${reelId}/share`);
+    } catch (e) {
+      console.error("Failed to record share");
+    }
+  };
+
+  const copyLink = async (reelId: string) => {
     navigator.clipboard.writeText(`${window.location.origin}/reels?id=${reelId}`);
     setShareOpen(null);
-    alert("Link copied!");
+    await recordShare(reelId);
+    alert("Link copied! Share recorded.");
   };
 
   // Upload
@@ -183,53 +212,156 @@ export default function InnoReelsPage() {
     finally { setIsUploading(false); }
   };
 
-  // Donate
+  const loadRazorpay = () => new Promise((resolve) => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+
   const handleDonate = async () => {
     if (!donateOpen) return;
     const token = localStorage.getItem("zilverse_token");
+    if (!token) return alert("Login required to donate");
+
+    const res = await loadRazorpay();
+    if (!res) return alert("Failed to load Razorpay SDK");
+
     try {
-      await axios.post(`${API}/donate`, {
-        receiverId: donateOpen.creatorId, reelId: donateOpen.id,
-        amount: donateAmount, message: donateMsg, currency: "USD"
+      const orderData = await axios.post(`${API_BASE}/api/payments/razorpay/create-order`, {
+        amount: donateAmount * 100, // typically paise/cents
+        currency: "USD",
+        receipt: `tip_${Date.now()}`
       }, { headers: { Authorization: `Bearer ${token}` } });
-      setDonateOpen(null); setDonateMsg("");
-      alert("Donation sent! 🎉");
-    } catch { alert("Login required to donate"); }
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_live_Sxuhmk2KLWNZx5",
+        amount: orderData.data.amount,
+        currency: orderData.data.currency,
+        name: "ZilVerse InnoReels",
+        description: `Tip for ${donateOpen.creator || 'Creator'}`,
+        order_id: orderData.data.order_id,
+        handler: async function (response: any) {
+          try {
+            await axios.post(`${API_BASE}/api/payments/razorpay/verify-payment`, {
+              ...response,
+              amount: donateAmount,
+              currency: "USD"
+            }, { headers: { Authorization: `Bearer ${token}` } });
+            
+            await axios.post(`${API}/donate`, {
+              receiverId: donateOpen.creatorId, reelId: donateOpen.id,
+              amount: donateAmount, message: donateMsg, currency: "USD"
+            }, { headers: { Authorization: `Bearer ${token}` } });
+            
+            setDonateOpen(null); setDonateMsg("");
+            alert("Donation sent successfully! 🎉");
+          } catch (e) {
+            alert("Payment verification failed");
+          }
+        },
+        theme: { color: "#a855f7" }
+      };
+
+      const paymentObject = new (window as any).Razorpay(options);
+      paymentObject.open();
+    } catch (e: any) {
+      alert("Failed to initiate payment: " + (e.response?.data?.error || e.message));
+    }
+  };
+
+  // Open Creator Dashboard
+  const openDashboard = async () => {
+    if (!user) return alert("Please login first.");
+    setDashboardOpen(true);
+    try {
+      const r = await axios.get(`${API}/creator/${user.id}`);
+      setCreatorStats(r.data);
+    } catch (error) {
+      console.error("Failed to load dashboard stats", error);
+    }
+  };
+
+  const openCreatorProfile = async (creatorId: string) => {
+    if (!creatorId) return;
+    const token = localStorage.getItem("zilverse_token");
+    try {
+      const r = await axios.get(`${API}/creator/${creatorId}`);
+      setCreatorProfileOpen(r.data);
+      
+      const r2 = await axios.get(`${API}/creator/${creatorId}/reels`);
+      setCreatorProfileReels(r2.data);
+
+      if (token) {
+        const r3 = await axios.get(`${API}/follow/${creatorId}/status`, { headers: { Authorization: `Bearer ${token}` } });
+        setIsFollowingCreator(r3.data.following);
+      }
+    } catch (e) {
+      console.error("Failed to load creator profile", e);
+    }
+  };
+
+  const toggleFollowCreator = async () => {
+    const token = localStorage.getItem("zilverse_token");
+    if (!token) return alert("Please login to follow creators.");
+    try {
+      const r = await axios.post(`${API}/follow/${creatorProfileOpen.id}`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      setIsFollowingCreator(r.data.following);
+      setCreatorProfileOpen((prev: any) => ({
+        ...prev,
+        _count: {
+          ...prev._count,
+          followers: prev._count.followers + (r.data.following ? 1 : -1)
+        }
+      }));
+    } catch (e) {
+      console.error("Failed to toggle follow", e);
+    }
   };
 
   return (
     <div className={styles.container}>
-      {/* Top Bar */}
-      <div className={styles.topBar}>
-        <div className={styles.topBarTitle}>InnoReels</div>
-        <div className={styles.topBarActions}>
-          <button className={styles.iconBtn} onClick={() => setUploadOpen(true)}>📸</button>
-          <button className={styles.iconBtn} onClick={() => window.history.back()}>✕</button>
-        </div>
-      </div>
-
-      {/* Stories Bar */}
-      <div className={styles.storiesBar}>
-        <div className={styles.storyItem} onClick={() => setUploadOpen(true)}>
-          <div className={styles.storyAdd}>+</div>
-          <span className={styles.storyName}>Your Story</span>
-        </div>
-        {MOCK_STORIES.map(s => (
-          <div key={s.user.id} className={styles.storyItem} onClick={() => setStoryViewer(s)}>
-            <div className={styles.storyRing}>
-              <img src={s.user.avatar} alt={s.user.name} className={styles.storyAvatar} />
-            </div>
-            <span className={styles.storyName}>{s.user.name}</span>
+      {/* Top Nav Area */}
+      <div className={styles.navArea}>
+        <div className={styles.topBar}>
+          <div className={styles.topBarTitle}>InnoReels</div>
+          <div className={styles.topBarActions}>
+            <button className={styles.iconBtn} onClick={openDashboard} title="Creator Dashboard">📊</button>
+            <button className={styles.iconBtn} onClick={() => setUploadOpen(true)} title="Upload Reel">📸</button>
+            <button className={styles.iconBtn} onClick={() => window.history.back()} title="Go Back">✕</button>
           </div>
-        ))}
-      </div>
+        </div>
 
-      {/* Category Pills */}
-      <div className={styles.categoryBar}>
-        {REEL_CATEGORIES.map(cat => (
-          <button key={cat} onClick={() => { setActiveCategory(cat); setActiveIdx(0); }}
-            className={activeCategory === cat ? styles.catPillActive : styles.catPill}>{cat}</button>
-        ))}
+        {/* Stories Bar */}
+        <div className={styles.storiesBar}>
+          <div className={styles.storyItem} onClick={() => setUploadOpen(true)}>
+            <div className={styles.storyAdd}>+</div>
+            <span className={styles.storyName}>Your Story</span>
+          </div>
+          {dbStories.map(s => (
+            <div key={s.user.id} className={styles.storyItem} onClick={() => setStoryViewer(s)}>
+              <div className={styles.storyRing}>
+                <Image src={s.user.avatar} alt={s.user.name} className={styles.storyAvatar} width={40} height={40} />
+              </div>
+              <span className={styles.storyName}>{s.user.name}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Category Pills */}
+        <div className={styles.categoryBar}>
+          <button 
+            onClick={() => { setActiveCategory("Trending" as any); setActiveIdx(0); }}
+            className={activeCategory === "Trending" ? styles.catPillActive : styles.catPill}
+          >
+            🔥 Trending
+          </button>
+          {REEL_CATEGORIES.map(cat => (
+            <button key={cat} onClick={() => { setActiveCategory(cat); setActiveIdx(0); }}
+              className={activeCategory === cat ? styles.catPillActive : styles.catPill}>{cat}</button>
+          ))}
+        </div>
       </div>
 
       {/* Feed */}
@@ -242,87 +374,100 @@ export default function InnoReelsPage() {
           </div>
         )}
         {allReels.map((reel: any, idx: number) => (
-          <div key={reel.id + idx} className={styles.reelSlide}
-            onClick={() => handleDoubleTap(reel.id, reel.creatorId)}>
-
-            {/* Video / Gradient */}
-            {reel.isReal && reel.videoUrl ? (
-              <div className={styles.videoWrapper}>
-                <video src={reel.videoUrl} loop playsInline muted={idx !== activeIdx}
-                  autoPlay={idx === activeIdx}
-                  ref={el => { if (el) videoRefs.current.set(reel.id, el); }} />
-              </div>
-            ) : (
-              <div className={styles.gradientPlaceholder} style={{ background: reel.gradient }}>
-                <div className={styles.placeholderIcon}>{reel.icon}</div>
-                <div className={styles.playBtn}>▶</div>
-              </div>
-            )}
-
-            {/* Heart Burst */}
-            {heartBurst === reel.id && (
-              <div className={styles.heartBurst}><span className={styles.heartIcon}>❤️</span></div>
-            )}
-
-            {/* Floating Emojis */}
-            {floatingEmojis.map(e => (
-              <div key={e.id} className={styles.floatingEmoji} style={{ right: 15 + Math.random() * 40 }}>{e.emoji}</div>
-            ))}
-
-            {/* Right Sidebar */}
-            <div className={styles.sidebar}>
-              {/* Creator Avatar */}
-              <div className={styles.sideAction}>
-                <img src={reel.avatar || "/avatars/avatar_1.png"} alt="" className={styles.creatorAvatar} />
-                <div className={styles.followBadge}>+</div>
-              </div>
-
-              {/* Like */}
-              <div className={styles.sideAction} onClick={e => { e.stopPropagation(); toggleLike(reel.id); }}>
-                <div className={likedSet.has(reel.id) ? styles.actionIconLiked : styles.actionIcon}>
-                  {likedSet.has(reel.id) ? "❤️" : "🤍"}
-                </div>
-                <span className={styles.actionCount}>{formatCount(reel.likes + (likedSet.has(reel.id) ? 1 : 0))}</span>
-              </div>
-
-              {/* Comment */}
-              <div className={styles.sideAction} onClick={e => { e.stopPropagation(); openComments(reel.id); }}>
-                <div className={styles.actionIcon}>💬</div>
-                <span className={styles.actionCount}>{formatCount(reel.comments)}</span>
-              </div>
-
-              {/* Share */}
-              <div className={styles.sideAction} onClick={e => { e.stopPropagation(); setShareOpen(reel.id); }}>
-                <div className={styles.actionIcon}>↗️</div>
-                <span className={styles.actionCount}>{formatCount(reel.shares)}</span>
-              </div>
-
-              {/* Donate */}
-              <div className={styles.sideAction} onClick={e => { e.stopPropagation(); setDonateOpen(reel); }}>
-                <div className={styles.actionIcon}>💎</div>
-                <span className={styles.actionCount}>Tip</span>
-              </div>
-
-              {/* Save */}
-              <div className={styles.sideAction} onClick={e => e.stopPropagation()}>
-                <div className={styles.actionIcon}>🔖</div>
-                <span className={styles.actionCount}>{formatCount(reel.saves || 0)}</span>
-              </div>
+          <div key={reel.id + idx} className={styles.reelSlide} onClick={() => handleDoubleTap(reel.id, reel.creatorId)}>
+            
+            {/* Cinematic Background Blur */}
+            <div className={styles.reelBackgroundBlurred} 
+                 style={{ backgroundImage: `url(${reel.thumbnailUrl || '/assets/default-bg.png'})`, background: reel.gradient || '#0f0f11' }}>
             </div>
 
-            {/* Bottom Info */}
-            <div className={styles.bottomInfo}>
-              <div className={styles.creatorRow}>
-                <span className={styles.creatorName}>{reel.creator}</span>
-                {reel.verified && <span className={styles.verifiedBadge}>✅</span>}
-                <span className={styles.followTag}>Follow</span>
-              </div>
-              <p className={styles.caption}>{reel.title} — {reel.description}</p>
-              <div className={styles.hashTags}>
-                {reel.tags?.map((t: string, i: number) => (
-                  <span key={i} className={styles.hashTag}>#{t.replace("#","")}</span>
+            <div className={styles.reelContent}>
+              
+              {/* Video Wrapper */}
+              <div className={styles.videoWrapper}>
+                {reel.isReal && reel.videoUrl ? (
+                  <video src={reel.videoUrl} loop playsInline muted={idx !== activeIdx}
+                    autoPlay={idx === activeIdx} className={styles.videoElement}
+                    ref={el => { if (el) videoRefs.current.set(reel.id, el); }} />
+                ) : (
+                  <div className={styles.gradientPlaceholder} style={{ background: reel.gradient }}>
+                    <div className={styles.placeholderIcon}>{reel.icon}</div>
+                    <div className={styles.playBtn}>▶</div>
+                  </div>
+                )}
+
+                {/* Heart Burst */}
+                {heartBurst === reel.id && (
+                  <div className={styles.heartBurst}><span className={styles.heartIcon}>❤️</span></div>
+                )}
+
+                {/* Floating Emojis */}
+                {floatingEmojis.map(e => (
+                  <div key={e.id} className={styles.floatingEmoji} style={{ right: 15 + Math.random() * 40 }}>{e.emoji}</div>
                 ))}
+
+                {/* Bottom Info inside Video Wrapper */}
+                <div className={styles.bottomInfo} onClick={(e) => e.stopPropagation()}>
+                  <div className={styles.creatorRow} onClick={() => openCreatorProfile(reel.creatorId)}>
+                    <img src={reel.avatar || "/avatars/avatar_1.png"} alt="" className={styles.creatorAvatarSmall} style={{cursor:'pointer'}} />
+                    <div className={styles.creatorName} style={{cursor:'pointer'}}>{reel.creator || reel.handle}</div>
+                    {reel.verified && <span className={styles.verifiedBadge}>✅</span>}
+                  </div>
+                  <div className={styles.caption}>{reel.title}</div>
+                  <div className={styles.descriptionText}>{reel.description}</div>
+                  <div className={styles.hashTags}>
+                    {reel.tags.map((t: string) => <span key={t} className={styles.hashTag}>{t}</span>)}
+                  </div>
+                </div>
+
+                <div className={styles.videoProgress}>
+                  <div className={styles.videoProgressFill} style={{ width: idx === activeIdx ? '100%' : '0%' }}></div>
+                </div>
               </div>
+
+              {/* Right Sidebar Actions */}
+              <div className={styles.sidebar}>
+                {/* Creator Avatar */}
+                <div className={styles.creatorAvatarWrapper} onClick={e => { e.stopPropagation(); openCreatorProfile(reel.creatorId); }}>
+                  <img src={reel.avatar || "/avatars/avatar_1.png"} alt="" className={styles.creatorAvatarLarge} />
+                  <div className={styles.followBadge}>+</div>
+                </div>
+
+                {/* Like */}
+                <div className={styles.sideAction} onClick={e => { e.stopPropagation(); toggleLike(reel.id); }}>
+                  <div className={likedSet.has(reel.id) ? styles.actionIconLiked : styles.actionIcon}>
+                    {likedSet.has(reel.id) ? '❤️' : '🤍'}
+                  </div>
+                  <span className={styles.actionCount}>{formatCount(reel.likes + (likedSet.has(reel.id) ? 1 : 0))}</span>
+                </div>
+
+                {/* Comment */}
+                <div className={styles.sideAction} onClick={e => { e.stopPropagation(); openComments(reel.id); }}>
+                  <div className={styles.actionIcon}>💬</div>
+                  <span className={styles.actionCount}>{formatCount(reel.comments)}</span>
+                </div>
+
+                {/* Share */}
+                <div className={styles.sideAction} onClick={e => { e.stopPropagation(); setShareOpen(reel.id); }}>
+                  <div className={styles.actionIcon}>↗️</div>
+                  <span className={styles.actionCount}>{formatCount(reel.shares)}</span>
+                </div>
+
+                {/* Save */}
+                <div className={styles.sideAction} onClick={(e) => { e.stopPropagation(); toggleSave(reel.id); }}>
+                  <div className={savedSet.has(reel.id) ? styles.actionIconLiked : styles.actionIcon}>
+                    {savedSet.has(reel.id) ? '🔖' : '📑'}
+                  </div>
+                  <span className={styles.actionCount}>{formatCount(reel.saves + (savedSet.has(reel.id) ? 1 : 0))}</span>
+                </div>
+
+                {/* Donate */}
+                <div className={styles.sideAction} onClick={e => { e.stopPropagation(); setDonateOpen(reel); }}>
+                  <div className={styles.actionIconDiamond}>💎</div>
+                  <span className={styles.actionCount}>Tip</span>
+                </div>
+              </div>
+
             </div>
           </div>
         ))}
@@ -330,11 +475,11 @@ export default function InnoReelsPage() {
 
       {/* ── Comments Drawer ── */}
       {commentsOpen && (
-        <div className={styles.commentsOverlay} onClick={() => setCommentsOpen(null)}>
-          <div className={styles.commentsDrawer} onClick={e => e.stopPropagation()}>
-            <div className={styles.commentsHeader}>
-              <span className={styles.commentsTitle}>Comments ({comments.length})</span>
-              <button className={styles.iconBtn} onClick={() => setCommentsOpen(null)} style={{width:32,height:32,fontSize:'0.9rem'}}>✕</button>
+        <div className={styles.overlay} onClick={() => setCommentsOpen(null)}>
+          <div className={styles.sheet} onClick={e => e.stopPropagation()}>
+            <div className={styles.sheetHeader}>
+              <span className={styles.sheetTitle}>Comments ({comments.length})</span>
+              <button className={styles.closeSheetBtn} onClick={() => setCommentsOpen(null)}>✕</button>
             </div>
             <div className={styles.commentsList}>
               {comments.length === 0 && <p style={{color:'#555',textAlign:'center',padding:'2rem 0'}}>No comments yet. Be the first!</p>}
@@ -353,8 +498,8 @@ export default function InnoReelsPage() {
                 </div>
               ))}
             </div>
-            <div className={styles.commentInput}>
-              <input value={commentText} onChange={e => setCommentText(e.target.value)}
+            <div className={styles.commentInputArea}>
+              <input type="text" className={styles.commentInput} value={commentText} onChange={e => setCommentText(e.target.value)}
                 placeholder="Add a comment..." onKeyDown={e => e.key === 'Enter' && postComment()} />
               <button className={styles.commentSendBtn} onClick={postComment}>➤</button>
             </div>
@@ -364,23 +509,26 @@ export default function InnoReelsPage() {
 
       {/* ── Share Sheet ── */}
       {shareOpen && (
-        <div className={styles.shareOverlay} onClick={() => setShareOpen(null)}>
-          <div className={styles.shareSheet} onClick={e => e.stopPropagation()}>
-            <div className={styles.shareTitle}>Share Reel</div>
+        <div className={styles.overlay} onClick={() => setShareOpen(null)}>
+          <div className={styles.sheet} onClick={e => e.stopPropagation()}>
+            <div className={styles.sheetHeader}>
+              <div className={styles.sheetTitle}>Share Reel</div>
+              <button className={styles.closeSheetBtn} onClick={() => setShareOpen(null)}>✕</button>
+            </div>
             <div className={styles.shareGrid}>
               <div className={styles.shareItem} onClick={() => copyLink(shareOpen)}>
                 <div className={styles.shareIcon} style={{background:'rgba(255,255,255,0.1)'}}>🔗</div>
                 <span className={styles.shareLabel}>Copy Link</span>
               </div>
-              <div className={styles.shareItem} onClick={() => { window.open(`https://wa.me/?text=${encodeURIComponent(window.location.origin+'/reels?id='+shareOpen)}`); setShareOpen(null); }}>
+              <div className={styles.shareItem} onClick={() => { window.open(`https://wa.me/?text=${encodeURIComponent(window.location.origin+'/reels?id='+shareOpen)}`); recordShare(shareOpen); setShareOpen(null); }}>
                 <div className={styles.shareIcon} style={{background:'#25d366'}}>💬</div>
                 <span className={styles.shareLabel}>WhatsApp</span>
               </div>
-              <div className={styles.shareItem} onClick={() => { window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.origin+'/reels?id='+shareOpen)}&text=Check this out on ZilVerse!`); setShareOpen(null); }}>
+              <div className={styles.shareItem} onClick={() => { window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.origin+'/reels?id='+shareOpen)}&text=Check this out on ZilVerse!`); recordShare(shareOpen); setShareOpen(null); }}>
                 <div className={styles.shareIcon} style={{background:'#1da1f2'}}>🐦</div>
                 <span className={styles.shareLabel}>X / Twitter</span>
               </div>
-              <div className={styles.shareItem} onClick={() => { window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.origin+'/reels?id='+shareOpen)}`); setShareOpen(null); }}>
+              <div className={styles.shareItem} onClick={() => { window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.origin+'/reels?id='+shareOpen)}`); recordShare(shareOpen); setShareOpen(null); }}>
                 <div className={styles.shareIcon} style={{background:'#0a66c2'}}>💼</div>
                 <span className={styles.shareLabel}>LinkedIn</span>
               </div>
@@ -391,9 +539,12 @@ export default function InnoReelsPage() {
 
       {/* ── Donate Modal ── */}
       {donateOpen && (
-        <div className={styles.donateOverlay} onClick={() => setDonateOpen(null)}>
-          <div className={styles.donateSheet} onClick={e => e.stopPropagation()}>
-            <div className={styles.donateTitle}>💎 Support {donateOpen.creator}</div>
+        <div className={styles.overlay} onClick={() => setDonateOpen(null)}>
+          <div className={styles.sheet} onClick={e => e.stopPropagation()} style={{ maxWidth: '420px' }}>
+            <div className={styles.sheetHeader}>
+              <div className={styles.sheetTitle}>Support {donateOpen.creator} 💎</div>
+              <button className={styles.closeSheetBtn} onClick={() => setDonateOpen(null)}>✕</button>
+            </div>
             <div className={styles.donateSubtitle}>Show your love with a donation</div>
             <div className={styles.donateAmounts}>
               {[2, 5, 10, 25, 50, 100].map(a => (
@@ -412,8 +563,8 @@ export default function InnoReelsPage() {
 
       {/* ── Upload Modal ── */}
       {uploadOpen && (
-        <div className={styles.uploadOverlay} onClick={() => setUploadOpen(false)}>
-          <div className={styles.uploadModal} onClick={e => e.stopPropagation()}>
+        <div className={styles.overlay} onClick={() => setUploadOpen(false)}>
+          <div className={styles.sheet} onClick={e => e.stopPropagation()}>
             <div className={styles.uploadTitle}>📸 Create New Reel</div>
             <input type="file" accept="video/*" ref={fileRef} style={{display:'none'}}
               onChange={e => e.target.files?.[0] && setUploadFile(e.target.files[0])} />
@@ -450,7 +601,7 @@ export default function InnoReelsPage() {
             ))}
           </div>
           <div className={styles.storyUserInfo}>
-            <img src={storyViewer.user.avatar} alt="" className={styles.storyUserAvatar} />
+            <Image src={storyViewer.user.avatar} alt="" className={styles.storyUserAvatar} width={40} height={40} />
             <div>
               <div className={styles.storyUserName}>{storyViewer.user.name}</div>
               <div className={styles.storyTimeAgo}>2h ago</div>
@@ -468,6 +619,121 @@ export default function InnoReelsPage() {
             <div style={{fontSize:'4rem'}}>📸</div>
             <div style={{color:'#fff',fontWeight:700,fontSize:'1.1rem'}}>{storyViewer.user.name}&apos;s Story</div>
             <div style={{color:'rgba(255,255,255,0.5)',fontSize:'0.85rem'}}>Tap to view next</div>
+          </div>
+        </div>
+      )}
+      {/* ── Creator Profile Modal ── */}
+      {creatorProfileOpen && (
+        <div className={styles.overlay} onClick={() => setCreatorProfileOpen(null)}>
+          <div className={styles.sheet} onClick={e => e.stopPropagation()} style={{maxWidth: '600px', padding: 0}}>
+            {/* Header / Cover */}
+            <div style={{height: '120px', background: 'linear-gradient(135deg, #a855f7, #0ea5e9)', position: 'relative'}}>
+              <button className={styles.closeSheetBtn} onClick={() => setCreatorProfileOpen(null)} 
+                style={{position: 'absolute', top: '16px', right: '16px', background: 'rgba(0,0,0,0.5)'}}>✕</button>
+            </div>
+            
+            <div style={{padding: '0 1.5rem 1.5rem', position: 'relative'}}>
+              {/* Avatar & Follow Btn */}
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '-40px', marginBottom: '1rem'}}>
+                <img src={creatorProfileOpen.avatar || "/avatars/avatar_1.png"} alt="" 
+                  style={{width: '90px', height: '90px', borderRadius: '50%', border: '4px solid #18181b', objectFit: 'cover'}} />
+                
+                <button onClick={toggleFollowCreator} style={{
+                  padding: '0.6rem 1.5rem', borderRadius: '99px', fontWeight: 800, fontSize: '0.95rem', cursor: 'pointer',
+                  border: isFollowingCreator ? '1px solid rgba(255,255,255,0.3)' : 'none',
+                  background: isFollowingCreator ? 'transparent' : '#fff',
+                  color: isFollowingCreator ? '#fff' : '#000'
+                }}>
+                  {isFollowingCreator ? 'Following' : 'Follow'}
+                </button>
+              </div>
+
+              {/* Info */}
+              <div style={{marginBottom: '1rem'}}>
+                <h2 style={{margin: 0, color: '#fff', fontSize: '1.4rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+                  {creatorProfileOpen.name || 'Anonymous'}
+                  {creatorProfileOpen.verified && <span style={{fontSize: '1rem'}}>✅</span>}
+                </h2>
+                <p style={{margin: '0.2rem 0', color: '#a1a1aa', fontSize: '0.9rem'}}>@{creatorProfileOpen.name?.replace(/\s+/g,'').toLowerCase() || 'user'}</p>
+                <p style={{marginTop: '0.5rem', color: '#e4e4e7', fontSize: '0.95rem', lineHeight: 1.5}}>{creatorProfileOpen.bio || 'Building the future of innovation.'}</p>
+              </div>
+
+              {/* Stats */}
+              <div style={{display: 'flex', gap: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)', borderBottom: '1px solid rgba(255,255,255,0.1)', padding: '1rem 0', marginBottom: '1.5rem'}}>
+                <div style={{textAlign: 'center'}}><strong style={{color:'#fff', display:'block', fontSize:'1.1rem'}}>{formatCount(creatorProfileOpen._count?.following || 0)}</strong><span style={{color:'#a1a1aa', fontSize:'0.8rem'}}>Following</span></div>
+                <div style={{textAlign: 'center'}}><strong style={{color:'#fff', display:'block', fontSize:'1.1rem'}}>{formatCount(creatorProfileOpen._count?.followers || 0)}</strong><span style={{color:'#a1a1aa', fontSize:'0.8rem'}}>Followers</span></div>
+                <div style={{textAlign: 'center'}}><strong style={{color:'#fff', display:'block', fontSize:'1.1rem'}}>{formatCount(creatorProfileOpen.totalLikes || 0)}</strong><span style={{color:'#a1a1aa', fontSize:'0.8rem'}}>Likes</span></div>
+                <div style={{textAlign: 'center'}}><strong style={{color:'#fff', display:'block', fontSize:'1.1rem'}}>{formatCount(creatorProfileOpen.totalViews || 0)}</strong><span style={{color:'#a1a1aa', fontSize:'0.8rem'}}>Views</span></div>
+              </div>
+
+              {/* Grid of Reels */}
+              <h3 style={{color: '#fff', fontSize: '1rem', marginBottom: '1rem'}}>Reels</h3>
+              <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2px', maxHeight: '40vh', overflowY: 'auto'}}>
+                {creatorProfileReels.map((r: any) => (
+                  <div key={r.id} style={{aspectRatio: '9/16', background: '#27272a', position: 'relative', cursor: 'pointer'}}>
+                    <video src={r.videoUrl} style={{width: '100%', height: '100%', objectFit: 'cover'}} />
+                    <div style={{position: 'absolute', bottom: 4, left: 6, color: '#fff', fontSize: '0.75rem', fontWeight: 600, textShadow: '0 1px 2px #000'}}>
+                      ▶ {formatCount(r.views)}
+                    </div>
+                  </div>
+                ))}
+                {creatorProfileReels.length === 0 && <p style={{gridColumn: '1 / -1', color: '#71717a', textAlign: 'center', padding: '2rem 0'}}>No reels yet.</p>}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Creator Dashboard ── */}
+      {dashboardOpen && (
+        <div className={styles.overlay} onClick={() => setDashboardOpen(false)}>
+          <div className={styles.sheet} onClick={e => e.stopPropagation()} style={{maxWidth: '600px'}}>
+            <div className={styles.uploadTitle}>📊 Creator Dashboard</div>
+            
+            {creatorStats ? (
+              <div>
+                <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem'}}>
+                  <div style={{background: 'rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '16px', textAlign: 'center'}}>
+                    <div style={{fontSize: '2rem', fontWeight: '800', color: '#a855f7'}}>{formatCount(creatorStats.totalViews || 0)}</div>
+                    <div style={{fontSize: '0.8rem', color: '#888'}}>Total Views</div>
+                  </div>
+                  <div style={{background: 'rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '16px', textAlign: 'center'}}>
+                    <div style={{fontSize: '2rem', fontWeight: '800', color: '#10b981'}}>${creatorStats.totalDonations?.toFixed(2) || "0.00"}</div>
+                    <div style={{fontSize: '0.8rem', color: '#888'}}>Earnings</div>
+                  </div>
+                  <div style={{background: 'rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '16px', textAlign: 'center'}}>
+                    <div style={{fontSize: '2rem', fontWeight: '800', color: '#0ea5e9'}}>{formatCount(creatorStats._count?.followers || 0)}</div>
+                    <div style={{fontSize: '0.8rem', color: '#888'}}>Followers</div>
+                  </div>
+                  <div style={{background: 'rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '16px', textAlign: 'center'}}>
+                    <div style={{fontSize: '2rem', fontWeight: '800', color: '#f59e0b'}}>{formatCount(creatorStats.totalLikes || 0)}</div>
+                    <div style={{fontSize: '0.8rem', color: '#888'}}>Total Likes</div>
+                  </div>
+                </div>
+
+                <div style={{background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '1rem'}}>
+                  <h4 style={{marginTop: 0, marginBottom: '1rem', color: '#ccc'}}>Recent Performance</h4>
+                  <div style={{display: 'flex', justifyContent: 'space-between', color: '#aaa', fontSize: '0.9rem', marginBottom: '0.5rem'}}>
+                    <span>Reels Published</span>
+                    <strong style={{color: '#fff'}}>{creatorStats._count?.reels || 0}</strong>
+                  </div>
+                  <div style={{display: 'flex', justifyContent: 'space-between', color: '#aaa', fontSize: '0.9rem', marginBottom: '0.5rem'}}>
+                    <span>Shares Generated</span>
+                    <strong style={{color: '#fff'}}>{creatorStats.totalShares || 0}</strong>
+                  </div>
+                  <div style={{display: 'flex', justifyContent: 'space-between', color: '#aaa', fontSize: '0.9rem'}}>
+                    <span>Donations Received</span>
+                    <strong style={{color: '#fff'}}>{creatorStats.donationCount || 0}</strong>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div style={{textAlign: 'center', color: '#888', padding: '2rem'}}>Loading analytics...</div>
+            )}
+            
+            <button className={styles.publishBtn} onClick={() => setDashboardOpen(false)} style={{marginTop: '1.5rem'}}>
+              Close Dashboard
+            </button>
           </div>
         </div>
       )}

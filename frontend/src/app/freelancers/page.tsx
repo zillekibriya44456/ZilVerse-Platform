@@ -1,7 +1,7 @@
 "use client";
 import { API_BASE } from "@/utils/api";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import styles from "./freelancers.module.css";
 import { useAuth } from "@/context/AuthContext";
@@ -96,11 +96,12 @@ export default function FreelancersPage() {
 
   const freelancers = [...formattedDbFreelancers, ...MOCK_FREELANCERS];
 
-  // Filter listings by search criteria
-  const filteredFreelancers = freelancers.filter(f => {
-    const term = searchTerm.toLowerCase();
-    return f.name.toLowerCase().includes(term) || f.role.toLowerCase().includes(term) || f.skills.some(s => s.toLowerCase().includes(term));
-  });
+  const filteredFreelancers = useMemo(() => {
+    return freelancers.filter(f => {
+      const term = searchTerm.toLowerCase();
+      return f.name.toLowerCase().includes(term) || f.role.toLowerCase().includes(term) || f.skills.some((s: string) => s.toLowerCase().includes(term));
+    });
+  }, [freelancers, searchTerm]);
 
   const handleHireClick = (freelancer: FreelancerItem) => {
     const activeToken = token || localStorage.getItem("zilverse_token") || "";

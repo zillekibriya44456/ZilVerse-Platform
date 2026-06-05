@@ -1,8 +1,7 @@
 import { Router, Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../lib/prisma';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 const INITIAL_TESTIMONIALS = [
   { stars: 5, text: "Got my e-commerce site built within a week! The team was professional and delivered exactly what I needed.", name: "Rahul Kapoor", role: "Buyer · Retail Business Owner, Delhi", initials: "RK", color: "#3b82f6" },
@@ -13,11 +12,21 @@ const INITIAL_TESTIMONIALS = [
   { stars: 5, text: "The job board helped me find a remote internship in under a week. The interface is clean and applying is super simple!", name: "Karan Patel", role: "Jobseeker · IT Graduate, Mumbai", initials: "KP", color: "#ec4899" },
 ];
 
+let cachedTestimonials: any = null;
+let lastCacheTime = 0;
+const CACHE_TTL = 1000 * 60 * 5; // 5 minutes
+
 // GET testimonials
 router.get('/', async (req: Request, res: Response): Promise<any> => {
   try {
+    const now = Date.now();
+    if (cachedTestimonials && now - lastCacheTime < CACHE_TTL) {
+      return res.json(cachedTestimonials);
+    }
+
     let testimonials = await prisma.testimonial.findMany({
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
+      take: 20 // Limit to avoid massive payload
     });
 
     if (testimonials.length === 0) {
@@ -25,9 +34,13 @@ router.get('/', async (req: Request, res: Response): Promise<any> => {
         data: INITIAL_TESTIMONIALS
       });
       testimonials = await prisma.testimonial.findMany({
-        orderBy: { createdAt: 'desc' }
+        orderBy: { createdAt: 'desc' },
+        take: 20
       });
     }
+
+    cachedTestimonials = testimonials;
+    lastCacheTime = now;
 
     res.json(testimonials);
   } catch (error) {
@@ -65,6 +78,9 @@ router.post('/', async (req: Request, res: Response): Promise<any> => {
         color: randomColor
       }
     });
+
+    // Invalidate cache
+    cachedTestimonials = null;
 
     res.status(201).json(newTestimonial);
   } catch (error) {

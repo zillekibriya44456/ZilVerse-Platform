@@ -1,11 +1,12 @@
+import prisma from '../lib/prisma';
 import express, { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+
 import { authenticateToken } from '../middleware/auth';
 import axios from 'axios';
 import vm from 'vm';
 
 const router = express.Router();
-const prisma = new PrismaClient();
+
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 

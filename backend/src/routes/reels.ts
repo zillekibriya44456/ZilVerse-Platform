@@ -1,11 +1,12 @@
+import prisma from '../lib/prisma';
 // @ts-nocheck
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
+
 import { uploadVideo, getFileUrl } from '../config/cloudinary';
 import { authenticateToken } from '../middleware/auth';
 
 const router = express.Router();
-const prisma = new PrismaClient();
+
 // REELS CRUD
 // ───────────────────────────────────────────────
 
@@ -15,8 +16,9 @@ router.get('/', async (req, res) => {
     const { category, cursor, limit: rawLimit } = req.query;
     const limit = Math.min(parseInt(String(rawLimit)) || 20, 50);
     
+    const isTrending = category === 'Trending';
     const whereClause: any = {};
-    if (category && category !== 'For You') {
+    if (category && category !== 'For You' && !isTrending) {
       whereClause.category = String(category);
     }
     if (cursor) {
@@ -24,14 +26,14 @@ router.get('/', async (req, res) => {
     }
 
     const reels = await prisma.reel.findMany({
-      where: whereClause,
+      where: isTrending ? { createdAt: { gt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } } : whereClause,
       include: {
         creator: {
           select: { id: true, name: true, avatar: true, verified: true }
         },
         _count: { select: { reelLikes: true, reelComments: true } }
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: isTrending ? [{ likes: 'desc' }, { views: 'desc' }] : { createdAt: 'desc' },
       take: limit
     });
 
@@ -155,6 +157,47 @@ router.get('/:id/liked', authenticateToken, async (req: express.Request, res: an
     res.json({ liked: !!existing });
   } catch (error) {
     res.status(500).json({ error: 'Failed to check like status' });
+  }
+});
+
+// ───────────────────────────────────────────────
+// SAVES
+// ───────────────────────────────────────────────
+
+router.post('/:id/save', authenticateToken, async (req: express.Request, res: any) => {
+  try {
+    const userId = (req as any).user?.id;
+    const reelId = req.params.id;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const existing = await prisma.reelSave.findUnique({
+      where: { reelId_userId: { reelId, userId } }
+    });
+
+    if (existing) {
+      await prisma.reelSave.delete({ where: { id: existing.id } });
+      await prisma.reel.update({ where: { id: reelId }, data: { saves: { decrement: 1 } } });
+      return res.json({ saved: false });
+    } else {
+      await prisma.reelSave.create({ data: { reelId, userId } });
+      await prisma.reel.update({ where: { id: reelId }, data: { saves: { increment: 1 } } });
+      return res.json({ saved: true });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to toggle save' });
+  }
+});
+
+router.get('/:id/saved', authenticateToken, async (req: express.Request, res: any) => {
+  try {
+    const userId = (req as any).user?.id;
+    const existing = await prisma.reelSave.findUnique({
+      where: { reelId_userId: { reelId: req.params.id, userId } }
+    });
+    res.json({ saved: !!existing });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to check save status' });
   }
 });
 

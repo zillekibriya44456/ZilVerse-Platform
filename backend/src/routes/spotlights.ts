@@ -1,9 +1,10 @@
+import prisma from '../lib/prisma';
 import { Router, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+
 import { authenticateToken, AuthenticatedRequest } from '../middleware/auth';
 
 const router = Router();
-const prisma = new PrismaClient();
+
 
 // GET all Creator Spotlights
 router.get('/', async (req, res): Promise<any> => {

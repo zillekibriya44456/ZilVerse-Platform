@@ -1,19 +1,33 @@
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../lib/prisma';
 
 const router = express.Router();
-const prisma = new PrismaClient();
+
+let cachedFreelancers: any = null;
+let lastCacheTime = 0;
+const CACHE_TTL = 1000 * 60 * 5; // 5 minutes
 
 // Get all freelancers
 router.get('/', async (req, res) => {
   try {
+    const now = Date.now();
+    if (cachedFreelancers && now - lastCacheTime < CACHE_TTL) {
+      return res.json(cachedFreelancers);
+    }
+
     const freelancers = await prisma.freelancerProfile.findMany({
       include: {
         user: {
           select: { name: true, email: true, avatar: true }
         }
-      }
+      },
+      take: 50, // Limit payload
+      orderBy: { createdAt: 'desc' }
     });
+
+    cachedFreelancers = freelancers;
+    lastCacheTime = now;
+
     res.json(freelancers);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch freelancers' });

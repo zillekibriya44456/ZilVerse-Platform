@@ -134,9 +134,9 @@ img {
 }
 
 .btn-secondary {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.12);
-  color: #fff;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  color: var(--foreground);
   backdrop-filter: blur(4px);
 }
 

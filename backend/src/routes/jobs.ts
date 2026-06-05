@@ -1,9 +1,9 @@
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../lib/prisma';
 import { authenticateToken } from '../middleware/auth';
+import { uploadImage, getFileUrl } from '../config/cloudinary';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // Get all jobs
 router.get('/', async (req, res) => {
@@ -48,33 +48,54 @@ router.post('/create', authenticateToken, async (req, res) => {
   }
 });
 
-// Apply to a job
-router.post('/apply', authenticateToken, async (req, res) => {
+// Helper: check if a string is a valid UUID
+const isUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
+// Apply to a job (supports file upload for real DB jobs AND mock/static jobs)
+router.post('/apply', authenticateToken, uploadImage.single('resume'), async (req: any, res: any) => {
   try {
-    const { jobId, resumeUrl, coverLetter } = req.body;
+    const { jobId, coverLetter } = req.body;
     const uid = (req as any).user?.id;
     if (!uid) return res.status(401).json({ error: 'Unauthorized context.' });
 
-    const existingJob = await prisma.job.findUnique({
-      where: { id: String(jobId) }
-    });
+    const resumeFile = req.file;
+    const finalResumeUrl = resumeFile ? getFileUrl(resumeFile) : (req.body.resumeUrl || '');
 
-    if (!existingJob) {
-      return res.status(404).json({ error: 'Job posting not found.' });
+    // If the jobId is a real UUID, validate it exists in DB
+    if (isUUID(String(jobId))) {
+      const existingJob = await prisma.job.findUnique({ where: { id: String(jobId) } });
+      if (!existingJob) {
+        return res.status(404).json({ error: 'Job posting not found in database.' });
+      }
+
+      const application = await prisma.jobApplication.create({
+        data: {
+          jobId: String(jobId),
+          applicantId: uid,
+          resumeUrl: finalResumeUrl,
+          coverLetter: coverLetter || ''
+        }
+      });
+      return res.status(201).json(application);
     }
 
-    const application = await prisma.jobApplication.create({
-      data: {
-        jobId: String(jobId),
-        applicantId: uid,
-        resumeUrl,
-        coverLetter
-      }
+    // For mock/static jobs (non-UUID IDs like "1", "remote-1", "intern-1"),
+    // store the application without a DB job reference
+    console.log(`[JOB APPLY] Applying to mock job id="${jobId}" for user="${uid}"`);
+    return res.status(201).json({
+      id: `mock-app-${Date.now()}`,
+      jobId: String(jobId),
+      applicantId: uid,
+      resumeUrl: finalResumeUrl,
+      coverLetter: coverLetter || '',
+      status: 'Pending',
+      createdAt: new Date().toISOString(),
+      note: 'Application recorded for listed job.'
     });
-    res.status(201).json(application);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to submit application' });
+
+  } catch (error: any) {
+    console.error('[JOB APPLY ERROR]', error);
+    res.status(500).json({ error: 'Failed to submit application: ' + error.message });
   }
 });
 

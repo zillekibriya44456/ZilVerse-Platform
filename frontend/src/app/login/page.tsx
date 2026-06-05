@@ -1,18 +1,14 @@
 "use client";
-import { API_BASE } from "@/utils/api";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import axios from "axios";
-import { useEffect } from "react";
-import { useAuth } from "@/context/AuthContext";
+import { signIn } from "@/lib/auth-client";
 import styles from "./auth.module.css";
+import { Loader2 } from "lucide-react";
 
 const SOCIAL_PROVIDERS = [
-  { name: "Google", icon: "G", color: "#EA4335", bg: "rgba(234,67,53,0.1)", border: "rgba(234,67,53,0.25)" },
-  { name: "GitHub", icon: "🐙", color: "#e4e4e7", bg: "rgba(255,255,255,0.06)", border: "rgba(255,255,255,0.12)" },
-  { name: "Facebook", icon: "f", color: "#1877F2", bg: "rgba(24,119,242,0.1)", border: "rgba(24,119,242,0.25)" },
-  { name: "LinkedIn", icon: "in", color: "#0A66C2", bg: "rgba(10,102,194,0.1)", border: "rgba(10,102,194,0.25)" },
+  { id: "google", name: "Google", icon: "G", color: "#EA4335", bg: "rgba(234,67,53,0.1)", border: "rgba(234,67,53,0.25)" },
+  { id: "github", name: "GitHub", icon: "🐙", color: "#e4e4e7", bg: "rgba(255,255,255,0.06)", border: "rgba(255,255,255,0.12)" },
 ];
 
 export default function LoginPage() {
@@ -21,43 +17,37 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const { login } = useAuth();
-
-  useEffect(() => {
-    // Handle OAuth Callback from backend redirect
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get('token');
-    const userStr = params.get('user');
-    const err = params.get('error');
-
-    if (token && userStr) {
-      try {
-        const user = JSON.parse(decodeURIComponent(userStr));
-        login(user, token);
-        router.push('/dashboard');
-      } catch(e) {}
-    } else if (err) {
-      setError("OAuth login failed or is missing Client ID keys.");
-    }
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+    
     try {
-      const res = await axios.post(`${API_BASE}/api/auth/login`, { email, password });
-      login(res.data.user, res.data.token);
+      const { data, error } = await signIn.email({
+        email,
+        password,
+      });
+      
+      if (error) {
+        setError(error.message || "Invalid credentials.");
+        setLoading(false);
+        return;
+      }
+      
+      // Better auth securely sets httpOnly cookies.
       router.push("/dashboard");
     } catch (err: any) {
-      setError(err.response?.data?.message || "Login failed. Please check your credentials.");
-    } finally {
+      setError("An unexpected error occurred. Please try again.");
       setLoading(false);
     }
   };
 
-  const handleSocial = (provider: string) => {
-    window.location.href = `${API_BASE}/api/auth/${provider.toLowerCase()}`;
+  const handleSocial = async (providerId: "google" | "github") => {
+    await signIn.social({
+      provider: providerId,
+      callbackURL: "/dashboard" // Redirect automatically after OAuth
+    });
   };
 
   return (
@@ -76,8 +66,8 @@ export default function LoginPage() {
           {SOCIAL_PROVIDERS.map(p => (
             <button
               type="button"
-              key={p.name}
-              onClick={() => handleSocial(p.name)}
+              key={p.id}
+              onClick={() => handleSocial(p.id as "google" | "github")}
               className={styles.socialBtn}
               style={{ background: p.bg, borderColor: p.border, color: p.color }}
               title={`Continue with ${p.name}`}
@@ -106,8 +96,8 @@ export default function LoginPage() {
           <div className={styles.forgotRow}>
             <a href="#" className={styles.forgot}>Forgot password?</a>
           </div>
-          <button type="submit" className={`btn btn-primary ${styles.submitBtn}`} disabled={loading}>
-            {loading ? "Signing in..." : "Sign In →"}
+          <button type="submit" className={`btn btn-primary ${styles.submitBtn}`} disabled={loading} style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "8px" }}>
+            {loading ? <><Loader2 className="animate-spin" size={18} /> Signing in...</> : "Sign In →"}
           </button>
         </form>
 

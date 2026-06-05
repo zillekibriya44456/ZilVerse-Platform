@@ -1,12 +1,13 @@
+import prisma from '../lib/prisma';
 import { Router, Request, Response } from 'express';
 // @ts-ignore
 import bcrypt from 'bcrypt';
 // @ts-ignore
 import jwt from 'jsonwebtoken';
-import { PrismaClient } from '@prisma/client';
+
 
 const router = Router();
-const prisma = new PrismaClient();
+
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
   throw new Error("JWT_SECRET environment variable is missing.");

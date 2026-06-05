@@ -1,5 +1,6 @@
+import prisma from '../lib/prisma';
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
+
 import { authenticateToken, requireAdmin, AuthenticatedRequest } from '../middleware/auth';
 // @ts-ignore
 import Stripe from 'stripe';
@@ -8,7 +9,7 @@ import Razorpay from 'razorpay';
 import crypto from 'crypto';
 
 const router = express.Router();
-const prisma = new PrismaClient();
+
 
 // Initialize Stripe (uses secure env variable)
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'dummy_stripe_secret_key', {

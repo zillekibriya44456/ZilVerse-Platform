@@ -1,0 +1,624 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String?  // Optional for OAuth users
+  name      String?
+  avatar    String?
+  bio       String?
+  role      String   @default("USER")
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Better Auth Fields
+  emailVerified Boolean   @default(false)
+  image         String?
+  profession    String?
+  countryCode   String?
+  stateName     String?
+  phoneDial     String?
+  phoneNum      String?
+  sessions      Session[]
+  accounts      Account[]
+
+  // Relations
+  projects           Project[]
+  reels              Reel[]
+  portfolios         Portfolio[]
+  freelancerProfile  FreelancerProfile?
+  services           DigitalService[]
+  jobs               Job[]
+  fundGrants         FundGrant[]
+  interviewResults   InterviewResult[]
+  discussions        DiscussionPost[]
+  creatorProfile     CreatorProfile?
+  exchangeListings   ExchangeListing[]
+  jobApplications    JobApplication[]
+  exchangeProposals  ExchangeProposal[]
+  discussionReplies  DiscussionReply[]
+  wallet             Wallet?
+  transactions       Transaction[]
+  clientEscrows      Escrow[]          @relation("ClientEscrows")
+  freelancerEscrows  Escrow[]          @relation("FreelancerEscrows")
+  withdrawals        WithdrawalRequest[]
+  disputes           Dispute[]
+  researchPapers     ResearchPaper[]
+  sentMessages       Message[]         @relation("SentMessages")
+  receivedMessages   Message[]         @relation("ReceivedMessages")
+  creatorSpotlights  CreatorSpotlight[]
+
+  // InnoReels Social Relations
+  reelLikes          ReelLike[]
+  reelComments       ReelComment[]
+  followers          Follow[]          @relation("Followers")
+  following          Follow[]          @relation("Following")
+  stories            Story[]
+  storyViews         StoryView[]
+  donationsSent      ReelDonation[]    @relation("DonationsSent")
+  donationsReceived  ReelDonation[]    @relation("DonationsReceived")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime? @default(now())
+  updatedAt  DateTime? @updatedAt
+}
+
+model DiscussionPost {
+  id          String   @id @default(uuid())
+  title       String
+  content     String
+  category    String   @default("General")
+  upvotes     Int      @default(0)
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id])
+  replies     DiscussionReply[]
+  createdAt   DateTime @default(now())
+
+  @@index([authorId])
+}
+
+model DiscussionReply {
+  id          String         @id @default(uuid())
+  content     String
+  postId      String
+  post        DiscussionPost @relation(fields: [postId], references: [id])
+  authorId    String
+  author      User           @relation(fields: [authorId], references: [id])
+  createdAt   DateTime       @default(now())
+
+  @@index([postId])
+  @@index([authorId])
+}
+
+model CreatorProfile {
+  id          String   @id @default(uuid())
+  niche       String
+  followers   Int      @default(0)
+  platform    String   @default("YouTube")
+  bio         String?
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+}
+
+model ExchangeListing {
+  id          String   @id @default(uuid())
+  assetType   String   @default("Source Code")
+  title       String
+  description String
+  price       Float
+  sellerId    String
+  seller      User     @relation(fields: [sellerId], references: [id])
+  proposals   ExchangeProposal[]
+  createdAt   DateTime @default(now())
+
+  @@index([sellerId])
+}
+
+model ExchangeProposal {
+  id          String   @id @default(uuid())
+  listingId   String
+  listing     ExchangeListing @relation(fields: [listingId], references: [id])
+  proposerId  String
+  proposer    User     @relation(fields: [proposerId], references: [id])
+  message     String
+  status      String   @default("Pending")
+  createdAt   DateTime @default(now())
+
+  @@index([listingId])
+  @@index([proposerId])
+}
+
+model AcademyCourse {
+  id          String   @id @default(uuid())
+  title       String
+  instructor  String
+  level       String   @default("Beginner")
+  duration    String   @default("1 Hour")
+  description String?
+  price       Float    @default(0.0)
+  countryCode String   @default("US")
+  language    String   @default("English")
+  category    String   @default("Development")
+  students    Int      @default(0)
+  rating      Float    @default(5.0)
+  image       String   @default("/avatars/avatar_1.png")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Event {
+  id          String   @id @default(uuid())
+  title       String
+  type        String   @default("Virtual")
+  date        String
+  location    String   @default("Online")
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ContactMessage {
+  id          String   @id @default(uuid())
+  name        String
+  email       String
+  subject     String
+  message     String
+  createdAt   DateTime @default(now())
+}
+
+model InterviewResult {
+  id          String   @id @default(uuid())
+  score       Int
+  feedback    String
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+}
+
+model FundGrant {
+  id           String   @id @default(uuid())
+  title        String
+  organization String
+  amount       String
+  description  String
+  deadline     String   @default("Rolling")
+  creatorId    String
+  creator      User     @relation(fields: [creatorId], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([creatorId])
+}
+
+model Job {
+  id           String   @id @default(uuid())
+  title        String
+  company      String
+  location     String   @default("Remote")
+  type         String   @default("Full-Time")
+  salary       String   @default("Competitive")
+  description  String
+  requirements String
+  employerId   String
+  employer     User     @relation(fields: [employerId], references: [id])
+  applications JobApplication[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([employerId])
+}
+
+model JobApplication {
+  id          String   @id @default(uuid())
+  jobId       String
+  job         Job      @relation(fields: [jobId], references: [id])
+  applicantId String
+  applicant   User     @relation(fields: [applicantId], references: [id])
+  resumeUrl   String?
+  coverLetter String?
+  status      String   @default("Pending")
+  createdAt   DateTime @default(now())
+
+  @@index([jobId])
+  @@index([applicantId])
+}
+
+model DigitalService {
+  id           String   @id @default(uuid())
+  title        String
+  description  String
+  price        Float
+  category     String   @default("Software")
+  deliveryTime String   @default("3 Days")
+  rating       Float    @default(0.0)
+  sales        Int      @default(0)
+  sellerId     String
+  seller       User     @relation(fields: [sellerId], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([sellerId])
+}
+
+model FreelancerProfile {
+  id          String   @id @default(uuid())
+  title       String
+  hourlyRate  Float
+  skills      String
+  bio         String
+  portfolio   String?
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Project {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  price       Float
+  sellerId    String
+  seller      User     @relation(fields: [sellerId], references: [id])
+  videoUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([sellerId])
+}
+
+model Reel {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  videoUrl    String
+  thumbnailUrl String?
+  category    String   @default("For You")
+  tags        String   // Stored as comma separated
+  likes       Int      @default(0)
+  comments    Int      @default(0)
+  shares      Int      @default(0)
+  views       Int      @default(0)
+  saves       Int      @default(0)
+  creatorId   String
+  creator     User     @relation(fields: [creatorId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Social relations
+  reelLikes     ReelLike[]
+  reelComments  ReelComment[]
+  donations     ReelDonation[]
+
+  @@index([creatorId])
+  @@index([category])
+  @@index([createdAt])
+}
+
+model ReelLike {
+  id        String   @id @default(uuid())
+  reelId    String
+  reel      Reel     @relation(fields: [reelId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([reelId, userId])
+  @@index([reelId])
+  @@index([userId])
+}
+
+model ReelComment {
+  id        String   @id @default(uuid())
+  reelId    String
+  reel      Reel     @relation(fields: [reelId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  content   String
+  parentId  String?  // For nested replies
+  likes     Int      @default(0)
+  pinned    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([reelId])
+  @@index([userId])
+  @@index([parentId])
+}
+
+model Follow {
+  id          String   @id @default(uuid())
+  followerId  String
+  follower    User     @relation("Following", fields: [followerId], references: [id])
+  followingId String
+  following   User     @relation("Followers", fields: [followingId], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+}
+
+model Story {
+  id        String   @id @default(uuid())
+  mediaUrl  String
+  mediaType String   @default("image") // image | video
+  caption   String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  views     StoryView[]
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model StoryView {
+  id        String   @id @default(uuid())
+  storyId   String
+  story     Story    @relation(fields: [storyId], references: [id])
+  viewerId  String
+  viewer    User     @relation(fields: [viewerId], references: [id])
+  reaction  String?  // emoji reaction
+  createdAt DateTime @default(now())
+
+  @@unique([storyId, viewerId])
+  @@index([storyId])
+  @@index([viewerId])
+}
+
+model ReelDonation {
+  id          String   @id @default(uuid())
+  reelId      String?
+  reel        Reel?    @relation(fields: [reelId], references: [id])
+  senderId    String
+  sender      User     @relation("DonationsSent", fields: [senderId], references: [id])
+  receiverId  String
+  receiver    User     @relation("DonationsReceived", fields: [receiverId], references: [id])
+  amount      Float
+  currency    String   @default("USD")
+  message     String?
+  createdAt   DateTime @default(now())
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([reelId])
+}
+
+model Portfolio {
+  id          String   @id @default(uuid())
+  theme       String
+  bioText     String
+  skills      String
+  githubScore String?
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model GlobalNotification {
+  id        String   @id @default(uuid())
+  title     String
+  message   String
+  type      String   @default("announcement")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model Wallet {
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id])
+  availableBalance Float    @default(0.0)
+  pendingBalance   Float    @default(0.0)
+  currency         String   @default("USD")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Transaction {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  amount      Float
+  currency    String
+  type        String   // "DEPOSIT", "WITHDRAWAL", "ESCROW_DEPOSIT", "ESCROW_RELEASE", "REFUND"
+  status      String   // "PENDING", "COMPLETED", "FAILED"
+  gateway     String   // "STRIPE", "PAYPAL", "RAZORPAY", "UPI", "WISE", "PAYONEER"
+  description String?
+  createdAt   DateTime @default(now())
+  invoice     Invoice?
+
+  @@index([userId])
+}
+
+model Escrow {
+  id            String   @id @default(uuid())
+  projectId     String?
+  projectTitle  String?
+  clientId      String
+  client        User     @relation("ClientEscrows", fields: [clientId], references: [id])
+  freelancerId  String
+  freelancer    User     @relation("FreelancerEscrows", fields: [freelancerId], references: [id])
+  amount        Float
+  currency      String
+  status        String   // "HELD", "RELEASED", "DISPUTED", "REFUNDED"
+  milestoneName String   @default("Project Milestone")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  disputes      Dispute[]
+
+  @@index([clientId])
+  @@index([freelancerId])
+}
+
+model WithdrawalRequest {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  amount    Float
+  currency  String
+  method    String   // "BANK", "PAYPAL", "PAYONEER", "UPI", "WISE"
+  details   String   // JSON string of payment details
+  status    String   // "PENDING", "APPROVED", "REJECTED"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Dispute {
+  id           String   @id @default(uuid())
+  escrowId     String
+  escrow       Escrow   @relation(fields: [escrowId], references: [id])
+  raisedById   String
+  raisedBy     User     @relation(fields: [raisedById], references: [id])
+  reason       String
+  evidence     String?
+  status       String   // "OPEN", "RESOLVED_CLIENT", "RESOLVED_FREELANCER", "REJECTED"
+  resolution   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([escrowId])
+  @@index([raisedById])
+}
+
+model Invoice {
+  id            String      @id @default(uuid())
+  transactionId String      @unique
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+  invoiceNumber String      @unique
+  senderName    String
+  receiverName  String
+  amount        Float
+  currency      String
+  createdAt     DateTime    @default(now())
+
+  @@index([transactionId])
+}
+
+model ResearchPaper {
+  id          String   @id @default(uuid())
+  title       String
+  authors     String
+  abstract    String
+  pdfUrl      String?
+  category    String   @default("Computer Science")
+  upvotes     Int      @default(0)
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  senderId   String
+  receiverId String
+  content    String
+  createdAt  DateTime @default(now())
+  isRead     Boolean  @default(false)
+  
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([createdAt])
+}
+
+model CreatorSpotlight {
+  id          String   @id @default(uuid())
+  name        String
+  role        String
+  pitch       String
+  videoUrl    String
+  image       String   @default("/creators/creator_1.png")
+  project     String
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Testimonial {
+  id        String   @id @default(uuid())
+  stars     Int      @default(5)
+  text      String
+  name      String
+  role      String
+  initials  String
+  color     String   @default("var(--primary)")
+  createdAt DateTime @default(now())
+}
+
+model ServiceQuote {
+  id          String   @id @default(uuid())
+  serviceTitle String
+  name        String
+  email       String
+  phone       String?
+  company     String?
+  budget      String?
+  message     String
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now())
+}

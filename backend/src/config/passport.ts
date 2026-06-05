@@ -1,13 +1,14 @@
+import prisma from '../lib/prisma';
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { Strategy as GitHubStrategy } from 'passport-github2';
 import { Strategy as FacebookStrategy } from 'passport-facebook';
 import { Strategy as OAuth2Strategy } from 'passport-oauth2';
 import axios from 'axios';
-import { PrismaClient } from '@prisma/client';
+
 import bcrypt from 'bcrypt';
 
-const prisma = new PrismaClient();
+
 
 const handleSocialProfile = async (profile: any, provider: string, done: any) => {
   try {

@@ -29,6 +29,7 @@ export default function JobsPage() {
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [applicationData, setApplicationData] = useState({ resumeUrl: '', coverLetter: '' });
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [isApplying, setIsApplying] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -60,17 +61,30 @@ export default function JobsPage() {
   const handleApplySubmit = async () => {
     setIsApplying(true);
     try {
-      await axios.post(`${API_BASE}/api/jobs/apply`, {
-        jobId: selectedJobId,
-        resumeUrl: applicationData.resumeUrl,
-        coverLetter: applicationData.coverLetter
+      const activeToken = localStorage.getItem("zilverse_token") || "";
+      const formData = new FormData();
+      formData.append("jobId", selectedJobId || "");
+      formData.append("coverLetter", applicationData.coverLetter);
+      if (resumeFile) {
+        formData.append("resume", resumeFile);
+      } else {
+        formData.append("resumeUrl", applicationData.resumeUrl);
+      }
+
+      await axios.post(`${API_BASE}/api/jobs/apply`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${activeToken}`
+        }
       });
+
       setIsApplyModalOpen(false);
       setToastMessage("Application submitted successfully!");
       setApplicationData({ resumeUrl: '', coverLetter: '' });
-    } catch (err) {
+      setResumeFile(null);
+    } catch (err: any) {
       console.error(err);
-      setToastMessage("Failed to submit application.");
+      setToastMessage("Failed to submit application: " + (err.response?.data?.error || err.message));
     } finally {
       setIsApplying(false);
       setTimeout(() => setToastMessage(null), 4000);
@@ -225,13 +239,63 @@ export default function JobsPage() {
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: '#111', padding: '2rem', borderRadius: '16px', border: '1px solid #333', width: '90%', maxWidth: '500px' }}>
             <h2 style={{ color: '#fff', marginBottom: '1.5rem' }}>Submit Application</h2>
+            
+            {/* File Upload Control */}
+            <div style={{ marginBottom: "1rem" }}>
+              <label style={{ display: "block", color: "#a1a1aa", fontSize: "0.85rem", marginBottom: "0.5rem" }}>
+                Upload Resume / CV (PDF, DOC, DOCX, Images)
+              </label>
+              <div style={{
+                border: "2px dashed #333", borderRadius: "8px", padding: "1.5rem",
+                textAlign: "center", cursor: "pointer", background: "#050505",
+                transition: "border-color 0.2s"
+              }} onClick={() => document.getElementById("file-upload-input")?.click()}>
+                <input 
+                  type="file" 
+                  id="file-upload-input" 
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                  style={{ display: "none" }}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) setResumeFile(file);
+                  }}
+                />
+                {resumeFile ? (
+                  <div>
+                    <span style={{ color: "#10b981", fontWeight: "600", fontSize: "0.9rem" }}>📄 {resumeFile.name}</span>
+                    <button 
+                      type="button" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setResumeFile(null);
+                      }} 
+                      style={{
+                        marginLeft: "10px", background: "#ef4444", color: "#fff",
+                        border: "none", borderRadius: "4px", padding: "2px 6px",
+                        fontSize: "0.75rem", cursor: "pointer"
+                      }}
+                    >Remove</button>
+                  </div>
+                ) : (
+                  <div>
+                    <span style={{ color: "#3b82f6", fontSize: "0.9rem", fontWeight: "600" }}>📂 Click to browse files</span>
+                    <p style={{ color: "#71717a", fontSize: "0.75rem", marginTop: "4px" }}>Max size: 10MB</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div style={{ textAlign: "center", margin: "0.5rem 0", color: "#52525b", fontSize: "0.8rem" }}>— OR —</div>
+
             <input 
               type="text" 
-              placeholder="Portfolio / Resume URL" 
+              placeholder="Portfolio / Resume Link" 
               value={applicationData.resumeUrl}
               onChange={(e) => setApplicationData({...applicationData, resumeUrl: e.target.value})}
-              style={{ width: '100%', padding: '0.8rem', marginBottom: '1rem', background: '#000', border: '1px solid #333', color: '#fff', borderRadius: '8px' }}
+              disabled={!!resumeFile}
+              style={{ width: '100%', padding: '0.8rem', marginBottom: '1rem', background: '#000', border: '1px solid #333', color: !!resumeFile ? '#555' : '#fff', borderRadius: '8px' }}
             />
+            
             <textarea 
               placeholder="Cover Letter (Optional)" 
               value={applicationData.coverLetter}
@@ -239,7 +303,7 @@ export default function JobsPage() {
               style={{ width: '100%', padding: '0.8rem', marginBottom: '1.5rem', background: '#000', border: '1px solid #333', color: '#fff', borderRadius: '8px', minHeight: '120px' }}
             />
             <div style={{ display: 'flex', gap: '1rem' }}>
-              <button onClick={() => setIsApplyModalOpen(false)} style={{ flex: 1, padding: '0.8rem', background: '#333', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => { setIsApplyModalOpen(false); setResumeFile(null); }} style={{ flex: 1, padding: '0.8rem', background: '#333', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Cancel</button>
               <button onClick={handleApplySubmit} disabled={isApplying} style={{ flex: 1, padding: '0.8rem', background: '#10b981', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
                 {isApplying ? 'Submitting...' : 'Submit Application'}
               </button>

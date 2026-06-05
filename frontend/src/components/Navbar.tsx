@@ -6,8 +6,35 @@ import Link from "next/link";
 import axios from "axios";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { 
+  Home, 
+  ShoppingBag, 
+  Briefcase, 
+  Code2, 
+  ClipboardList, 
+  Coins, 
+  Calendar, 
+  GraduationCap, 
+  Globe, 
+  BookOpen, 
+  Lightbulb, 
+  FileText, 
+  Award, 
+  Cpu, 
+  Play, 
+  RefreshCw, 
+  Sparkles, 
+  MessageSquare, 
+  Info, 
+  Mail, 
+  FileEdit, 
+  HelpCircle,
+  ChevronDown,
+  ArrowRight
+} from "lucide-react";
 import CountrySelector from "./CountrySelector";
 import LanguageSelector from "./LanguageSelector";
+import ThemeSelector from "./ThemeSelector";
 import styles from "./Navbar.module.css";
 import { socket } from "@/utils/socket";
 
@@ -22,48 +49,76 @@ const MEGA_MENU = [
   {
     title: "Platform",
     items: [
-      { label: "Home", href: "/", desc: "Go to ecosystem homepage.", icon: "🏠" },
-      { label: "Services", href: "/services", desc: "Premium digital services.", icon: "🛒" },
-      { label: "Freelancers", href: "/freelancers", desc: "Hire top global talent.", icon: "💼" },
-      { label: "Projects", href: "/projects", desc: "Browse pre-built source code & assets.", icon: "🚀" },
-      { label: "Job Board", href: "/jobs", desc: "Find remote & local tech jobs.", icon: "👔" },
+      { label: "Home", href: "/", desc: "Go to ecosystem homepage.", icon: Home },
+      { label: "Services", href: "/services", desc: "Premium digital services.", icon: ShoppingBag },
+      { label: "Freelancers", href: "/freelancers", desc: "Hire top global talent.", icon: Briefcase },
+      { label: "Projects", href: "/projects", desc: "Browse pre-built source code & assets.", icon: Code2 },
+      { label: "Job Board", href: "/jobs", desc: "Find remote & local tech jobs.", icon: ClipboardList },
     ]
   },
   {
     title: "Opportunities",
+    featured: {
+      title: "Global Grant Program 2026",
+      desc: "Get up to $50,000 equity-free funding to build tools on ZilVerse.",
+      href: "/fund",
+      badge: "Active",
+      cta: "Apply Now"
+    },
     items: [
-      { label: "Grants & Funding", href: "/fund", desc: "Capital for your startup.", icon: "💰" },
-      { label: "Events", href: "/events", desc: "Tech meetups & conferences.", icon: "📅" },
-      { label: "Internships", href: "/internships", desc: "Kickstart your career.", icon: "🎓" },
-      { label: "Remote Work", href: "/remote", desc: "Work from anywhere.", icon: "🌍" },
+      { label: "Grants & Funding", href: "/fund", desc: "Capital for your startup.", icon: Coins },
+      { label: "Events", href: "/events", desc: "Tech meetups & conferences.", icon: Calendar },
+      { label: "Internships", href: "/internships", desc: "Kickstart your career.", icon: GraduationCap },
+      { label: "Remote Work", href: "/remote", desc: "Work from anywhere.", icon: Globe },
     ]
   },
   {
     title: "Learn & Innovate",
+    featured: {
+      title: "Verified Credentials",
+      desc: "Master new tech skills and earn industry-recognized certifications.",
+      href: "/certifications",
+      badge: "Hot",
+      cta: "View Courses"
+    },
     items: [
-      { label: "Academy", href: "/academy", desc: "Master new tech skills.", icon: "📚" },
-      { label: "Innovation Hub", href: "/innovation", desc: "Incubate your ideas.", icon: "💡" },
-      { label: "Research", href: "/research", desc: "Deep-dive whitepapers.", icon: "🔬" },
-      { label: "Certifications", href: "/certifications", desc: "Earn verified credentials.", icon: "🏆" },
-      { label: "AI Interview Prep", href: "/interview", desc: "Interactive role & sandbox coding prep.", icon: "🤖" },
+      { label: "Academy", href: "/academy", desc: "Master new tech skills.", icon: BookOpen },
+      { label: "Innovation Hub", href: "/innovation", desc: "Incubate your ideas.", icon: Lightbulb },
+      { label: "Research", href: "/research", desc: "Deep-dive whitepapers.", icon: FileText },
+      { label: "Certifications", href: "/certifications", desc: "Earn verified credentials.", icon: Award },
+      { label: "AI Interview Prep", href: "/interview", desc: "Interactive sandboxed prep.", icon: Cpu },
     ]
   },
   {
     title: "Community",
+    featured: {
+      title: "InnoReels Network",
+      desc: "Swipe through short-form tech tutorials and project demos.",
+      href: "/reels",
+      badge: "Trending",
+      cta: "Start Swiping"
+    },
     items: [
-      { label: "InnoReels", href: "/reels", desc: "Short-form tech content.", icon: "📱" },
-      { label: "Exchange", href: "/exchange", desc: "Trade ideas & assets.", icon: "🔄" },
-      { label: "Creator Network", href: "/creators", desc: "Join top influencers.", icon: "✨" },
-      { label: "Discussions", href: "/discussions", desc: "Engage in tech forums.", icon: "💬" },
+      { label: "InnoReels", href: "/reels", desc: "Short-form tech content.", icon: Play },
+      { label: "Exchange", href: "/exchange", desc: "Trade ideas & assets.", icon: RefreshCw },
+      { label: "Creator Network", href: "/creators", desc: "Join top influencers.", icon: Sparkles },
+      { label: "Discussions", href: "/discussions", desc: "Engage in tech forums.", icon: MessageSquare },
     ]
   },
   {
     title: "Company",
+    featured: {
+      title: "We are hiring!",
+      desc: "Join the core team building the next generation ecosystem.",
+      href: "/apply",
+      badge: "Careers",
+      cta: "Open Roles"
+    },
     items: [
-      { label: "About", href: "/about", desc: "Our mission & vision.", icon: "🏢" },
-      { label: "Contact", href: "/contact", desc: "Get in touch with us.", icon: "📬" },
-      { label: "Apply", href: "/apply", desc: "Join the core team.", icon: "📝" },
-      { label: "Support", href: "/help", desc: "24/7 global assistance.", icon: "🛟" },
+      { label: "About", href: "/about", desc: "Our mission & vision.", icon: Info },
+      { label: "Contact", href: "/contact", desc: "Get in touch with us.", icon: Mail },
+      { label: "Apply", href: "/apply", desc: "Join the core team.", icon: FileEdit },
+      { label: "Support", href: "/help", desc: "24/7 global assistance.", icon: HelpCircle },
     ]
   }
 ];
@@ -156,25 +211,44 @@ export default function Navbar() {
             onMouseEnter={() => handleMouseEnter(menu.title)}
             onMouseLeave={handleMouseLeave}
           >
-            <button className={`${styles.navLink} ${activeMenu === menu.title ? styles.active : ""}`}>
+            <Link 
+              href={menu.title === "Opportunities" ? "/opportunities" : menu.title === "Learn & Innovate" ? "/academy" : "#"}
+              className={`${styles.navLink} ${activeMenu === menu.title ? styles.active : ""}`}
+              onClick={() => setActiveMenu(null)}
+            >
               {menu.title}
-              <svg className={styles.chevron} viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="6 9 12 15 18 9"></polyline>
-              </svg>
-            </button>
+              <ChevronDown size={14} className={styles.chevron} />
+            </Link>
 
             {activeMenu === menu.title && (
               <div className={styles.megaMenuDropdown}>
-                <div className={styles.megaMenuGrid}>
-                  {menu.items.map(item => (
-                    <Link key={item.href} href={item.href} className={styles.megaMenuItem} onClick={() => setActiveMenu(null)}>
-                      <div className={styles.menuItemIcon}>{item.icon}</div>
-                      <div>
-                        <div className={styles.menuItemLabel}>{item.label}</div>
-                        <div className={styles.menuItemDesc}>{item.desc}</div>
-                      </div>
-                    </Link>
-                  ))}
+                <div className={styles.dropdownLayout}>
+                  {menu.featured && (
+                    <div className={styles.featuredCard}>
+                      <span className={styles.featuredBadge}>{menu.featured.badge}</span>
+                      <h4 className={styles.featuredTitle}>{menu.featured.title}</h4>
+                      <p className={styles.featuredDesc}>{menu.featured.desc}</p>
+                      <Link href={menu.featured.href} className={styles.featuredCta} onClick={() => setActiveMenu(null)}>
+                        {menu.featured.cta} <ArrowRight size={14} style={{ marginLeft: "4px" }} />
+                      </Link>
+                    </div>
+                  )}
+                  <div className={styles.megaMenuGrid}>
+                    {menu.items.map(item => {
+                      const IconComponent = item.icon;
+                      return (
+                        <Link key={item.href} href={item.href} className={styles.megaMenuItem} onClick={() => setActiveMenu(null)}>
+                          <div className={styles.menuItemIcon}>
+                            <IconComponent size={18} />
+                          </div>
+                          <div>
+                            <div className={styles.menuItemLabel}>{item.label}</div>
+                            <div className={styles.menuItemDesc}>{item.desc}</div>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             )}
@@ -186,6 +260,7 @@ export default function Navbar() {
         <div className={styles.selectors}>
           <LanguageSelector />
           <CountrySelector />
+          <ThemeSelector />
         </div>
 
         {/* 🔔 Notification Bell */}
@@ -193,9 +268,9 @@ export default function Navbar() {
           <button
             onClick={() => setIsBellOpen(!isBellOpen)}
             style={{
-              background: "none", border: "1px solid rgba(255,255,255,.1)",
+              background: "var(--card)", border: "1px solid var(--card-border)",
               borderRadius: "10px", padding: ".45rem .65rem",
-              cursor: "pointer", position: "relative", color: "#d4d4d8",
+              cursor: "pointer", position: "relative", color: "var(--foreground)",
               fontSize: "1.1rem", transition: "border-color .2s",
               display: "flex", alignItems: "center", gap: ".3rem"
             }}
@@ -215,40 +290,40 @@ export default function Navbar() {
           {isBellOpen && (
             <div style={{
               position: "absolute", top: "calc(100% + 12px)", right: 0,
-              width: "340px", background: "rgba(9,9,11,.95)",
-              border: "1px solid rgba(139,92,246,.3)", borderRadius: "16px",
-              backdropFilter: "blur(20px)", zIndex: 99999,
-              boxShadow: "0 16px 48px rgba(0,0,0,.6)", overflow: "hidden"
+              width: "340px", background: "var(--glass-bg)",
+              border: "1px solid var(--primary)", borderRadius: "16px",
+              backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", zIndex: 99999,
+              boxShadow: "0 16px 48px rgba(0,0,0,.2)", overflow: "hidden", color: "var(--foreground)"
             }}>
-              <div style={{ padding: "1rem 1.2rem", borderBottom: "1px solid rgba(255,255,255,.06)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ color: "#fff", fontWeight: 700, fontSize: ".95rem" }}>Notifications</span>
-                <button onClick={() => setIsBellOpen(false)} style={{ background: "none", border: "none", color: "#71717a", cursor: "pointer", fontSize: "1rem" }}>✕</button>
+              <div style={{ padding: "1rem 1.2rem", borderBottom: "1px solid var(--card-border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontWeight: 700, fontSize: ".95rem" }}>Notifications</span>
+                <button onClick={() => setIsBellOpen(false)} style={{ background: "none", border: "none", color: "var(--foreground)", cursor: "pointer", fontSize: "1rem" }}>✕</button>
               </div>
               {visibleNotifs.length === 0 ? (
-                <div style={{ padding: "2rem", textAlign: "center", color: "#52525b", fontSize: ".88rem" }}>No new notifications</div>
+                <div style={{ padding: "2rem", textAlign: "center", opacity: 0.7, fontSize: ".88rem" }}>No new notifications</div>
               ) : (
                 <div style={{ maxHeight: "360px", overflowY: "auto" }}>
                   {visibleNotifs.map((n: any) => (
                     <div key={n.id} style={{
                       padding: "1rem 1.2rem",
-                      borderBottom: "1px solid rgba(255,255,255,.04)",
+                      borderBottom: "1px solid var(--card-border)",
                       display: "flex", gap: ".8rem", alignItems: "flex-start"
                     }}>
                       <span style={{ fontSize: "1.2rem", flexShrink: 0 }}>{TYPE_ICONS[n.type] || "📢"}</span>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ color: "#fff", fontWeight: 600, fontSize: ".88rem", marginBottom: ".2rem" }}>{n.title}</div>
-                        <div style={{ color: "#a1a1aa", fontSize: ".8rem", lineHeight: 1.5 }}>{n.message}</div>
+                        <div style={{ fontWeight: 600, fontSize: ".88rem", marginBottom: ".2rem" }}>{n.title}</div>
+                        <div style={{ opacity: 0.7, fontSize: ".8rem", lineHeight: 1.5 }}>{n.message}</div>
                       </div>
                       <button
                         onClick={() => dismissNotif(n.id)}
-                        style={{ background: "none", border: "none", color: "#52525b", cursor: "pointer", fontSize: ".8rem", flexShrink: 0 }}
+                        style={{ background: "none", border: "none", color: "var(--foreground)", opacity: 0.7, cursor: "pointer", fontSize: ".8rem", flexShrink: 0 }}
                       >✕</button>
                     </div>
                   ))}
                 </div>
               )}
-              <div style={{ padding: ".8rem 1.2rem", borderTop: "1px solid rgba(255,255,255,.06)", textAlign: "center" }}>
-                <span style={{ color: "#52525b", fontSize: ".75rem" }}>Powered by ZilVerse Admin</span>
+              <div style={{ padding: ".8rem 1.2rem", borderTop: "1px solid var(--card-border)", textAlign: "center" }}>
+                <span style={{ opacity: 0.6, fontSize: ".75rem" }}>Powered by ZilVerse Admin</span>
               </div>
             </div>
           )}
@@ -257,7 +332,16 @@ export default function Navbar() {
         {user ? (
           <>
             <Link href="/dashboard" className={styles.userBadge}>
-              👤 {user.name}
+              {(user as any).avatar || (user as any).image ? (
+                <img
+                  src={(user as any).avatar || (user as any).image}
+                  alt={user.name}
+                  style={{ width: "22px", height: "22px", borderRadius: "50%", objectFit: "cover" }}
+                />
+              ) : (
+                <span>👤</span>
+              )}
+              <span>{user.name}</span>
             </Link>
             <button onClick={handleLogout} className={styles.logoutBtn}>
               Logout
@@ -293,11 +377,14 @@ export default function Navbar() {
             {MEGA_MENU.map(menu => (
               <div key={menu.title} className={styles.mobileMenuGroup}>
                 <div className={styles.mobileMenuTitle}>{menu.title}</div>
-                {menu.items.map(item => (
-                  <Link key={item.href} href={item.href} className={styles.mobileMenuItem} onClick={() => setIsMobileMenuOpen(false)}>
-                    {item.icon} {item.label}
-                  </Link>
-                ))}
+                {menu.items.map(item => {
+                  const IconComponent = item.icon;
+                  return (
+                    <Link key={item.href} href={item.href} className={styles.mobileMenuItem} onClick={() => setIsMobileMenuOpen(false)}>
+                      <IconComponent size={18} style={{ marginRight: "8px" }} /> {item.label}
+                    </Link>
+                  );
+                })}
               </div>
             ))}
             {!user && (

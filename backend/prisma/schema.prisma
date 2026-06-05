@@ -48,6 +48,7 @@ model User {
   // InnoReels Social Relations
   reelLikes          ReelLike[]
   reelComments       ReelComment[]
+  reelSaves          ReelSave[]
   followers          Follow[]          @relation("Followers")
   following          Follow[]          @relation("Following")
   stories            Story[]
@@ -288,6 +289,7 @@ model Reel {
   // Social relations
   reelLikes     ReelLike[]
   reelComments  ReelComment[]
+  reelSaves     ReelSave[]
   donations     ReelDonation[]
 
   @@index([creatorId])
@@ -576,4 +578,17 @@ model ServiceQuote {
   message     String
   status      String   @default("PENDING")
   createdAt   DateTime @default(now())
+}
+
+model ReelSave {
+  id        String   @id @default(uuid())
+  reelId    String
+  reel      Reel     @relation(fields: [reelId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([reelId, userId])
+  @@index([reelId])
+  @@index([userId])
 }

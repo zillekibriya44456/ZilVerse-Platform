@@ -5,10 +5,11 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useCountry } from "@/context/CountryContext";
-import ParticleNetwork from "@/components/ParticleNetwork";
-import TiltCard from "@/components/TiltCard";
-import InspirationalCarousel from "@/components/InspirationalCarousel";
-import GlobalMap from "@/components/GlobalMap";
+import dynamic from "next/dynamic";
+const ParticleNetwork = dynamic(() => import("@/components/ParticleNetwork"), { ssr: false });
+const TiltCard = dynamic(() => import("@/components/TiltCard"));
+const InspirationalCarousel = dynamic(() => import("@/components/InspirationalCarousel"), { ssr: false });
+const GlobalMap = dynamic(() => import("@/components/GlobalMap"), { ssr: false });
 import styles from "./home.module.css";
 
 const stats = [
@@ -24,11 +25,7 @@ const features = [
     href: "/freelancers",
     color: "rgba(168,85,247,0.15)",
     textColor: "var(--primary)",
-    icon: (
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-    ),
+    image: "/images/freelancers_working.png",
     title: "Freelancer Marketplace",
     desc: "Hire verified developers, designers, and creators worldwide. Built-in skill testing & reviews.",
     link: "Browse Freelancers →",
@@ -37,40 +34,37 @@ const features = [
     href: "/projects",
     color: "rgba(59,130,246,0.15)",
     textColor: "var(--accent)",
-    icon: (
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-      </svg>
-    ),
+    image: "/images/projects_development.png",
     title: "Project Marketplace",
     desc: "Buy & sell source code, SaaS boilerplates, and academic projects. Instant downloads.",
     link: "Browse Projects →",
   },
   {
-    href: "/services",
-    color: "rgba(16,185,129,0.15)",
-    textColor: "var(--secondary)",
-    icon: (
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-      </svg>
-    ),
-    title: "Digital Services",
-    desc: "Get professional website, app and e-commerce development services for your business.",
-    link: "View Services →",
-  },
-  {
     href: "/jobs",
     color: "rgba(245,158,11,0.15)",
     textColor: "#f59e0b",
-    icon: (
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-      </svg>
-    ),
+    image: "/images/job_board_hiring.png",
     title: "Job Board",
     desc: "Find remote jobs, internships and local tech opportunities across 150+ countries. Apply in one click.",
     link: "Find Jobs →",
+  },
+  {
+    href: "/innovation",
+    color: "rgba(236,72,153,0.15)",
+    textColor: "#ec4899",
+    image: "/images/innovation_hub.png",
+    title: "Innovation Hub",
+    desc: "Collaborate with researchers, innovators, startups, and technology creators globally.",
+    link: "Explore Innovation →",
+  },
+  {
+    href: "/community",
+    color: "rgba(14,165,233,0.15)",
+    textColor: "#0ea5e9",
+    image: "/images/community_networking.png",
+    title: "Global Community",
+    desc: "Network and collaborate with professionals, developers, and entrepreneurs worldwide.",
+    link: "Join Community →",
   },
 ];
 
@@ -135,7 +129,7 @@ export default function Home() {
     <div className={styles.page}>
 
       {/* Hero */}
-      <section className={styles.hero}>
+      <section className={styles.hero} style={{ background: "linear-gradient(to bottom, rgba(15,15,17,0.6) 0%, rgba(15,15,17,1) 100%), url('/images/hero_global_collab.png') center/cover no-repeat" }}>
         <div className="container" style={{ position: "relative", zIndex: 10 }}>
           <div className={`${styles.badge} shimmer-text`}>
             {selectedCountry.flag} ZilVerse — Your Global Tech Ecosystem
@@ -183,14 +177,14 @@ export default function Home() {
           <p className={styles.sectionSub}>Four powerful modules, one unified global platform</p>
           <div className={styles.featuresGrid}>
             {features.map((f) => (
-              <TiltCard key={f.href} className={`glass-panel ${styles.featureCard}`}>
-                <Link href={f.href} className={styles.featureCardInner}>
-                  <div className={styles.featureIcon} style={{ background: f.color, color: f.textColor }}>
-                    {f.icon}
+              <TiltCard key={f.href} className={`glass-panel ${styles.featureCard}`} style={{ padding: 0, overflow: 'hidden' }}>
+                <Link href={f.href} className={styles.featureCardInner} style={{ height: '100%' }}>
+                  <img src={f.image} alt={f.title} style={{ width: '100%', height: '180px', objectFit: 'cover' }} />
+                  <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                    <h3 style={{ fontSize: '1.3rem', marginBottom: '0.5rem' }}>{f.title}</h3>
+                    <p style={{ color: '#a1a1aa', fontSize: '0.9rem', lineHeight: 1.6, flex: 1 }}>{f.desc}</p>
+                    <span className={styles.cardLink} style={{ color: f.textColor }}>{f.link}</span>
                   </div>
-                  <h3>{f.title}</h3>
-                  <p>{f.desc}</p>
-                  <span className={styles.cardLink}>{f.link}</span>
                 </Link>
               </TiltCard>
             ))}

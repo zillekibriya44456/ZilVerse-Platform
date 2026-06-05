@@ -1,10 +1,11 @@
+import prisma from '../lib/prisma';
 import { Router, Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+
 import { authenticateToken } from '../middleware/auth';
 import { uploadVideo, getFileUrl } from '../config/cloudinary';
 
 const router = Router();
-const prisma = new PrismaClient();
+
 
 // GET all projects
 router.get('/', async (req: Request, res: Response): Promise<any> => {
