@@ -25,7 +25,7 @@ const RATES: Record<Currency, { rate: number; symbol: string }> = {
 };
 
 export default function PaymentModal({ projectTitle, price, onClose, onSuccess }: Props) {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [step, setStep] = useState<"details" | "processing" | "success">("details");
   const [currency, setCurrency] = useState<Currency>("INR");
   const [method, setMethod] = useState<PaymentMethod>("card");
@@ -40,6 +40,14 @@ export default function PaymentModal({ projectTitle, price, onClose, onSuccess }
     : convertedTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   useEffect(() => {
+    // If not logged in, alert and redirect to login
+    const activeToken = token || localStorage.getItem("zilverse_token");
+    if (!activeToken) {
+      alert("Please log in to purchase projects.");
+      window.location.href = "/login?redirect=/projects";
+      return;
+    }
+
     // Dynamically load the Razorpay checkout script
     const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
@@ -50,13 +58,19 @@ export default function PaymentModal({ projectTitle, price, onClose, onSuccess }
         document.body.removeChild(script);
       } catch (e) {}
     };
-  }, []);
+  }, [token]);
 
   const handlePay = async () => {
+    const activeToken = token || localStorage.getItem("zilverse_token") || "";
+    if (!activeToken) {
+      alert("Please log in to purchase projects.");
+      window.location.href = "/login?redirect=/projects";
+      return;
+    }
+
     if (method === "card" || method === "upi") {
       setStep("processing");
       try {
-        const activeToken = localStorage.getItem("zilverse_token") || "";
         const config = {
           headers: {
             Authorization: `Bearer ${activeToken}`
