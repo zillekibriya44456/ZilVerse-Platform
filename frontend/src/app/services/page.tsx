@@ -48,24 +48,57 @@ const MOCK_SERVICES = [
   },
 ];
 
+const parsePrice = (priceStr: string): number => {
+  const clean = priceStr.replace(/[^0-9]/g, "");
+  const num = parseInt(clean, 10);
+  return isNaN(num) ? 499 : num;
+};
+
+const RATES: Record<string, { rate: number; symbol: string }> = {
+  USD: { rate: 1.0, symbol: "$" },
+  INR: { rate: 83.5, symbol: "₹" },
+  EUR: { rate: 0.92, symbol: "€" },
+  GBP: { rate: 0.79, symbol: "£" }
+};
+
 export default function ServicesPage() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [dbServices, setDbServices] = useState<any[]>([]);
   const [quoteModal, setQuoteModal] = useState<string | null>(null);
   const [quoteForm, setQuoteForm] = useState({ name: "", email: "", phone: "", company: "", budget: "", message: "" });
+  
+  // Checkout Modal State
+  const [selectedService, setSelectedService] = useState<any | null>(null);
+  const [purchaseForm, setPurchaseForm] = useState({ name: "", email: "", phone: "", company: "", requirements: "" });
+  const [currency, setCurrency] = useState<"USD" | "INR" | "EUR" | "GBP">("INR");
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
+    // Dynamically load the Razorpay checkout script
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
+
+    // Fetch DB services
     axios.get(API)
       .then(res => setDbServices(res.data))
       .catch(err => console.error("Failed to load DB services", err));
+
+    return () => {
+      try {
+        document.body.removeChild(script);
+      } catch (e) {}
+    };
   }, []);
 
   // Pre-fill name/email from auth
   useEffect(() => {
     if (user) {
       setQuoteForm(prev => ({ ...prev, name: user.name || "", email: user.email || "" }));
+      setPurchaseForm(prev => ({ ...prev, name: user.name || "", email: user.email || "" }));
     }
   }, [user]);
 
@@ -77,6 +110,27 @@ export default function ServicesPage() {
   }));
 
   const services = [...formattedDbServices, ...MOCK_SERVICES];
+
+  const handleQuoteClick = (title: string) => {
+    setQuoteModal(title);
+  };
+
+  const handleOrderClick = (service: any) => {
+    const activeToken = token || localStorage.getItem("zilverse_token") || "";
+    if (!activeToken) {
+      alert("Please log in to purchase services.");
+      window.location.href = "/login?redirect=/services";
+      return;
+    }
+    setSelectedService(service);
+    setPurchaseForm({
+      name: user?.name || "",
+      email: user?.email || "",
+      phone: "",
+      company: "",
+      requirements: ""
+    });
+  };
 
   const handleQuoteSubmit = async () => {
     if (!quoteForm.name || !quoteForm.email || !quoteForm.message) {
@@ -98,6 +152,127 @@ export default function ServicesPage() {
       setToast("❌ Failed to submit: " + (err.response?.data?.error || err.message));
       setTimeout(() => setToast(null), 4000);
     } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleServiceCheckout = async () => {
+    if (!purchaseForm.name || !purchaseForm.email || !purchaseForm.requirements) {
+      setToast("Please fill in Name, Email, and Requirements.");
+      setTimeout(() => setToast(null), 3000);
+      return;
+    }
+
+    const activeToken = token || localStorage.getItem("zilverse_token") || "";
+    if (!activeToken) {
+      setToast("Authentication context lost. Please log in.");
+      setTimeout(() => setToast(null), 3500);
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const config = {
+        headers: {
+          Authorization: `Bearer ${activeToken}`
+        }
+      };
+
+      const basePriceUsd = parsePrice(selectedService.price);
+      const inrRate = RATES.INR.rate;
+      const baseInrPrice = basePriceUsd * inrRate;
+      
+      // Calculate final total (base price + 2% service fee)
+      const baseTotalInr = baseInrPrice + (baseInrPrice * 0.02);
+      const paiseAmount = Math.max(100, Math.round(baseTotalInr * 100));
+
+      // 1. Create order on the backend
+      const orderRes = await axios.post(
+        `${API_BASE}/api/payments/razorpay/create-order`,
+        {
+          amount: paiseAmount,
+          currency: "INR",
+          receipt: `service_${Date.now()}`
+        },
+        config
+      );
+
+      const { order_id, amount: orderAmount, currency: orderCurrency } = orderRes.data;
+
+      // 2. Configure Razorpay checkout options
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_live_Sxuhmk2KLWNZx5",
+        amount: orderAmount,
+        currency: orderCurrency,
+        name: "ZilVerse Digital Services",
+        description: `Order: ${selectedService.title}`,
+        order_id: order_id,
+        handler: async function (response: any) {
+          setIsSubmitting(true);
+          try {
+            // 3. Verify Payment on Backend
+            await axios.post(
+              `${API_BASE}/api/payments/razorpay/verify-payment`,
+              {
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature,
+                amount: basePriceUsd,
+                currency: "USD"
+              },
+              config
+            );
+
+            // 4. Create Service Quote with status PAID
+            await axios.post(`${API_BASE}/api/services/quote`, {
+              serviceTitle: selectedService.title,
+              name: purchaseForm.name,
+              email: purchaseForm.email,
+              phone: purchaseForm.phone || null,
+              company: purchaseForm.company || null,
+              budget: `$${basePriceUsd} USD`,
+              message: `[DIRECT PURCHASE PAID VIA RAZORPAY] Requirements: ${purchaseForm.requirements}`,
+              status: "PAID"
+            }, config);
+
+            setSelectedService(null);
+            setToast("✅ Payment successful! Service order has been initiated.");
+            setTimeout(() => setToast(null), 5000);
+          } catch (err: any) {
+            console.error("Verification error:", err);
+            setToast("❌ Verification failed: " + (err.response?.data?.error || err.message));
+            setTimeout(() => setToast(null), 4000);
+          } finally {
+            setIsSubmitting(false);
+          }
+        },
+        prefill: {
+          name: purchaseForm.name,
+          email: purchaseForm.email,
+          contact: purchaseForm.phone || ""
+        },
+        theme: {
+          color: "#7c3aed"
+        },
+        modal: {
+          ondismiss: function () {
+            setIsSubmitting(false);
+          }
+        }
+      };
+
+      if ((window as any).Razorpay) {
+        const rzp = new (window as any).Razorpay(options);
+        rzp.open();
+      } else {
+        setToast("❌ Razorpay SDK not loaded.");
+        setTimeout(() => setToast(null), 3000);
+        setIsSubmitting(false);
+      }
+    } catch (err: any) {
+      console.error("Order creation error:", err);
+      setToast("❌ Order initiation failed: " + (err.response?.data?.error || err.message));
+      setTimeout(() => setToast(null), 4000);
       setIsSubmitting(false);
     }
   };
@@ -144,10 +319,12 @@ export default function ServicesPage() {
                   <li key={f}>✓ {f}</li>
                 ))}
               </ul>
-              <div className={styles.bottom}>
-                <span className={styles.price}>{s.price}</span>
-                <button className="btn btn-primary" onClick={() => setQuoteModal(s.title)}>
-                  Request Quote
+              <div className={styles.bottom} style={{ display: "flex", gap: "0.5rem", width: "100%", marginTop: "1rem" }}>
+                <button className="btn btn-secondary" style={{ flex: 1, padding: "0.6rem" }} onClick={() => handleQuoteClick(s.title)}>
+                  Quote
+                </button>
+                <button className="btn btn-primary" style={{ flex: 1, padding: "0.6rem" }} onClick={() => handleOrderClick(s)}>
+                  Buy Now
                 </button>
               </div>
             </div>
@@ -232,6 +409,97 @@ export default function ServicesPage() {
             <p style={{ color: "#52525b", fontSize: "0.75rem", textAlign: "center", marginTop: "1rem" }}>
               We typically respond within 24 hours. No spam, ever.
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* Direct Purchase Modal */}
+      {selectedService && (
+        <div style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", zIndex: 99999,
+          display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)"
+        }} onClick={() => setSelectedService(null)}>
+          <div style={{
+            background: "rgba(18,18,20,0.98)", borderRadius: "20px",
+            border: "1px solid rgba(255,255,255,0.08)", padding: "2rem",
+            width: "90%", maxWidth: "480px", maxHeight: "85vh", overflowY: "auto",
+            backdropFilter: "blur(30px)"
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+              <h2 style={{ color: "#fff", fontSize: "1.25rem", fontWeight: 800, margin: 0 }}>
+                🛍️ Buy Service Package
+              </h2>
+              <button onClick={() => setSelectedService(null)} style={{
+                background: "none", border: "none", color: "#71717a", fontSize: "1.2rem", cursor: "pointer"
+              }}>✕</button>
+            </div>
+
+            <div style={{
+              background: "rgba(168,85,247,0.1)", border: "1px solid rgba(168,85,247,0.2)",
+              borderRadius: "10px", padding: "0.75rem 1rem", marginBottom: "1.5rem",
+              color: "#a855f7", fontSize: "0.88rem", fontWeight: 600
+            }}>
+              Service: {selectedService.title} ({selectedService.price})
+            </div>
+
+            {/* Currency Selector */}
+            <div style={{ marginBottom: "1rem" }}>
+              <label style={{ fontSize: "0.75rem", color: "#a1a1aa", display: "block", marginBottom: "0.4rem" }}>Select Currency</label>
+              <select 
+                value={currency} 
+                onChange={(e) => setCurrency(e.target.value as any)}
+                style={inputStyle}
+              >
+                <option value="INR">INR (₹) - Indian Rupee</option>
+                <option value="USD">USD ($) - US Dollar</option>
+                <option value="EUR">EUR (€) - Euro</option>
+                <option value="GBP">GBP (£) - British Pound</option>
+              </select>
+            </div>
+
+            {/* Display Converted Amount */}
+            <div style={{ 
+              background: "rgba(255,255,255,0.02)", 
+              border: "1px solid rgba(255,255,255,0.05)", 
+              borderRadius: "10px", 
+              padding: "1rem", 
+              marginBottom: "1.5rem",
+              textAlign: "center"
+            }}>
+              <span style={{ fontSize: "0.8rem", color: "#a1a1aa", display: "block" }}>Final Amount</span>
+              <span style={{ fontSize: "1.8rem", fontWeight: 800, color: "#fff" }}>
+                {RATES[currency].symbol}{(parsePrice(selectedService.price) * RATES[currency].rate).toFixed(2)}
+              </span>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+              <input type="text" placeholder="Your Name *" value={purchaseForm.name}
+                onChange={e => setPurchaseForm({ ...purchaseForm, name: e.target.value })}
+                style={inputStyle} />
+              <input type="email" placeholder="Email Address *" value={purchaseForm.email}
+                onChange={e => setPurchaseForm({ ...purchaseForm, email: e.target.value })}
+                style={inputStyle} />
+              <input type="tel" placeholder="Phone Number" value={purchaseForm.phone}
+                onChange={e => setPurchaseForm({ ...purchaseForm, phone: e.target.value })}
+                style={inputStyle} />
+              <input type="text" placeholder="Company Name" value={purchaseForm.company}
+                onChange={e => setPurchaseForm({ ...purchaseForm, company: e.target.value })}
+                style={inputStyle} />
+              <textarea placeholder="Describe your requirements details... *" value={purchaseForm.requirements}
+                onChange={e => setPurchaseForm({ ...purchaseForm, requirements: e.target.value })}
+                rows={3}
+                style={{ ...inputStyle, minHeight: "80px", resize: "vertical" }} />
+            </div>
+
+            <button onClick={handleServiceCheckout} disabled={isSubmitting}
+              style={{
+                width: "100%", padding: "1rem", marginTop: "1.25rem", border: "none",
+                borderRadius: "12px", fontWeight: 700, fontSize: "1rem", cursor: "pointer",
+                background: "linear-gradient(135deg, #a855f7, #0ea5e9)", color: "#fff",
+                opacity: isSubmitting ? 0.7 : 1, transition: "all 0.2s"
+              }}>
+              {isSubmitting ? "Processing Checkout..." : `💳 Pay ${RATES[currency].symbol}{(parsePrice(selectedService.price) * RATES[currency].rate).toFixed(2)} Now`}
+            </button>
           </div>
         </div>
       )}

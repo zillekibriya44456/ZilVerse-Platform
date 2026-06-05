@@ -52,7 +52,7 @@ router.post('/create', async (req, res) => {
 // Request a quote for a service
 router.post('/quote', async (req, res) => {
   try {
-    const { serviceTitle, name, email, phone, company, budget, message } = req.body;
+    const { serviceTitle, name, email, phone, company, budget, message, status } = req.body;
     if (!serviceTitle || !name || !email || !message) {
       return res.status(400).json({ error: 'serviceTitle, name, email, and message are required.' });
     }
@@ -65,7 +65,8 @@ router.post('/quote', async (req, res) => {
         phone: phone || null,
         company: company || null,
         budget: budget || null,
-        message
+        message,
+        status: status || 'PENDING'
       }
     });
     res.status(201).json(quote);
