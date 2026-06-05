@@ -19,8 +19,8 @@ const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || 'dummy_webhoo
 
 // Initialize Razorpay (uses secure env variable)
 const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || 'dummy_key_id',
-  key_secret: process.env.RAZORPAY_KEY_SECRET || 'dummy_key_secret',
+  key_id: process.env.RAZORPAY_KEY_ID || 'rzp_live_Sxuhmk2KLWNZx5',
+  key_secret: process.env.RAZORPAY_KEY_SECRET || '0XjyIUAtjCmUa29O0JowbV2J',
 });
 
 
@@ -675,8 +675,8 @@ const createOrderHandler = async (req: AuthenticatedRequest, res: any) => {
       return res.status(400).json({ error: 'Amount must be at least 100 paise.' });
     }
 
-    const keyId = process.env.RAZORPAY_KEY_ID;
-    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+    const keyId = process.env.RAZORPAY_KEY_ID || 'rzp_live_Sxuhmk2KLWNZx5';
+    const keySecret = process.env.RAZORPAY_KEY_SECRET || '0XjyIUAtjCmUa29O0JowbV2J';
     if (!keyId || !keySecret || keyId === 'dummy_key_id' || keySecret === 'dummy_key_secret') {
       return res.status(401).json({ error: 'Razorpay keys are not configured on the server.' });
     }
@@ -711,7 +711,7 @@ const verifyPaymentHandler = async (req: AuthenticatedRequest, res: any) => {
       return res.status(400).json({ error: 'Missing required Razorpay fields.' });
     }
 
-    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+    const keySecret = process.env.RAZORPAY_KEY_SECRET || '0XjyIUAtjCmUa29O0JowbV2J';
     if (!keySecret || keySecret === 'dummy_key_secret') {
       return res.status(401).json({ error: 'Razorpay secret is not configured on the server.' });
     }
