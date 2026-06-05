@@ -1,7 +1,7 @@
 "use client";
 import { API_BASE } from "@/utils/api";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
 import styles from "./PaymentModal.module.css";
@@ -39,18 +39,137 @@ export default function PaymentModal({ projectTitle, price, onClose, onSuccess }
     ? convertedTotal.toFixed(2) 
     : convertedTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+  useEffect(() => {
+    // Dynamically load the Razorpay checkout script
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
+    return () => {
+      try {
+        document.body.removeChild(script);
+      } catch (e) {}
+    };
+  }, []);
+
   const handlePay = async () => {
+    if (method === "card" || method === "upi") {
+      setStep("processing");
+      try {
+        const activeToken = localStorage.getItem("zilverse_token") || "";
+        const config = {
+          headers: {
+            Authorization: `Bearer ${activeToken}`
+          }
+        };
+
+        // Convert base price (INR) to paise (multiplying by 100)
+        // Ensure price is at least 1 INR (100 paise)
+        const paiseAmount = Math.max(100, Math.round(price * 100));
+
+        // 1. Create order on the backend
+        const orderRes = await axios.post(
+          `${API_BASE}/api/payments/razorpay/create-order`,
+          {
+            amount: paiseAmount,
+            currency: "INR", // Razorpay sandbox test accounts use INR base
+            receipt: `project_${Date.now()}`
+          },
+          config
+        );
+
+        const { order_id, amount: orderAmount, currency: orderCurrency } = orderRes.data;
+
+        // 2. Configure Razorpay checkout options
+        const options = {
+          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_SxrGDKusVwDK8G",
+          amount: orderAmount,
+          currency: orderCurrency,
+          name: "ZilVerse Marketplace",
+          description: `Purchase: ${projectTitle}`,
+          order_id: order_id,
+          handler: async function (response: any) {
+            setStep("processing");
+            try {
+              // 3. Verify Payment on Backend
+              const verifyRes = await axios.post(
+                `${API_BASE}/api/payments/razorpay/verify-payment`,
+                {
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_signature: response.razorpay_signature,
+                  amount: price,
+                  currency: "INR"
+                },
+                config
+              );
+
+              if (verifyRes.data.success) {
+                setStep("success");
+                setTimeout(() => {
+                  onSuccess();
+                }, 2000);
+              } else {
+                alert("Payment verification failed.");
+                setStep("details");
+              }
+            } catch (err: any) {
+              console.error("Verification error:", err);
+              alert(err.response?.data?.error || "Payment verification failed.");
+              setStep("details");
+            }
+          },
+          prefill: {
+            name: user?.name || "",
+            email: user?.email || "",
+          },
+          theme: {
+            color: "#7c3aed",
+          },
+          modal: {
+            ondismiss: function () {
+              alert("Payment checkout cancelled.");
+              setStep("details");
+            }
+          }
+        };
+
+        if ((window as any).Razorpay) {
+          const rzp = new (window as any).Razorpay(options);
+          rzp.on('payment.failed', function (resp: any) {
+            console.error("Payment failed:", resp.error);
+            alert(`Payment failed: ${resp.error.description}`);
+            setStep("details");
+          });
+          rzp.open();
+        } else {
+          alert("Razorpay SDK not loaded. Please try again.");
+          setStep("details");
+        }
+      } catch (err: any) {
+        console.error("Razorpay order creation error:", err);
+        alert(err.response?.data?.error || "Failed to initiate Razorpay checkout.");
+        setStep("details");
+      }
+      return;
+    }
+
+    // For PayPal or Crypto, fall back to simulated success
     setStep("processing");
     try {
       if (user) {
-        // Convert base price (INR) to USD
         const usdAmount = price * RATES.USD.rate;
+        const activeToken = localStorage.getItem("zilverse_token") || "";
         await axios.post(`${API_BASE}/api/payments/deposit`, {
           userId: user.id,
           amount: usdAmount,
           currency: "USD",
           gateway: method.toUpperCase(),
-          description: `Enrollment: ${projectTitle}`
+          description: `Purchase: ${projectTitle}`
+        }, {
+          headers: {
+            Authorization: `Bearer ${activeToken}`
+          }
         });
       }
       setStep("success");
@@ -58,7 +177,7 @@ export default function PaymentModal({ projectTitle, price, onClose, onSuccess }
         onSuccess();
       }, 2000);
     } catch (err) {
-      console.error("Database billing sync failed, falling back to offline transaction confirmation:", err);
+      console.error("Database billing sync failed:", err);
       setStep("success");
       setTimeout(() => {
         onSuccess();
