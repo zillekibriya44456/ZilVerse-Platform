@@ -42,16 +42,54 @@ const adminAuth = (req: any, res: any, next: any) => {
 };
 
 // Global Stats
-router.get('/stats', adminAuth, async (req, res) => {
+router.get('/stats', adminAuth, async (req: any, res: any) => {
   try {
-    const [users, projects, jobs, services, reels, discussions] = await Promise.all([
+    const [
+      users,
+      projects,
+      jobs,
+      services,
+      reels,
+      discussions,
+      activeFreelancers,
+      depositsSum
+    ] = await Promise.all([
       prisma.user.count(),
       prisma.project.count(),
       prisma.job.count(),
       prisma.digitalService.count(),
       prisma.reel.count(),
       prisma.discussionPost.count(),
+      prisma.freelancerProfile.count(),
+      prisma.transaction.aggregate({
+        _sum: { amount: true },
+        where: { type: 'DEPOSIT', status: 'COMPLETED' }
+      })
     ]);
+
+    const totalRev = depositsSum._sum.amount || 0.0;
+
+    // Calculate real growth rate based on users signed up in the last 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const newUsersLast30Days = await prisma.user.count({
+      where: {
+        createdAt: { gte: thirtyDaysAgo }
+      }
+    });
+    const growthPercent = users > 0 ? ((newUsersLast30Days / users) * 100).toFixed(1) : '0.0';
+
+    // Get live Socket.io visitors
+    const io = req.app.get('io');
+    const liveSocketCount = io ? io.sockets.sockets.size : 0;
+    const liveVisitors = Math.max(1, liveSocketCount); // minimum 1 (admin session itself)
+
+    // Calculate server uptime
+    const uptimeSec = process.uptime();
+    const hrs = Math.floor(uptimeSec / 3600);
+    const mins = Math.floor((uptimeSec % 3600) / 60);
+    const uptimeStr = `${hrs}h ${mins}m`;
+
     res.json({
       totalUsers: users,
       totalProjects: projects,
@@ -59,14 +97,15 @@ router.get('/stats', adminAuth, async (req, res) => {
       totalServices: services,
       totalReels: reels,
       totalDiscussions: discussions,
-      liveVisitors: Math.floor(Math.random() * 340) + 60,
-      activeFreelancers: Math.floor(users * 0.6),
-      monthlyGrowth: '+24.3%',
-      totalRevenue: '$48,290',
+      liveVisitors,
+      activeFreelancers,
+      monthlyGrowth: `+${growthPercent}%`,
+      totalRevenue: `$${totalRev.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       serverStatus: 'Healthy',
-      uptime: '99.97%',
+      uptime: uptimeStr,
     });
   } catch (error) {
+    console.error('[ADMIN STATS FETCH ERROR]', error);
     res.status(500).json({ error: 'Failed to fetch stats' });
   }
 });
