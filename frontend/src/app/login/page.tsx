@@ -44,10 +44,19 @@ export default function LoginPage() {
   };
 
   const handleSocial = async (providerId: "google" | "github") => {
-    await signIn.social({
-      provider: providerId,
-      callbackURL: "/dashboard" // Redirect automatically after OAuth
-    });
+    setError("");
+    try {
+      const res = await signIn.social({
+        provider: providerId,
+        callbackURL: "/dashboard" // Redirect automatically after OAuth
+      });
+      if (res?.error) {
+        setError(`OAuth Error: ${res.error.message || JSON.stringify(res.error)}`);
+      }
+    } catch (e: any) {
+      console.error("Social login error:", e);
+      setError(`Failed to initialize ${providerId} login. Please check environment variables (GOOGLE_CLIENT_ID, NEXT_PUBLIC_APP_URL, BETTER_AUTH_URL). Error: ${e.message}`);
+    }
   };
 
   return (
