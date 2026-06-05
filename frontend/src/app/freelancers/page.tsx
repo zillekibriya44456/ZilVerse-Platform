@@ -32,7 +32,7 @@ const MOCK_FREELANCERS = [
 ];
 
 export default function FreelancersPage() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [dbFreelancers, setDbFreelancers] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   
@@ -46,6 +46,19 @@ export default function FreelancersPage() {
   const [hireError, setHireError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Dynamically load the Razorpay checkout script
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
+    return () => {
+      try {
+        document.body.removeChild(script);
+      } catch (e) {}
+    };
+  }, []);
+
+  useEffect(() => {
     // Load freelancers from backend
     axios.get(`${API_BASE}/api/freelancers`)
       .then(res => setDbFreelancers(res.data))
@@ -54,14 +67,17 @@ export default function FreelancersPage() {
 
   useEffect(() => {
     // Load client wallet details if logged in
-    const url = user?.id 
-      ? `${API_BASE}/api/payments/wallet?userId=${user.id}`
-      : `${API_BASE}/api/payments/wallet`;
-
-    axios.get(url)
+    const activeToken = token || localStorage.getItem("zilverse_token") || "";
+    if (!activeToken || !user?.id) return;
+    
+    axios.get(`${API_BASE}/api/payments/wallet?userId=${user.id}`, {
+      headers: {
+        Authorization: `Bearer ${activeToken}`
+      }
+    })
       .then(res => setWalletBalance(res.data.availableBalance))
       .catch(err => console.error("Failed to load wallet data", err));
-  }, [user]);
+  }, [user, token]);
 
   const formattedDbFreelancers: FreelancerItem[] = dbFreelancers.map(f => ({
     id: f.id,
@@ -87,6 +103,12 @@ export default function FreelancersPage() {
   });
 
   const handleHireClick = (freelancer: FreelancerItem) => {
+    const activeToken = token || localStorage.getItem("zilverse_token") || "";
+    if (!activeToken) {
+      alert("Please log in to hire freelancers.");
+      window.location.href = "/login?redirect=/freelancers";
+      return;
+    }
     setSelectedFreelancer(freelancer);
     setMilestoneName(`Hire ${freelancer.name} - Milestone 1`);
     setBudget(freelancer.hourlyRateNum * 10); // Default to 10 hours of work
@@ -100,30 +122,139 @@ export default function FreelancersPage() {
     setIsHiring(true);
     setHireError(null);
 
+    const activeToken = token || localStorage.getItem("zilverse_token") || "";
+    const config = {
+      headers: {
+        Authorization: `Bearer ${activeToken}`
+      }
+    };
+
     // Fallback ID if hiring a local mock freelancer who isn't saved in the DB yet
     const targetFreelancerId = selectedFreelancer.userId || "fallback-freelancer-id";
 
-    try {
-      const response = await axios.post(`${API_BASE}/api/payments/escrow/create`, {
-        userId: user?.id,
-        freelancerId: targetFreelancerId,
-        amount: budget,
-        currency: "USD",
-        milestoneName: milestoneName,
-        projectTitle: `${selectedFreelancer.role} Services`
-      });
+    // Scenario A: Client has enough wallet balance
+    if (walletBalance !== null && walletBalance >= budget) {
+      try {
+        const response = await axios.post(`${API_BASE}/api/payments/escrow/create`, {
+          userId: user?.id,
+          freelancerId: targetFreelancerId,
+          amount: budget,
+          currency: "USD",
+          milestoneName: milestoneName,
+          projectTitle: `${selectedFreelancer.role} Services`
+        }, config);
 
-      if (response.data.success) {
-        setHiredSuccess(true);
-        // Refresh wallet balance state
-        if (walletBalance !== null) {
+        if (response.data.success) {
+          setHiredSuccess(true);
           setWalletBalance(prev => (prev !== null ? prev - budget : null));
         }
+      } catch (err: any) {
+        console.error(err);
+        setHireError(err.response?.data?.error || "Transaction failed. Please ensure you have sufficient available balance.");
+      } finally {
+        setIsHiring(false);
+      }
+      return;
+    }
+
+    // Scenario B: Client needs to pay/deposit via Razorpay first
+    try {
+      // 1. Create order on the backend
+      // Convert budget (USD) to INR (exchange rate 83.5), then to paise
+      const inrAmount = budget * 83.5;
+      const paiseAmount = Math.max(100, Math.round(inrAmount * 100));
+
+      const orderRes = await axios.post(
+        `${API_BASE}/api/payments/razorpay/create-order`,
+        {
+          amount: paiseAmount,
+          currency: "INR",
+          receipt: `escrow_${Date.now()}`
+        },
+        config
+      );
+
+      const { order_id, amount: orderAmount, currency: orderCurrency } = orderRes.data;
+
+      // 2. Configure Razorpay checkout options
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_live_Sxuhmk2KLWNZx5",
+        amount: orderAmount,
+        currency: orderCurrency,
+        name: "ZilVerse Freelancers",
+        description: `Escrow Deposit: ${selectedFreelancer.name}`,
+        order_id: order_id,
+        handler: async function (response: any) {
+          setIsHiring(true);
+          try {
+            // 3. Verify Payment (Automatically credits user's wallet with the USD amount)
+            await axios.post(
+              `${API_BASE}/api/payments/razorpay/verify-payment`,
+              {
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature,
+                amount: budget, // USD amount to credit
+                currency: "USD"
+              },
+              config
+            );
+
+            // 4. Create Escrow transaction using newly credited balance
+            const escrowResponse = await axios.post(`${API_BASE}/api/payments/escrow/create`, {
+              userId: user?.id,
+              freelancerId: targetFreelancerId,
+              amount: budget,
+              currency: "USD",
+              milestoneName: milestoneName,
+              projectTitle: `${selectedFreelancer.role} Services`
+            }, config);
+
+            if (escrowResponse.data.success) {
+              setHiredSuccess(true);
+              // Refresh wallet balance state
+              const wRes = await axios.get(`${API_BASE}/api/payments/wallet?userId=${user?.id}`, config);
+              setWalletBalance(wRes.data.availableBalance);
+            } else {
+              setHireError("Escrow contract setup failed after payment.");
+            }
+          } catch (err: any) {
+            console.error("Payment flow verification error:", err);
+            setHireError(err.response?.data?.error || "Payment verification failed.");
+          } finally {
+            setIsHiring(false);
+          }
+        },
+        prefill: {
+          name: user?.name || "",
+          email: user?.email || "",
+        },
+        theme: {
+          color: "#7c3aed",
+        },
+        modal: {
+          ondismiss: function () {
+            alert("Payment checkout cancelled.");
+            setIsHiring(false);
+          }
+        }
+      };
+
+      if ((window as any).Razorpay) {
+        const rzp = new (window as any).Razorpay(options);
+        rzp.on('payment.failed', function (resp: any) {
+          console.error("Payment failed:", resp.error);
+          alert(`Payment failed: ${resp.error.description}`);
+          setIsHiring(false);
+        });
+        rzp.open();
+      } else {
+        setHireError("Razorpay SDK not loaded. Please try again.");
+        setIsHiring(false);
       }
     } catch (err: any) {
-      console.error(err);
-      setHireError(err.response?.data?.error || "Transaction failed. Please ensure you have sufficient available balance.");
-    } finally {
+      console.error("Razorpay order creation error:", err);
+      setHireError(err.response?.data?.error || "Failed to initiate Razorpay checkout.");
       setIsHiring(false);
     }
   };
@@ -265,10 +396,14 @@ export default function FreelancersPage() {
                   <button
                     type="submit"
                     className="btn btn-primary"
-                    disabled={isHiring || (walletBalance !== null && walletBalance < budget)}
+                    disabled={isHiring}
                     style={{ flex: 2 }}
                   >
-                    {isHiring ? "Authorizing Escrow..." : "Confirm & Deposit"}
+                    {isHiring 
+                      ? "Authorizing..." 
+                      : (walletBalance !== null && walletBalance >= budget)
+                        ? "Confirm & Deposit"
+                        : "Pay & Hire via Razorpay"}
                   </button>
                   <button
                     type="button"
