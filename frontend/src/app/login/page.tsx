@@ -1,11 +1,12 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "@/lib/auth-client";
 import styles from "./auth.module.css";
 import { useAuth } from "@/context/AuthContext";
 import { API_BASE } from "@/utils/api";
+import { Loader2 } from "lucide-react";
 
 const SOCIAL_PROVIDERS = [
   { id: "google", name: "Google", icon: "G", color: "#EA4335", bg: "rgba(234,67,53,0.1)", border: "rgba(234,67,53,0.25)" },
