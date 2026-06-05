@@ -165,7 +165,7 @@ export default function WalletPage() {
 
         // 2. Configure Razorpay checkout options
         const options = {
-          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_SxrGDKusVwDK8G",
+          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_live_Sxuhmk2KLWNZx5",
           amount: orderAmount,
           currency: orderCurrency,
           name: "ZilVerse Platform",
