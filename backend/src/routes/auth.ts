@@ -122,35 +122,37 @@ router.post('/social', async (req: Request, res: Response): Promise<any> => {
 import passport from 'passport';
 
 // Google OAuth
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'], session: false }));
-router.get('/google/callback', passport.authenticate('google', { session: false, failureRedirect: 'http://localhost:3000/login?error=oauth_failed' }), (req: any, res: Response) => {
+router.get('/google/callback', passport.authenticate('google', { session: false, failureRedirect: `${FRONTEND_URL}/login?error=oauth_failed` }), (req: any, res: Response) => {
   const token = jwt.sign({ id: req.user.id, role: req.user.role }, JWT_SECRET, { expiresIn: '1d' });
   const userStr = encodeURIComponent(JSON.stringify({ id: req.user.id, email: req.user.email, name: req.user.name, role: req.user.role }));
-  res.redirect(`http://localhost:3000/login?token=${token}&user=${userStr}`);
+  res.redirect(`${FRONTEND_URL}/login?token=${token}&user=${userStr}`);
 });
 
 // GitHub OAuth
 router.get('/github', passport.authenticate('github', { scope: ['user:email'], session: false }));
-router.get('/github/callback', passport.authenticate('github', { session: false, failureRedirect: 'http://localhost:3000/login?error=oauth_failed' }), (req: any, res: Response) => {
+router.get('/github/callback', passport.authenticate('github', { session: false, failureRedirect: `${FRONTEND_URL}/login?error=oauth_failed` }), (req: any, res: Response) => {
   const token = jwt.sign({ id: req.user.id, role: req.user.role }, JWT_SECRET, { expiresIn: '1d' });
   const userStr = encodeURIComponent(JSON.stringify({ id: req.user.id, email: req.user.email, name: req.user.name, role: req.user.role }));
-  res.redirect(`http://localhost:3000/login?token=${token}&user=${userStr}`);
+  res.redirect(`${FRONTEND_URL}/login?token=${token}&user=${userStr}`);
 });
 
 // Facebook OAuth
 router.get('/facebook', passport.authenticate('facebook', { scope: ['email'], session: false }));
-router.get('/facebook/callback', passport.authenticate('facebook', { session: false, failureRedirect: 'http://localhost:3000/login?error=oauth_failed' }), (req: any, res: Response) => {
+router.get('/facebook/callback', passport.authenticate('facebook', { session: false, failureRedirect: `${FRONTEND_URL}/login?error=oauth_failed` }), (req: any, res: Response) => {
   const token = jwt.sign({ id: req.user.id, role: req.user.role }, JWT_SECRET, { expiresIn: '1d' });
   const userStr = encodeURIComponent(JSON.stringify({ id: req.user.id, email: req.user.email, name: req.user.name, role: req.user.role }));
-  res.redirect(`http://localhost:3000/login?token=${token}&user=${userStr}`);
+  res.redirect(`${FRONTEND_URL}/login?token=${token}&user=${userStr}`);
 });
 
 // LinkedIn OAuth
 router.get('/linkedin', passport.authenticate('linkedin', { scope: ['openid', 'profile', 'email'], session: false }));
-router.get('/linkedin/callback', passport.authenticate('linkedin', { session: false, failureRedirect: 'http://localhost:3000/login?error=oauth_failed' }), (req: any, res: Response) => {
+router.get('/linkedin/callback', passport.authenticate('linkedin', { session: false, failureRedirect: `${FRONTEND_URL}/login?error=oauth_failed` }), (req: any, res: Response) => {
   const token = jwt.sign({ id: req.user.id, role: req.user.role }, JWT_SECRET, { expiresIn: '1d' });
   const userStr = encodeURIComponent(JSON.stringify({ id: req.user.id, email: req.user.email, name: req.user.name, role: req.user.role }));
-  res.redirect(`http://localhost:3000/login?token=${token}&user=${userStr}`);
+  res.redirect(`${FRONTEND_URL}/login?token=${token}&user=${userStr}`);
 });
 
 // Generic fallbacks for others

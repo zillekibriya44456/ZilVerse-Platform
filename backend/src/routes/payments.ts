@@ -3,6 +3,9 @@ import { PrismaClient } from '@prisma/client';
 import { authenticateToken, requireAdmin, AuthenticatedRequest } from '../middleware/auth';
 // @ts-ignore
 import Stripe from 'stripe';
+// @ts-ignore
+import Razorpay from 'razorpay';
+import crypto from 'crypto';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -13,6 +16,13 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'dummy_stripe_secret_
 });
 
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || 'dummy_webhook_secret';
+
+// Initialize Razorpay (uses secure env variable)
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID || 'dummy_key_id',
+  key_secret: process.env.RAZORPAY_KEY_SECRET || 'dummy_key_secret',
+});
+
 
 // Helper to get or create wallet for a user
 async function getOrCreateWallet(userId: string) {
@@ -648,4 +658,144 @@ router.post('/admin/disputes/:id/resolve', authenticateToken, requireAdmin, asyn
   }
 });
 
+// ==========================================
+// RAZORPAY STANDARD CHECKOUT API ENDPOINTS
+// ==========================================
+
+const createOrderHandler = async (req: AuthenticatedRequest, res: any) => {
+  try {
+    const userId = (req as any).user?.id;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized user context.' });
+
+    const { amount, currency, receipt } = req.body;
+    
+    // Validate amount (paise)
+    const paiseAmount = parseInt(amount, 10);
+    if (isNaN(paiseAmount) || paiseAmount < 100) {
+      return res.status(400).json({ error: 'Amount must be at least 100 paise.' });
+    }
+
+    const keyId = process.env.RAZORPAY_KEY_ID;
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+    if (!keyId || !keySecret || keyId === 'dummy_key_id' || keySecret === 'dummy_key_secret') {
+      return res.status(401).json({ error: 'Razorpay keys are not configured on the server.' });
+    }
+
+    const options = {
+      amount: paiseAmount,
+      currency: currency || 'INR',
+      receipt: receipt || `receipt_${Date.now()}`,
+    };
+
+    const order = await razorpay.orders.create(options);
+    
+    return res.json({
+      order_id: order.id,
+      amount: order.amount,
+      currency: order.currency
+    });
+  } catch (error: any) {
+    console.error('[RAZORPAY CREATE ORDER ERROR]', error);
+    return res.status(500).json({ error: 'Failed to create Razorpay order: ' + error.message });
+  }
+};
+
+const verifyPaymentHandler = async (req: AuthenticatedRequest, res: any) => {
+  try {
+    const userId = (req as any).user?.id;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized user context.' });
+
+    const { razorpay_payment_id, razorpay_order_id, razorpay_signature, amount, currency } = req.body;
+
+    if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature) {
+      return res.status(400).json({ error: 'Missing required Razorpay fields.' });
+    }
+
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+    if (!keySecret || keySecret === 'dummy_key_secret') {
+      return res.status(401).json({ error: 'Razorpay secret is not configured on the server.' });
+    }
+
+    // Generate expected signature
+    const generated_signature = crypto
+      .createHmac('sha256', keySecret)
+      .update(razorpay_order_id + "|" + razorpay_payment_id)
+      .digest('hex');
+
+    if (generated_signature !== razorpay_signature) {
+      return res.status(400).json({ error: 'Payment signature verification failed. Mismatch.' });
+    }
+
+    // Credit User's Wallet if amount and currency are provided
+    let updatedWallet = null;
+    let transaction = null;
+    if (amount) {
+      const parsedAmount = parseFloat(amount);
+      if (!isNaN(parsedAmount) && parsedAmount > 0) {
+        // Convert to USD base if currency is INR or other (EXCHANGE_RATES)
+        const rates: Record<string, number> = {
+          USD: 1.0,
+          INR: 83.5,
+          EUR: 0.92,
+          GBP: 0.79,
+          AED: 3.67,
+          SGD: 1.35
+        };
+        const rate = rates[currency?.toUpperCase()] || 1.0;
+        const usdAmount = parsedAmount / rate;
+
+        const wallet = await getOrCreateWallet(userId);
+        updatedWallet = await prisma.wallet.update({
+          where: { userId },
+          data: { availableBalance: wallet.availableBalance + usdAmount }
+        });
+
+        transaction = await prisma.transaction.create({
+          data: {
+            userId,
+            amount: usdAmount,
+            currency: 'USD',
+            type: 'DEPOSIT',
+            status: 'COMPLETED',
+            gateway: 'RAZORPAY',
+            description: `Razorpay Deposit (${currency} ${parsedAmount})`
+          }
+        });
+
+        // Create Invoice
+        const invoiceNum = 'INV-RZP-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+        const userObj = await prisma.user.findUnique({ where: { id: userId } });
+        await prisma.invoice.create({
+          data: {
+            transactionId: transaction.id,
+            invoiceNumber: invoiceNum,
+            senderName: 'Razorpay Payments Inc.',
+            receiverName: userObj?.name || 'ZilVerse Partner',
+            amount: usdAmount,
+            currency: 'USD'
+          }
+        });
+
+        emitWalletUpdate(req, userId);
+      }
+    }
+
+    return res.json({
+      success: true,
+      message: 'Payment verified successfully.',
+      wallet: updatedWallet,
+      transaction
+    });
+  } catch (error: any) {
+    console.error('[RAZORPAY VERIFY PAYMENT ERROR]', error);
+    return res.status(500).json({ error: 'Failed to verify payment: ' + error.message });
+  }
+};
+
+router.post('/create-order', authenticateToken, createOrderHandler as any);
+router.post('/razorpay/create-order', authenticateToken, createOrderHandler as any);
+router.post('/verify-payment', authenticateToken, verifyPaymentHandler as any);
+router.post('/razorpay/verify-payment', authenticateToken, verifyPaymentHandler as any);
+
 export default router;
+

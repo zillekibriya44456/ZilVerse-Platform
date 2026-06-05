@@ -1,5 +1,6 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
+import { authenticateToken } from '../middleware/auth';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -22,16 +23,11 @@ router.get('/', async (req, res) => {
 });
 
 // Post a new job
-router.post('/create', async (req, res) => {
+router.post('/create', authenticateToken, async (req, res) => {
   try {
-    const { title, company, location, type, salary, description, requirements, employerId } = req.body;
-    
-    let uid = employerId;
-    if (!uid) {
-       const user = await prisma.user.findFirst();
-       if (!user) return res.status(400).json({ error: 'No users exist. Please sign up first.' });
-       uid = user.id;
-    }
+    const { title, company, location, type, salary, description, requirements } = req.body;
+    const uid = (req as any).user?.id;
+    if (!uid) return res.status(401).json({ error: 'Unauthorized context.' });
 
     const job = await prisma.job.create({
       data: {
@@ -53,23 +49,18 @@ router.post('/create', async (req, res) => {
 });
 
 // Apply to a job
-router.post('/apply', async (req, res) => {
+router.post('/apply', authenticateToken, async (req, res) => {
   try {
-    const { jobId, resumeUrl, coverLetter, applicantId } = req.body;
-    let uid = applicantId;
-    if (!uid) {
-       const user = await prisma.user.findFirst();
-       if (!user) return res.status(400).json({ error: 'No users exist.' });
-       uid = user.id;
-    }
+    const { jobId, resumeUrl, coverLetter } = req.body;
+    const uid = (req as any).user?.id;
+    if (!uid) return res.status(401).json({ error: 'Unauthorized context.' });
 
     const existingJob = await prisma.job.findUnique({
       where: { id: String(jobId) }
     });
 
     if (!existingJob) {
-      // Mock success for frontend demo data
-      return res.status(201).json({ id: 'mock', status: 'Applied to Demo Job' });
+      return res.status(404).json({ error: 'Job posting not found.' });
     }
 
     const application = await prisma.jobApplication.create({

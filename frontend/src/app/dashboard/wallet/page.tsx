@@ -25,7 +25,7 @@ const EXCHANGE_RATES: Record<string, number> = {
 };
 
 export default function WalletPage() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [wallet, setWallet] = useState<any>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [escrows, setEscrows] = useState<any[]>([]);
@@ -52,30 +52,47 @@ export default function WalletPage() {
     setTimeout(() => setToast(""), 4000);
   };
 
+  const getHeaders = () => {
+    const activeToken = token || localStorage.getItem("zilverse_token") || "";
+    return {
+      headers: {
+        Authorization: `Bearer ${activeToken}`
+      }
+    };
+  };
+
   const loadData = async () => {
     if (!user) return;
     try {
-      const wRes = await axios.get(`${API_BASE}/api/payments/wallet?userId=${user.id}`);
+      const config = getHeaders();
+      const wRes = await axios.get(`${API_BASE}/api/payments/wallet?userId=${user.id}`, config);
       setWallet(wRes.data);
 
-      const tRes = await axios.get(`${API_BASE}/api/payments/transactions?userId=${user.id}`);
+      const tRes = await axios.get(`${API_BASE}/api/payments/transactions?userId=${user.id}`, config);
       setTransactions(tRes.data);
 
-      const eRes = await axios.get(`${API_BASE}/api/payments/escrows?userId=${user.id}`);
+      const eRes = await axios.get(`${API_BASE}/api/payments/escrows?userId=${user.id}`, config);
       setEscrows(eRes.data);
 
-      const wrRes = await axios.get(`${API_BASE}/api/payments/withdrawals?userId=${user.id}`);
+      const wrRes = await axios.get(`${API_BASE}/api/payments/withdrawals?userId=${user.id}`, config);
       setWithdrawals(wrRes.data);
 
-      const invRes = await axios.get(`${API_BASE}/api/payments/invoices?userId=${user.id}`);
+      const invRes = await axios.get(`${API_BASE}/api/payments/invoices?userId=${user.id}`, config);
       setInvoices(invRes.data);
     } catch (err) {
-      console.error(err);
+      console.error("Error loading wallet page ledger details:", err);
     }
   };
 
   useEffect(() => {
+    // Dynamically append Razorpay checkout script
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
+
     loadData();
+
     // Detect country/currency
     const region = navigator.language;
     if (region.includes("IN") || region.includes("in")) {
@@ -100,6 +117,9 @@ export default function WalletPage() {
 
     return () => {
       socket.off('wallet_update', handleWalletUpdate);
+      try {
+        document.body.removeChild(script);
+      } catch (e) {}
     };
   }, [user]);
 
@@ -113,18 +133,118 @@ export default function WalletPage() {
       return showToast("Please enter a valid amount.");
     }
     setLoading(true);
-    try {
-      // Calculate USD base for backend
-      const rate = EXCHANGE_RATES[selectedCurrency] || 1.0;
-      const usdAmount = parseFloat(depositData.amount) / rate;
 
+    const rate = EXCHANGE_RATES[selectedCurrency] || 1.0;
+    const usdAmount = parseFloat(depositData.amount) / rate;
+
+    // Handle real Razorpay checkout flow
+    if (depositData.gateway === "RAZORPAY") {
+      try {
+        const currency = selectedCurrency;
+        const amountVal = parseFloat(depositData.amount);
+        const paiseAmount = Math.round(amountVal * 100);
+
+        if (paiseAmount < 100) {
+          showToast("Minimum amount is 100 paise (₹1.00).");
+          setLoading(false);
+          return;
+        }
+
+        // 1. Call Backend to Create Order
+        const orderRes = await axios.post(
+          `${API_BASE}/api/payments/razorpay/create-order`,
+          {
+            amount: paiseAmount,
+            currency: currency,
+            receipt: `receipt_${Date.now()}`
+          },
+          getHeaders()
+        );
+
+        const { order_id, amount: orderAmount, currency: orderCurrency } = orderRes.data;
+
+        // 2. Configure Razorpay checkout options
+        const options = {
+          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_SxrGDKusVwDK8G",
+          amount: orderAmount,
+          currency: orderCurrency,
+          name: "ZilVerse Platform",
+          description: depositData.description || "Wallet Deposit",
+          order_id: order_id,
+          handler: async function (response: any) {
+            setLoading(true);
+            try {
+              // 3. Send payment details to verify endpoint
+              const verifyRes = await axios.post(
+                `${API_BASE}/api/payments/razorpay/verify-payment`,
+                {
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_signature: response.razorpay_signature,
+                  amount: amountVal,
+                  currency: currency
+                },
+                getHeaders()
+              );
+
+              if (verifyRes.data.success) {
+                showToast(`Payment successful! Deposited ${CURRENCY_SYMBOLS[selectedCurrency]}${depositData.amount} successfully.`);
+                setShowDepositModal(false);
+                setDepositData({ amount: "", gateway: "STRIPE", description: "Wallet Deposit" });
+                loadData();
+              } else {
+                showToast("Payment verification failed.");
+              }
+            } catch (err: any) {
+              console.error("Verification error:", err);
+              showToast(err.response?.data?.error || "Verification failed.");
+            } finally {
+              setLoading(false);
+            }
+          },
+          prefill: {
+            name: user?.name || "",
+            email: user?.email || "",
+          },
+          theme: {
+            color: "#7c3aed",
+          },
+          modal: {
+            ondismiss: function () {
+              showToast("Payment checkout cancelled by user.");
+              setLoading(false);
+            }
+          }
+        };
+
+        if ((window as any).Razorpay) {
+          const rzp = new (window as any).Razorpay(options);
+          rzp.on('payment.failed', function (resp: any) {
+            console.error("Payment failed:", resp.error);
+            showToast(`Payment failed: ${resp.error.description}`);
+          });
+          rzp.open();
+        } else {
+          showToast("Razorpay SDK not loaded. Please try again.");
+          setLoading(false);
+        }
+      } catch (err: any) {
+        console.error("Razorpay order creation error:", err);
+        showToast(err.response?.data?.error || "Failed to initiate Razorpay checkout.");
+        setLoading(false);
+      }
+      return;
+    }
+
+    // Otherwise, simulate other deposits
+    try {
       await axios.post(`${API_BASE}/api/payments/deposit`, {
         userId: user?.id,
         amount: usdAmount,
         currency: "USD",
         gateway: depositData.gateway,
         description: depositData.description
-      });
+      }, getHeaders());
 
       showToast(`Successfully deposited ${CURRENCY_SYMBOLS[selectedCurrency]}${depositData.amount} via ${depositData.gateway}!`);
       setShowDepositModal(false);
@@ -155,7 +275,7 @@ export default function WalletPage() {
         currency: "USD",
         method: withdrawData.method,
         details: withdrawData.details
-      });
+      }, getHeaders());
 
       showToast(`Withdrawal of ${CURRENCY_SYMBOLS[selectedCurrency]}${withdrawData.amount} requested! Pending admin approval.`);
       setShowWithdrawModal(false);
@@ -187,7 +307,7 @@ export default function WalletPage() {
         currency: "USD",
         milestoneName: escrowData.milestoneName,
         projectTitle: escrowData.projectTitle || "New Project Escrow"
-      });
+      }, getHeaders());
 
       showToast(`Escrow of ${CURRENCY_SYMBOLS[selectedCurrency]}${escrowData.amount} funded successfully!`);
       setShowEscrowModal(false);
@@ -203,7 +323,7 @@ export default function WalletPage() {
   const handleReleaseEscrow = async (escrowId: string) => {
     if (!confirm("Are you sure you want to release these escrow funds to the freelancer?")) return;
     try {
-      await axios.post(`${API_BASE}/api/payments/escrow/release`, { escrowId });
+      await axios.post(`${API_BASE}/api/payments/escrow/release`, { escrowId }, getHeaders());
       showToast("Escrow funds released successfully to the freelancer!");
       loadData();
     } catch {
@@ -219,13 +339,14 @@ export default function WalletPage() {
         escrowId,
         reason,
         raisedBy: user?.id
-      });
+      }, getHeaders());
       showToast("Dispute logged successfully. Super Admin has been notified.");
       loadData();
     } catch {
       showToast("Failed to file dispute.");
     }
   };
+
 
   const downloadReceipt = (inv: any) => {
     const printWindow = window.open("", "_blank");

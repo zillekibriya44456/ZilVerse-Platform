@@ -1,5 +1,6 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
+import { authenticateToken } from '../middleware/auth';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -16,15 +17,11 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.post('/create', async (req, res) => {
+router.post('/create', authenticateToken, async (req, res) => {
   try {
-    const { assetType, title, description, price, sellerId } = req.body;
-    let uid = sellerId;
-    if (!uid) {
-       const user = await prisma.user.findFirst();
-       if (!user) return res.status(400).json({ error: 'No users exist.' });
-       uid = user.id;
-    }
+    const { assetType, title, description, price } = req.body;
+    const uid = (req as any).user?.id;
+    if (!uid) return res.status(401).json({ error: 'Unauthorized context.' });
 
     const listing = await prisma.exchangeListing.create({
       data: { assetType, title, description, price: parseFloat(price || '0'), sellerId: uid }
@@ -36,23 +33,18 @@ router.post('/create', async (req, res) => {
 });
 
 // Propose a trade
-router.post('/propose', async (req, res) => {
+router.post('/propose', authenticateToken, async (req, res) => {
   try {
-    const { listingId, message, proposerId } = req.body;
-    let uid = proposerId;
-    if (!uid) {
-       const user = await prisma.user.findFirst();
-       if (!user) return res.status(400).json({ error: 'No users exist.' });
-       uid = user.id;
-    }
+    const { listingId, message } = req.body;
+    const uid = (req as any).user?.id;
+    if (!uid) return res.status(401).json({ error: 'Unauthorized context.' });
 
     const existingListing = await prisma.exchangeListing.findUnique({
       where: { id: String(listingId) }
     });
 
     if (!existingListing) {
-      // Mock success for frontend demo data
-      return res.status(201).json({ id: 'mock', message, status: 'Sent to Demo User' });
+      return res.status(404).json({ error: 'Exchange listing not found.' });
     }
 
     const proposal = await prisma.exchangeProposal.create({

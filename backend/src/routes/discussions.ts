@@ -1,5 +1,6 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
+import { authenticateToken } from '../middleware/auth';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -22,15 +23,11 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.post('/create', async (req, res) => {
+router.post('/create', authenticateToken, async (req, res) => {
   try {
-    const { title, content, category, authorId } = req.body;
-    let uid = authorId;
-    if (!uid) {
-       const user = await prisma.user.findFirst();
-       if (!user) return res.status(400).json({ error: 'No users exist.' });
-       uid = user.id;
-    }
+    const { title, content, category } = req.body;
+    const uid = (req as any).user?.id;
+    if (!uid) return res.status(401).json({ error: 'Unauthorized context.' });
 
     const post = await prisma.discussionPost.create({
       data: { title, content, category, authorId: uid }
@@ -42,23 +39,18 @@ router.post('/create', async (req, res) => {
 });
 
 // Reply to a discussion post
-router.post('/reply', async (req, res) => {
+router.post('/reply', authenticateToken, async (req, res) => {
   try {
-    const { postId, content, authorId } = req.body;
-    let uid = authorId;
-    if (!uid) {
-       const user = await prisma.user.findFirst();
-       if (!user) return res.status(400).json({ error: 'No users exist.' });
-       uid = user.id;
-    }
+    const { postId, content } = req.body;
+    const uid = (req as any).user?.id;
+    if (!uid) return res.status(401).json({ error: 'Unauthorized context.' });
 
     const existingPost = await prisma.discussionPost.findUnique({
       where: { id: String(postId) }
     });
 
     if (!existingPost) {
-      // Mock success for frontend demo data
-      return res.status(201).json({ id: 'mock-reply', content, status: 'Mock Reply Added' });
+      return res.status(404).json({ error: 'Discussion post not found.' });
     }
 
     const reply = await prisma.discussionReply.create({
