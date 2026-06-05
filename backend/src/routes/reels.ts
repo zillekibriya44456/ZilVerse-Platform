@@ -51,7 +51,7 @@ router.get('/', async (req, res) => {
 
     res.json({
       reels: scored,
-      nextCursor: reels.length === limit ? reels[reels.length - 1].createdAt.toISOString() : null
+      nextCursor: reels.length === limit ? reels[reels.length - 1]?.createdAt.toISOString() : null
     });
   } catch (error) {
     console.error(error);
@@ -63,7 +63,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const reel = await prisma.reel.findUnique({
-      where: { id: req.params.id },
+      where: { id: (req.params.id as string) },
       include: {
         creator: { select: { id: true, name: true, avatar: true, bio: true, verified: true } },
         _count: { select: { reelLikes: true, reelComments: true, donations: true } }
@@ -107,7 +107,7 @@ router.post('/upload', authenticateToken, uploadVideo.single('video'), async (re
 router.post('/:id/view', async (req, res) => {
   try {
     await prisma.reel.update({
-      where: { id: req.params.id },
+      where: { id: (req.params.id as string) },
       data: { views: { increment: 1 } }
     });
     res.json({ success: true });
@@ -123,7 +123,7 @@ router.post('/:id/view', async (req, res) => {
 router.post('/:id/like', authenticateToken, async (req: express.Request, res: any) => {
   try {
     const userId = (req as any).user?.id;
-    const reelId = req.params.id;
+    const reelId = req.params.id as string;
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
     const existing = await prisma.reelLike.findUnique({
@@ -152,7 +152,7 @@ router.get('/:id/liked', authenticateToken, async (req: express.Request, res: an
   try {
     const userId = (req as any).user?.id;
     const existing = await prisma.reelLike.findUnique({
-      where: { reelId_userId: { reelId: req.params.id, userId } }
+      where: { reelId_userId: { reelId: (req.params.id as string), userId } }
     });
     res.json({ liked: !!existing });
   } catch (error) {
@@ -167,7 +167,7 @@ router.get('/:id/liked', authenticateToken, async (req: express.Request, res: an
 router.post('/:id/save', authenticateToken, async (req: express.Request, res: any) => {
   try {
     const userId = (req as any).user?.id;
-    const reelId = req.params.id;
+    const reelId = req.params.id as string;
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
     const existing = await prisma.reelSave.findUnique({
@@ -193,7 +193,7 @@ router.get('/:id/saved', authenticateToken, async (req: express.Request, res: an
   try {
     const userId = (req as any).user?.id;
     const existing = await prisma.reelSave.findUnique({
-      where: { reelId_userId: { reelId: req.params.id, userId } }
+      where: { reelId_userId: { reelId: (req.params.id as string), userId } }
     });
     res.json({ saved: !!existing });
   } catch (error) {
@@ -209,7 +209,7 @@ router.get('/:id/saved', authenticateToken, async (req: express.Request, res: an
 router.get('/:id/comments', async (req, res) => {
   try {
     const comments = await prisma.reelComment.findMany({
-      where: { reelId: req.params.id, parentId: null },
+      where: { reelId: (req.params.id as string), parentId: null },
       include: {
         user: { select: { id: true, name: true, avatar: true, verified: true } }
       },
@@ -259,7 +259,7 @@ router.post('/:id/comments', authenticateToken, async (req: express.Request, res
 
     const comment = await prisma.reelComment.create({
       data: {
-        reelId: req.params.id,
+        reelId: (req.params.id as string),
         userId,
         content: content.trim(),
         parentId: parentId || null
@@ -271,7 +271,7 @@ router.post('/:id/comments', authenticateToken, async (req: express.Request, res
 
     // Increment comment count on reel
     await prisma.reel.update({
-      where: { id: req.params.id },
+      where: { id: (req.params.id as string) },
       data: { comments: { increment: 1 } }
     });
 
@@ -289,7 +289,7 @@ router.post('/:id/comments', authenticateToken, async (req: express.Request, res
 router.post('/:id/share', async (req, res) => {
   try {
     await prisma.reel.update({
-      where: { id: req.params.id },
+      where: { id: (req.params.id as string) },
       data: { shares: { increment: 1 } }
     });
     res.json({ success: true });
@@ -305,7 +305,7 @@ router.post('/:id/share', async (req, res) => {
 router.post('/follow/:targetId', authenticateToken, async (req: express.Request, res: any) => {
   try {
     const followerId = (req as any).user?.id;
-    const followingId = req.params.targetId;
+    const followingId = (req.params.targetId as string);
     if (!followerId) return res.status(401).json({ error: 'Unauthorized' });
     if (followerId === followingId) return res.status(400).json({ error: 'Cannot follow yourself' });
 
@@ -331,7 +331,7 @@ router.get('/follow/:targetId/status', authenticateToken, async (req: express.Re
   try {
     const followerId = (req as any).user?.id;
     const existing = await prisma.follow.findUnique({
-      where: { followerId_followingId: { followerId, followingId: req.params.targetId } }
+      where: { followerId_followingId: { followerId, followingId: (req.params.targetId as string) } }
     });
     res.json({ following: !!existing });
   } catch (error) {
@@ -514,8 +514,8 @@ router.post('/stories/:storyId/view', authenticateToken, async (req: express.Req
     if (!viewerId) return res.status(401).json({ error: 'Unauthorized' });
 
     await prisma.storyView.upsert({
-      where: { storyId_viewerId: { storyId: req.params.storyId, viewerId } },
-      create: { storyId: req.params.storyId, viewerId, reaction: req.body.reaction || null },
+      where: { storyId_viewerId: { storyId: (req.params.storyId as string), viewerId } },
+      create: { storyId: (req.params.storyId as string), viewerId, reaction: req.body.reaction || null },
       update: { reaction: req.body.reaction || undefined }
     });
 
