@@ -292,6 +292,7 @@ model Reel {
   reelComments  ReelComment[]
   reelSaves     ReelSave[]
   donations     ReelDonation[]
+  reelReports   ReelReport[]
 
   @@index([creatorId])
   @@index([category])
