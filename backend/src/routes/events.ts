@@ -1,6 +1,8 @@
 import express from 'express';
 import prisma from '../lib/prisma';
 
+import { authenticateToken } from '../middleware/auth';
+
 const router = express.Router();
 
 router.get('/', async (req, res) => {
@@ -12,7 +14,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.post('/create', async (req, res) => {
+router.post('/create', authenticateToken, async (req, res) => {
   try {
     const { title, type, date, location, description } = req.body;
     const event = await prisma.event.create({

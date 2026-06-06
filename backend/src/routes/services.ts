@@ -2,6 +2,8 @@ import prisma from '../lib/prisma';
 import express from 'express';
 
 
+import { authenticateToken } from '../middleware/auth';
+
 const router = express.Router();
 
 
@@ -23,15 +25,13 @@ router.get('/', async (req, res) => {
 });
 
 // Create a new digital service
-router.post('/create', async (req, res) => {
+router.post('/create', authenticateToken, async (req: any, res: any) => {
   try {
-    const { title, description, price, category, deliveryTime, sellerId } = req.body;
+    const { title, description, price, category, deliveryTime } = req.body;
     
-    let uid = sellerId;
+    const uid = req.user?.id;
     if (!uid) {
-       const user = await prisma.user.findFirst();
-       if (!user) return res.status(400).json({ error: 'No users exist. Please sign up first.' });
-       uid = user.id;
+       return res.status(401).json({ error: 'Unauthorized user context.' });
     }
 
     const service = await prisma.digitalService.create({

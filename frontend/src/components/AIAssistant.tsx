@@ -111,9 +111,13 @@ export default function AIAssistant() {
             {messages.map((m, i) => (
               <div key={i} className={`${styles.msg} ${m.role === "user" ? styles.msgUser : styles.msgAI}`}>
                 {m.role === "ai" && <div className={styles.msgAvatar}>🤖</div>}
-                <div className={styles.msgBubble} dangerouslySetInnerHTML={{
-                  __html: m.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                }} />
+                {m.role === "ai" ? (
+                  <div className={styles.msgBubble} dangerouslySetInnerHTML={{
+                    __html: m.text.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                  }} />
+                ) : (
+                  <div className={styles.msgBubble}>{m.text}</div>
+                )}
               </div>
             ))}
             {typing && (

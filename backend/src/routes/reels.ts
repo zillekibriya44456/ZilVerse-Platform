@@ -630,3 +630,38 @@ router.get('/trending/creators', async (req, res) => {
 });
 
 export default router;
+
+// ───────────────────────────────────────────────
+// REPORT
+// ───────────────────────────────────────────────
+
+router.post('/:id/report', authenticateToken, async (req: express.Request, res: any) => {
+  try {
+    const userId = (req as any).user?.id;
+    const reelId = req.params.id as string;
+    const { reason } = req.body;
+    
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const existing = await prisma.reelReport.findUnique({
+      where: { reelId_userId: { reelId, userId } }
+    });
+
+    if (existing) {
+      return res.status(400).json({ error: 'You have already reported this reel.' });
+    }
+
+    await prisma.reelReport.create({
+      data: {
+        reelId,
+        userId,
+        reason: reason || 'Inappropriate content'
+      }
+    });
+
+    res.status(201).json({ success: true, message: 'Report submitted successfully.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to submit report' });
+  }
+});

@@ -7,38 +7,17 @@ import { socket } from "@/utils/socket";
 
 const API = `${API_BASE}/api/admin`;
 
-const DEMO_USERS = [
-  { id: "u1", name: "Alex Chen", email: "alex@example.com", role: "Freelancer", status: "Active", joined: "2026-01-12" },
-  { id: "u2", name: "Sarah Jenkins", email: "sarah@example.com", role: "Buyer", status: "Active", joined: "2026-02-08" },
-  { id: "u3", name: "Mike Ross", email: "mike@example.com", role: "Startup", status: "Suspended", joined: "2026-03-21" },
-  { id: "u4", name: "Priya Sharma", email: "priya@example.com", role: "Freelancer", status: "Active", joined: "2026-04-05" },
-  { id: "u5", name: "James Adeyemi", email: "james@example.com", role: "Company", status: "Verified", joined: "2026-04-18" },
-];
 
-const ACTIVITY = [
-  { color: "#a78bfa", text: "New freelancer registered: Priya Sharma", time: "2 min ago" },
-  { color: "#22d3ee", text: "Project posted: AI SaaS Dashboard - $4,200", time: "8 min ago" },
-  { color: "#34d399", text: "Payment processed: $1,800 to @alexchen", time: "15 min ago" },
-  { color: "#fbbf24", text: "AI Flagged: Suspicious account activity on user #4821", time: "22 min ago" },
-  { color: "#f87171", text: "Report submitted: Spam listing in Digital Services", time: "35 min ago" },
-  { color: "#a78bfa", text: "Freelancer verified: James Adeyemi — Web Dev", time: "1 hr ago" },
-  { color: "#22d3ee", text: "New partnership inquiry from TechBridge Corp.", time: "2 hr ago" },
-];
-
-const AI_INSIGHTS = [
-  { icon: "🚀", text: "User growth is 24% above target — projected to hit 10k users by Q3 2026." },
-  { icon: "⚠️", text: "3 accounts flagged for fraudulent payment patterns — auto-review initiated." },
-  { icon: "📈", text: "Design & UI freelancers have the highest demand this week (+38%)." },
-  { icon: "🛡️", text: "Zero critical security incidents in the last 30 days." },
-];
 
 const SIDEBAR_ITEMS = [
   { id: "overview", icon: "⚡", label: "Overview" },
-  { id: "users", icon: "👥", label: "Users", badge: "1.2k" },
+  { id: "users", icon: "👥", label: "Users" },
   { id: "projects", icon: "🚀", label: "Projects" },
-  { id: "contacts", icon: "📬", label: "Inquiries", badge: "8" },
+  { id: "jobs", icon: "💼", label: "Jobs" },
+  { id: "applications", icon: "📋", label: "Applications" },
+  { id: "contacts", icon: "📬", label: "Inquiries" },
   { id: "analytics", icon: "📊", label: "Analytics" },
-  { id: "moderation", icon: "🛡️", label: "AI Moderation" },
+  { id: "moderation", icon: "🛡️", label: "Content Moderation" },
   { id: "notifications", icon: "🔔", label: "Notifications" },
   { id: "payments", icon: "💰", label: "Payments Escrow" },
   { id: "server", icon: "🖥️", label: "Server Status" },
@@ -52,6 +31,13 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<any>(null);
   const [users, setUsers] = useState<any[]>([]);
   const [contacts, setContacts] = useState<any[]>([]);
+  const [activity, setActivity] = useState<any[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [jobs, setJobs] = useState<any[]>([]);
+  const [applications, setApplications] = useState<any[]>([]);
+  const [analytics, setAnalytics] = useState<any>(null);
+  const [financials, setFinancials] = useState<any>(null);
+  
   const [toast, setToast] = useState("");
   const [notify, setNotify] = useState({ title: "", message: "", type: "announcement" });
   const [sentNotifs, setSentNotifs] = useState<any[]>([]);
@@ -66,15 +52,25 @@ export default function AdminDashboard() {
     if (!token) return;
     const fetchAll = () => {
       axios.get(`${API}/stats`, { headers: { Authorization: `Bearer ${token}` } })
-        .then(r => setStats(r.data)).catch(() => {});
+        .then(r => { setStats(r.data); setActivity(r.data.activityFeed || []); }).catch(() => {});
       axios.get(`${API}/users`, { headers: { Authorization: `Bearer ${token}` } })
-        .then(r => setUsers(r.data)).catch(() => {});
+        .then(r => setUsers(r.data.users || [])).catch(() => {});
       axios.get(`${API}/contacts`, { headers: { Authorization: `Bearer ${token}` } })
         .then(r => setContacts(r.data)).catch(() => {});
       axios.get(`${API}/notifications`)
         .then(r => setSentNotifs(r.data)).catch(() => {});
       axios.get(`${API_BASE}/api/payments/admin/summary`)
         .then(r => setPaySummary(r.data)).catch(() => {});
+      axios.get(`${API}/projects`, { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => setProjects(r.data)).catch(() => {});
+      axios.get(`${API}/jobs`, { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => setJobs(r.data)).catch(() => {});
+      axios.get(`${API}/applications`, { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => setApplications(r.data)).catch(() => {});
+      axios.get(`${API}/analytics`, { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => setAnalytics(r.data)).catch(() => {});
+      axios.get(`${API}/financials`, { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => setFinancials(r.data)).catch(() => {});
     };
 
     fetchAll();
@@ -191,14 +187,9 @@ export default function AdminDashboard() {
     </div>
   );
 
-  const allUsers = [...users, ...DEMO_USERS].slice(0, 20);
-  const allContacts = contacts.length > 0 ? contacts : [
-    { id: "c1", name: "David Park", email: "david@vc.com", subject: "Investor Inquiry", message: "Interested in Series A funding", createdAt: "2026-05-25" },
-    { id: "c2", name: "TechBridge Corp", email: "biz@techbridge.io", subject: "Partnership Request", message: "We want to co-host a virtual hackathon", createdAt: "2026-05-26" },
-    { id: "c3", name: "Amara Osei", email: "amara@startup.ng", subject: "Platform Support", message: "Cannot upload my portfolio files", createdAt: "2026-05-27" },
-  ];
-
-  const BARS = [40, 65, 50, 80, 70, 90, 75, 95, 85, 100, 88, 92];
+  const allUsers = users;
+  const allContacts = contacts;
+  const BARS = financials?.monthlyBreakdown?.map((m: any) => (m.revenue / (Math.max(...financials.monthlyBreakdown.map((x: any) => x.revenue)) || 1)) * 100) || [0,0,0,0,0,0,0,0,0,0,0,0];
 
   return (
     <div className={styles.shell}>
@@ -236,14 +227,14 @@ export default function AdminDashboard() {
           <>
             <div className={styles.statsGrid}>
               {[
-                { icon: "👥", label: "Total Users", value: stats?.totalUsers ?? "1,248", change: "+12.4%", up: true, accent: "linear-gradient(90deg,#7c3aed,#a78bfa)" },
-                { icon: "🌐", label: "Live Visitors", value: stats?.liveVisitors ?? "342", change: "Real-time", up: true, accent: "linear-gradient(90deg,#0891b2,#22d3ee)" },
-                { icon: "💼", label: "Active Freelancers", value: stats?.activeFreelancers ?? "748", change: "+8.2%", up: true, accent: "linear-gradient(90deg,#7c3aed,#22d3ee)" },
-                { icon: "🚀", label: "Total Projects", value: stats?.totalProjects ?? "3,921", change: "+24.3%", up: true, accent: "linear-gradient(90deg,#059669,#34d399)" },
-                { icon: "💰", label: "Total Revenue", value: stats?.totalRevenue ?? "$48,290", change: "+31.7%", up: true, accent: "linear-gradient(90deg,#d97706,#fbbf24)" },
-                { icon: "💬", label: "Discussions", value: stats?.totalDiscussions ?? "892", change: "+5.6%", up: true, accent: "linear-gradient(90deg,#db2777,#f472b6)" },
-                { icon: "📋", label: "Open Jobs", value: stats?.totalJobs ?? "207", change: "-2.1%", up: false, accent: "linear-gradient(90deg,#7c3aed,#a78bfa)" },
-                { icon: "⚡", label: "Uptime", value: stats?.uptime ?? "99.97%", change: "30-day avg", up: true, accent: "linear-gradient(90deg,#0891b2,#22d3ee)" },
+                { icon: "👥", label: "Total Users", value: stats?.totalUsers || "0", change: stats?.monthlyGrowth || "+0%", up: true, accent: "linear-gradient(90deg,#7c3aed,#a78bfa)" },
+                { icon: "🌐", label: "Live Visitors", value: stats?.liveVisitors || "0", change: "Real-time", up: true, accent: "linear-gradient(90deg,#0891b2,#22d3ee)" },
+                { icon: "💼", label: "Active Freelancers", value: stats?.totalFreelancers || "0", change: "Active Profiles", up: true, accent: "linear-gradient(90deg,#7c3aed,#22d3ee)" },
+                { icon: "🚀", label: "Total Projects", value: stats?.totalProjects || "0", change: "Live", up: true, accent: "linear-gradient(90deg,#059669,#34d399)" },
+                { icon: "💰", label: "Total Revenue", value: `$${stats?.totalRevenue?.toLocaleString() || "0"}`, change: "All Time", up: true, accent: "linear-gradient(90deg,#d97706,#fbbf24)" },
+                { icon: "💬", label: "Discussions", value: stats?.totalDiscussions || "0", change: "Community", up: true, accent: "linear-gradient(90deg,#db2777,#f472b6)" },
+                { icon: "📋", label: "Open Jobs", value: stats?.totalJobs || "0", change: "Posted", up: true, accent: "linear-gradient(90deg,#7c3aed,#a78bfa)" },
+                { icon: "⚡", label: "Uptime", value: stats?.uptime || "100%", change: "Since boot", up: true, accent: "linear-gradient(90deg,#0891b2,#22d3ee)" },
               ].map((s, i) => (
                 <div key={i} className={styles.statCard} style={{ "--card-accent": s.accent } as any}>
                   <div className={styles.statIcon}>{s.icon}</div>
@@ -261,7 +252,9 @@ export default function AdminDashboard() {
                   {BARS.map((h, i) => <div key={i} className={styles.bar} style={{ height: `${h}%` }} />)}
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", marginTop: ".5rem" }}>
-                  {["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"].map(m => (
+                  {financials?.monthlyBreakdown?.map((m: any) => (
+                    <span key={m.month} style={{ color: "#52525b", fontSize: ".65rem" }}>{m.month}</span>
+                  )) || ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"].map(m => (
                     <span key={m} style={{ color: "#52525b", fontSize: ".65rem" }}>{m}</span>
                   ))}
                 </div>
@@ -282,10 +275,10 @@ export default function AdminDashboard() {
             <div className={styles.section}>
               <div className={styles.sectionHeader}><span className={styles.sectionTitle}>⚡ Live Activity Feed</span><span className={styles.sectionBadge}>Real-time</span></div>
               <div className={styles.activityFeed}>
-                {ACTIVITY.map((a, i) => (
+                {activity.length === 0 ? <p style={{color: "#52525b", padding: "1rem"}}>No recent activity.</p> : activity.map((a, i) => (
                   <div key={i} className={styles.activityItem}>
                     <div className={styles.activityDot} style={{ background: a.color }} />
-                    <div><div className={styles.activityText}>{a.text}</div><div className={styles.activityTime}>{a.time}</div></div>
+                    <div><div className={styles.activityText}>{a.icon} {a.text}</div><div className={styles.activityTime}>{new Date(a.time).toLocaleString()}</div></div>
                   </div>
                 ))}
               </div>
@@ -350,8 +343,12 @@ export default function AdminDashboard() {
                 <div className={styles.barChart}>{[60,75,55,85,70,95,80,100,88,72,90,95].map((h,i)=><div key={i} className={styles.bar} style={{height:`${h}%`}}/>)}</div>
               </div>
               <div className={styles.analyticsCard}>
-                <h3>👥 User Growth</h3>
-                <div className={styles.barChart}>{[30,45,55,60,70,80,88,92,96,98,99,100].map((h,i)=><div key={i} className={styles.bar} style={{height:`${h}%`,background:"linear-gradient(180deg,#22d3ee,#0891b2)"}}/>)}</div>
+                <h3>👥 User Growth (Last 30 Days)</h3>
+                <div className={styles.barChart}>{analytics?.userGrowth?.map((g: any, i: number) => {
+                  const maxGrowth = Math.max(...analytics.userGrowth.map((x: any) => x.count)) || 1;
+                  const h = (g.count / maxGrowth) * 100;
+                  return <div key={i} className={styles.bar} style={{height:`${h}%`,background:"linear-gradient(180deg,#22d3ee,#0891b2)"}} title={`${g.date}: ${g.count} users`}/>;
+                }) || []}</div>
               </div>
             </div>
             <div className={styles.mapBox}>
@@ -375,12 +372,22 @@ export default function AdminDashboard() {
           <div>
             <div className={styles.aiPanel} style={{ marginBottom: "1.5rem" }}>
               <h3>🤖 AI Moderation Engine</h3>
-              {AI_INSIGHTS.map((a, i) => (
-                <div key={i} className={styles.aiInsight}>
-                  <span style={{ fontSize: "1.2rem" }}>{a.icon}</span>
-                  <p>{a.text}</p>
-                </div>
-              ))}
+              {stats && (
+                <>
+                  <div className={styles.aiInsight}>
+                    <span style={{ fontSize: "1.2rem" }}>🚀</span>
+                    <p>User growth trend is positive with a {stats.monthlyGrowth} increase in the last 30 days.</p>
+                  </div>
+                  <div className={styles.aiInsight}>
+                    <span style={{ fontSize: "1.2rem" }}>🛡️</span>
+                    <p>{stats.openDisputes} active escrow disputes detected requiring attention.</p>
+                  </div>
+                  <div className={styles.aiInsight}>
+                    <span style={{ fontSize: "1.2rem" }}>📈</span>
+                    <p>Total Revenue is ${stats.totalRevenue}, with ${stats.escrowHeld} currently held securely in active escrows.</p>
+                  </div>
+                </>
+              )}
             </div>
             <div className={styles.section}>
               <div className={styles.sectionHeader}><span className={styles.sectionTitle}>🚨 Flagged Content</span><span className={styles.sectionBadge}>AI Detected</span></div>
@@ -650,22 +657,67 @@ export default function AdminDashboard() {
               <table className={styles.table}>
                 <thead><tr><th>Title</th><th>Owner</th><th>Category</th><th>Status</th><th>Action</th></tr></thead>
                 <tbody>
-                  {[
-                    ["AI SaaS Dashboard","Alex Chen","Web Dev","Active"],
-                    ["Mobile Banking App","Priya Sharma","Mobile","Active"],
-                    ["NFT Marketplace","James A.","Blockchain","Under Review"],
-                    ["E-learning Platform","Sarah J.","EdTech","Active"],
-                    ["Healthcare AI","Mike Ross","AI/ML","Suspended"],
-                  ].map(([t,o,c,s],i)=>(
-                    <tr key={i}>
-                      <td style={{ color:"#fff", fontWeight:600 }}>{t}</td>
-                      <td>{o}</td>
-                      <td><span className={styles.badge+" "+styles.badgeBlue}>{c}</span></td>
-                      <td><span className={`${styles.badge} ${s==="Suspended"?styles.badgeRed:s==="Under Review"?styles.badgeYellow:styles.badgeGreen}`}>{s}</span></td>
+                  {projects.length === 0 ? (
+                    <tr><td colSpan={5} style={{textAlign: "center", padding: "2rem", color: "#52525b"}}>No projects found.</td></tr>
+                  ) : projects.map((p: any) => (
+                    <tr key={p.id}>
+                      <td style={{ color:"#fff", fontWeight:600 }}>{p.title}</td>
+                      <td>{p.seller?.name || 'Unknown'}</td>
+                      <td><span className={styles.badge+" "+styles.badgeBlue}>{p.techStack?.split(',')[0] || "General"}</span></td>
+                      <td><span className={`${styles.badge} ${p.status==="Suspended"?styles.badgeRed:p.status==="Under Review"?styles.badgeYellow:styles.badgeGreen}`}>{p.status || "Active"}</span></td>
                       <td style={{ display:"flex", gap:".5rem" }}>
                         <button className={`${styles.actionBtn} ${styles.btnPrimary}`} onClick={()=>showToast("Approved!")}>Approve</button>
                         <button className={`${styles.actionBtn} ${styles.btnDanger}`} onClick={()=>showToast("Removed!")}>Remove</button>
                       </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeSection === "jobs" && (
+          <div className={styles.section}>
+            <div className={styles.sectionHeader}><span className={styles.sectionTitle}>Global Jobs</span></div>
+            <div className={styles.tableWrap}>
+              <table className={styles.table}>
+                <thead><tr><th>Job Title</th><th>Company</th><th>Type</th><th>Location</th><th>Salary</th><th>Action</th></tr></thead>
+                <tbody>
+                  {jobs.length === 0 ? (
+                    <tr><td colSpan={6} style={{textAlign: "center", padding: "2rem", color: "#52525b"}}>No jobs posted.</td></tr>
+                  ) : jobs.map((j: any) => (
+                    <tr key={j.id}>
+                      <td style={{ color:"#fff", fontWeight:600 }}>{j.title}</td>
+                      <td>{j.company || j.employer?.name || 'Unknown'}</td>
+                      <td><span className={styles.badge+" "+styles.badgePurple}>{j.type || 'Full-time'}</span></td>
+                      <td>{j.location || 'Remote'}</td>
+                      <td>{j.salary || '-'}</td>
+                      <td><button className={`${styles.actionBtn} ${styles.btnDanger}`} onClick={()=>showToast("Job Removed!")}>Delete</button></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeSection === "applications" && (
+          <div className={styles.section}>
+            <div className={styles.sectionHeader}><span className={styles.sectionTitle}>Job Applications</span></div>
+            <div className={styles.tableWrap}>
+              <table className={styles.table}>
+                <thead><tr><th>Applicant</th><th>Job Title</th><th>Company</th><th>Status</th><th>Applied Date</th></tr></thead>
+                <tbody>
+                  {applications.length === 0 ? (
+                    <tr><td colSpan={5} style={{textAlign: "center", padding: "2rem", color: "#52525b"}}>No applications found.</td></tr>
+                  ) : applications.map((a: any) => (
+                    <tr key={a.id}>
+                      <td style={{ color:"#fff", fontWeight:600 }}>{a.applicant?.name || 'Unknown'}</td>
+                      <td>{a.job?.title || 'Deleted Job'}</td>
+                      <td>{a.job?.company || 'Unknown'}</td>
+                      <td><span className={`${styles.badge} ${a.status==="REJECTED"?styles.badgeRed:a.status==="HIRED"?styles.badgeGreen:styles.badgeYellow}`}>{a.status || 'PENDING'}</span></td>
+                      <td>{new Date(a.createdAt).toLocaleDateString()}</td>
                     </tr>
                   ))}
                 </tbody>

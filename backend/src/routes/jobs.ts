@@ -100,3 +100,23 @@ router.post('/apply', authenticateToken, uploadImage.single('resume'), async (re
 });
 
 export default router;
+
+// Get user's applications
+router.get('/applications', authenticateToken, async (req, res) => {
+  try {
+    const uid = (req as any).user?.id;
+    if (!uid) return res.status(401).json({ error: 'Unauthorized context.' });
+
+    const apps = await prisma.jobApplication.findMany({
+      where: { applicantId: uid },
+      include: {
+        job: true
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(apps);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to fetch applications' });
+  }
+});

@@ -9,6 +9,7 @@ import styles from "./PaymentModal.module.css";
 interface Props {
   projectTitle: string;
   price: number; // base price in INR
+  sellerId?: string;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -24,7 +25,7 @@ const RATES: Record<Currency, { rate: number; symbol: string }> = {
   USDT: { rate: 1 / 88.0, symbol: "🪙" },
 };
 
-export default function PaymentModal({ projectTitle, price, onClose, onSuccess }: Props) {
+export default function PaymentModal({ projectTitle, price, sellerId, onClose, onSuccess }: Props) {
   const { user, token } = useAuth();
   const [step, setStep] = useState<"details" | "processing" | "success">("details");
   const [currency, setCurrency] = useState<Currency>("INR");
@@ -127,7 +128,10 @@ export default function PaymentModal({ projectTitle, price, onClose, onSuccess }
                   razorpay_order_id: response.razorpay_order_id,
                   razorpay_signature: response.razorpay_signature,
                   amount: finalAmount,
-                  currency: finalCurrency
+                  currency: finalCurrency,
+                  type: 'PURCHASE',
+                  description: `Purchase: ${projectTitle}`,
+                  sellerId: sellerId
                 },
                 config
               );

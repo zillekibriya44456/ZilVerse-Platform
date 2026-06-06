@@ -2,6 +2,7 @@
 import { API_BASE } from "@/utils/api";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useCountry } from "@/context/CountryContext";
@@ -166,7 +167,9 @@ export default function Home() {
             {features.map((f) => (
               <TiltCard key={f.href} className={`glass-panel ${styles.featureCard}`} style={{ padding: 0, overflow: 'hidden' }}>
                 <Link href={f.href} className={styles.featureCardInner} style={{ height: '100%' }}>
-                  <img src={f.image} alt={f.title} style={{ width: '100%', height: '180px', objectFit: 'cover' }} />
+                  <div style={{ position: 'relative', width: '100%', height: '180px' }}>
+                    <Image src={f.image} alt={f.title} fill sizes="(max-width: 768px) 100vw, 33vw" style={{ objectFit: 'cover' }} />
+                  </div>
                   <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
                     <h3 style={{ fontSize: '1.3rem', marginBottom: '0.5rem' }}>{f.title}</h3>
                     <p style={{ color: '#a1a1aa', fontSize: '0.9rem', lineHeight: 1.6, flex: 1 }}>{f.desc}</p>

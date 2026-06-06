@@ -2,6 +2,8 @@ import prisma from '../lib/prisma';
 import express from 'express';
 
 
+import { authenticateToken } from '../middleware/auth';
+
 const router = express.Router();
 
 
@@ -14,7 +16,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.post('/create', async (req, res) => {
+router.post('/create', authenticateToken, async (req, res) => {
   try {
     const { title, instructor, level, duration, description, price, countryCode, language, category, students, rating, image } = req.body;
     const course = await prisma.academyCourse.create({

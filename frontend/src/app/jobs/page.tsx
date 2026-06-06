@@ -5,14 +5,7 @@ import axios from "axios";
 import styles from "./jobs.module.css";
 import { useAuth } from "@/context/AuthContext";
 
-const MOCK_JOBS = [
-  { id: 1, title: "Senior React Developer", company: "TechCorp", location: "Remote", salary: "$80k–$120k/yr", type: "Full-Time", tags: ["React", "TypeScript", "Node.js"], posted: "2 days ago", logo: "TC" },
-  { id: 2, title: "Flutter Mobile Developer", company: "AppWorks", location: "Karachi, PK", salary: "$40k–$70k/yr", type: "Full-Time", tags: ["Flutter", "Dart", "Firebase"], posted: "1 day ago", logo: "AW" },
-  { id: 3, title: "UI/UX Design Intern", company: "DesignHive", location: "Remote", salary: "$800/mo", type: "Internship", tags: ["Figma", "Adobe XD", "Prototyping"], posted: "3 hours ago", logo: "DH" },
-  { id: 4, title: "Backend Engineer (Node.js)", company: "CloudBase", location: "Lahore, PK", salary: "$50k–$80k/yr", type: "Full-Time", tags: ["Node.js", "PostgreSQL", "AWS"], posted: "5 days ago", logo: "CB" },
-  { id: 5, title: "Next.js Freelance Project", company: "StartupX", location: "Remote", salary: "$2,000 fixed", type: "Freelance", tags: ["Next.js", "Tailwind", "Prisma"], posted: "12 hours ago", logo: "SX" },
-  { id: 6, title: "Machine Learning Engineer", company: "DataMinds", location: "Remote", salary: "$100k–$150k/yr", type: "Full-Time", tags: ["Python", "TensorFlow", "PyTorch"], posted: "4 days ago", logo: "DM" },
-];
+
 
 const TYPES = ["All", "Full-Time", "Freelance", "Internship"];
 
@@ -103,7 +96,7 @@ export default function JobsPage() {
     logo: j.company.substring(0, 2).toUpperCase()
   }));
 
-  const JOBS = [...formattedDbJobs, ...MOCK_JOBS];
+  const JOBS = [...formattedDbJobs];
 
   const filtered = JOBS.filter(j => {
     const matchType = filter === "All" || j.type === filter;

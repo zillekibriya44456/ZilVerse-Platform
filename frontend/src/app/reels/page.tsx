@@ -189,6 +189,21 @@ export default function InnoReelsPage() {
     alert("Link copied! Share recorded.");
   };
 
+  // Report
+  const handleReport = async (reelId: string) => {
+    const reason = prompt("Reason for reporting?");
+    if (!reason) return;
+    const token = localStorage.getItem("zilverse_token");
+    if (!token) return alert("Login required to report.");
+    try {
+      await axios.post(`${API}/${reelId}/report`, { reason }, { headers: { Authorization: `Bearer ${token}` } });
+      alert("Report submitted successfully.");
+    } catch (e: any) {
+      alert("Report failed: " + (e.response?.data?.error || e.message));
+    }
+  };
+
+
   // Upload
   const handlePublish = async () => {
     if (!uploadFile) return alert("Select a video first");
@@ -247,7 +262,10 @@ export default function InnoReelsPage() {
             await axios.post(`${API_BASE}/api/payments/razorpay/verify-payment`, {
               ...response,
               amount: donateAmount,
-              currency: "USD"
+              currency: "USD",
+              type: "PURCHASE",
+              description: `Creator Tip: ${donateOpen.creator || 'Creator'}`,
+              sellerId: donateOpen.creatorId
             }, { headers: { Authorization: `Bearer ${token}` } });
             
             await axios.post(`${API}/donate`, {
@@ -387,7 +405,7 @@ export default function InnoReelsPage() {
               <div className={styles.videoWrapper}>
                 {reel.isReal && reel.videoUrl ? (
                   <video src={reel.videoUrl} loop playsInline muted={idx !== activeIdx}
-                    autoPlay={idx === activeIdx} className={styles.videoElement}
+                    autoPlay={idx === activeIdx} preload={idx === activeIdx ? "auto" : "metadata"} className={styles.videoElement}
                     ref={el => { if (el) videoRefs.current.set(reel.id, el); }} />
                 ) : (
                   <div className={styles.gradientPlaceholder} style={{ background: reel.gradient }}>
@@ -465,6 +483,12 @@ export default function InnoReelsPage() {
                 <div className={styles.sideAction} onClick={e => { e.stopPropagation(); setDonateOpen(reel); }}>
                   <div className={styles.actionIconDiamond}>💎</div>
                   <span className={styles.actionCount}>Tip</span>
+                </div>
+
+                {/* Report */}
+                <div className={styles.sideAction} onClick={e => { e.stopPropagation(); handleReport(reel.id); }}>
+                  <div className={styles.actionIcon}>🚩</div>
+                  <span className={styles.actionCount}>Report</span>
                 </div>
               </div>
 

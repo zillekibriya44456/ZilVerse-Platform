@@ -3,6 +3,7 @@ import { API_BASE } from "@/utils/api";
 
 import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
+import Script from "next/script";
 import axios from "axios";
 import { MOCK_EVENTS, EventType, EventCategory } from "@/data/events";
 import countriesList from "@/constants/countries";
@@ -10,7 +11,7 @@ import styles from "./events.module.css";
 import { useAuth } from "@/context/AuthContext";
 
 export default function EventsPage() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [dbEvents, setDbEvents] = useState<any[]>([]);
   const [selectedCountry, setSelectedCountry] = useState<string>("ALL");
   const [selectedType, setSelectedType] = useState<EventType | "ALL">("ALL");
@@ -44,13 +45,70 @@ export default function EventsPage() {
     fetchEvents();
   }, []);
 
-  const handleRegister = (eventName: string, isFree: boolean) => {
+  const handleRegister = async (eventName: string, isFree: boolean) => {
     if (isFree) {
       setRegistrationMessage(`Successfully registered for ${eventName}! Check your email for details.`);
       setTimeout(() => setRegistrationMessage(null), 4000);
     } else {
-      setRegistrationMessage(`Registration for premium event "${eventName}" requires payment. Redirecting to gateway...`);
-      setTimeout(() => setRegistrationMessage(null), 4000);
+      const activeToken = token || localStorage.getItem("zilverse_token");
+      if (!activeToken) {
+        alert("Please log in to register for premium events.");
+        return window.location.href = "/login?redirect=/events";
+      }
+
+      try {
+        setRegistrationMessage(`Registration for premium event "${eventName}" requires payment. Initiating checkout...`);
+        
+        const paiseAmount = 50 * 83.5 * 100; // $50 in paise
+        const orderRes = await axios.post(
+          `${API_BASE}/api/payments/razorpay/create-order`,
+          { amount: paiseAmount, currency: "INR", receipt: `event_${Date.now()}` },
+          { headers: { Authorization: `Bearer ${activeToken}` } }
+        );
+
+        const { order_id, amount: orderAmount, currency: orderCurrency } = orderRes.data;
+
+        const options = {
+          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_live_Sxuhmk2KLWNZx5",
+          amount: orderAmount,
+          currency: orderCurrency,
+          name: "ZilVerse Events",
+          description: `Ticket: ${eventName}`,
+          order_id: order_id,
+          handler: async function (response: any) {
+            try {
+              setRegistrationMessage("Verifying payment...");
+              await axios.post(
+                `${API_BASE}/api/payments/razorpay/verify-payment`,
+                {
+                  ...response,
+                  amount: 50,
+                  currency: "USD",
+                  type: "PURCHASE",
+                  description: `Event Ticket: ${eventName}`
+                },
+                { headers: { Authorization: `Bearer ${activeToken}` } }
+              );
+              setRegistrationMessage(`✅ Payment successful! You are registered for ${eventName}.`);
+              setTimeout(() => setRegistrationMessage(null), 5000);
+            } catch (err: any) {
+              setRegistrationMessage(`❌ Payment verification failed: ${err.message}`);
+              setTimeout(() => setRegistrationMessage(null), 5000);
+            }
+          },
+          theme: { color: "#7c3aed" }
+        };
+
+        if ((window as any).Razorpay) {
+          const rzp = new (window as any).Razorpay(options);
+          rzp.open();
+        } else {
+          setRegistrationMessage("❌ Razorpay SDK not loaded.");
+        }
+      } catch (err: any) {
+        setRegistrationMessage(`❌ Failed to initiate checkout: ${err.message}`);
+        setTimeout(() => setRegistrationMessage(null), 4000);
+      }
     }
   };
 
@@ -114,6 +172,7 @@ export default function EventsPage() {
 
   return (
     <div className={styles.page} style={{ paddingTop: "120px" }}>
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       {/* Registration Toast */}
       {registrationMessage && (
         <div className={styles.toast}>

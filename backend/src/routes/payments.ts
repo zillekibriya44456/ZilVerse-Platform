@@ -706,7 +706,7 @@ const verifyPaymentHandler = async (req: AuthenticatedRequest, res: any) => {
     const userId = (req as any).user?.id;
     if (!userId) return res.status(401).json({ error: 'Unauthorized user context.' });
 
-    const { razorpay_payment_id, razorpay_order_id, razorpay_signature, amount, currency } = req.body;
+    const { razorpay_payment_id, razorpay_order_id, razorpay_signature, amount, currency, type, description, sellerId, projectId } = req.body;
 
     if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature) {
       return res.status(400).json({ error: 'Missing required Razorpay fields.' });
@@ -745,23 +745,68 @@ const verifyPaymentHandler = async (req: AuthenticatedRequest, res: any) => {
         const rate = rates[currency?.toUpperCase()] || 1.0;
         const usdAmount = parsedAmount / rate;
 
-        const wallet = await getOrCreateWallet(userId);
-        updatedWallet = await prisma.wallet.update({
-          where: { userId },
-          data: { availableBalance: wallet.availableBalance + usdAmount }
-        });
+        let finalType = type || 'DEPOSIT';
+        let finalDescription = description || `Razorpay Deposit (${currency} ${parsedAmount})`;
 
-        transaction = await prisma.transaction.create({
-          data: {
-            userId,
-            amount: usdAmount,
-            currency: 'USD',
-            type: 'DEPOSIT',
-            status: 'COMPLETED',
-            gateway: 'RAZORPAY',
-            description: `Razorpay Deposit (${currency} ${parsedAmount})`
+        if (finalType === 'PURCHASE') {
+          // It's a purchase. Do not add to buyer's wallet available balance.
+          // Instead, log the transaction as PURCHASE.
+          transaction = await prisma.transaction.create({
+            data: {
+              userId,
+              amount: usdAmount,
+              currency: 'USD',
+              type: 'PURCHASE',
+              status: 'COMPLETED',
+              gateway: 'RAZORPAY',
+              description: finalDescription
+            }
+          });
+
+          // Credit the seller if sellerId is provided
+          if (sellerId) {
+            const sellerWallet = await getOrCreateWallet(sellerId);
+            const fee = usdAmount * 0.10; // 10% platform fee
+            const sellerEarned = usdAmount - fee;
+            
+            await prisma.wallet.update({
+              where: { userId: sellerId },
+              data: { availableBalance: sellerWallet.availableBalance + sellerEarned }
+            });
+
+            await prisma.transaction.create({
+              data: {
+                userId: sellerId,
+                amount: sellerEarned,
+                currency: 'USD',
+                type: 'SALE',
+                status: 'COMPLETED',
+                gateway: 'SYSTEM',
+                description: `Sale Revenue: ${finalDescription}`
+              }
+            });
+            emitWalletUpdate(req, sellerId);
           }
-        });
+        } else {
+          // Standard deposit to own wallet
+          const wallet = await getOrCreateWallet(userId);
+          updatedWallet = await prisma.wallet.update({
+            where: { userId },
+            data: { availableBalance: wallet.availableBalance + usdAmount }
+          });
+
+          transaction = await prisma.transaction.create({
+            data: {
+              userId,
+              amount: usdAmount,
+              currency: 'USD',
+              type: finalType,
+              status: 'COMPLETED',
+              gateway: 'RAZORPAY',
+              description: finalDescription
+            }
+          });
+        }
 
         // Create Invoice
         const invoiceNum = 'INV-RZP-' + Date.now() + '-' + Math.floor(Math.random() * 1000);

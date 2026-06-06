@@ -1,6 +1,8 @@
 import express from 'express';
 import prisma from '../lib/prisma';
 
+import { authenticateToken } from '../middleware/auth';
+
 const router = express.Router();
 
 // Get all fund grants
@@ -16,15 +18,13 @@ router.get('/', async (req, res) => {
 });
 
 // Post a new grant
-router.post('/create', async (req, res) => {
+router.post('/create', authenticateToken, async (req: any, res: any) => {
   try {
-    const { title, organization, amount, description, deadline, creatorId } = req.body;
+    const { title, organization, amount, description, deadline } = req.body;
     
-    let uid = creatorId;
+    const uid = req.user?.id;
     if (!uid) {
-       const user = await prisma.user.findFirst();
-       if (!user) return res.status(400).json({ error: 'No users exist. Please sign up first.' });
-       uid = user.id;
+       return res.status(401).json({ error: 'Unauthorized user context.' });
     }
 
     const grant = await prisma.fundGrant.create({

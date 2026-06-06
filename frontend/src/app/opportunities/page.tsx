@@ -30,131 +30,42 @@ export default function OpportunitiesPage() {
     { id: "events", label: "Events & Hackathons", count: 3 }
   ];
 
-  const grants = [
-    {
-      id: "grant-1",
-      title: "AI Innovation & Web3 Integration Grant",
-      org: "ZilLabs Foundation",
-      amount: "$250,000",
-      desc: "Funding breakthrough products merging zero-knowledge proofs and transformer neural networks.",
-      deadline: "June 30, 2026",
-      impact: "98/100",
-      tags: ["AI", "Web3", "ZK-Proofs"]
-    },
-    {
-      id: "grant-2",
-      title: "Ecology & Sustainability Venture Fund",
-      org: "ZilVerse Green Ventures",
-      amount: "$150,000",
-      desc: "For decentralized projects tackling carbon credits tracking or smart-grid optimization.",
-      deadline: "July 15, 2026",
-      impact: "99/100",
-      tags: ["GreenTech", "DeFi", "Climate"]
-    },
-    {
-      id: "grant-3",
-      title: "Global Open Source Infrastructure Grant",
-      org: "Linux Foundation Partner",
-      amount: "$80,000",
-      desc: "Supporting developer toolings, package security audits, and developer efficiency toolkits.",
-      deadline: "Rolling",
-      impact: "95/100",
-      tags: ["Open Source", "DevOps", "Security"]
-    }
-  ];
+  const [grants, setGrants] = useState<any[]>([]);
+  const [remoteJobs, setRemoteJobs] = useState<any[]>([]);
+  const [internships, setInternships] = useState<any[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
 
-  const remoteJobs = [
-    {
-      id: "job-1",
-      title: "Senior Next.js & React Architect",
-      company: "DevStack Corp",
-      salary: "$120k–$150k/yr",
-      location: "Remote (Global)",
-      posted: "1 day ago",
-      tags: ["Next.js", "TypeScript", "Tailwind"]
-    },
-    {
-      id: "job-2",
-      title: "AI Research & LLM Specialist",
-      company: "NeuroTech AI",
-      salary: "$180k–$220k/yr",
-      location: "Remote (US/Canada)",
-      posted: "Just now",
-      tags: ["PyTorch", "NLP", "Transformers"]
-    },
-    {
-      id: "job-3",
-      title: "Staff Cloud Engineer (Kubernetes)",
-      company: "CloudScale Inc",
-      salary: "€80k–€110k/yr",
-      location: "Remote (Europe)",
-      posted: "5 days ago",
-      tags: ["Docker", "Kubernetes", "AWS"]
-    }
-  ];
+  React.useEffect(() => {
+    // Fetch Grants
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/funds`)
+      .then(res => res.json())
+      .then(data => { if(Array.isArray(data)) setGrants(data); })
+      .catch(console.error);
 
-  const internships = [
-    {
-      id: "intern-1",
-      title: "UI/UX Design Intern",
-      company: "DesignHive Studios",
-      stipend: "$1,200/mo",
-      location: "Remote",
-      posted: "2 days ago",
-      tags: ["Figma", "Design System", "Prototyping"]
-    },
-    {
-      id: "intern-2",
-      title: "Frontend Developer Intern",
-      company: "ZilLabs Devs",
-      stipend: "$800/mo",
-      location: "Bengaluru, IN (Hybrid)",
-      posted: "Just now",
-      tags: ["React", "CSS Grid", "JavaScript"]
-    },
-    {
-      id: "intern-3",
-      title: "Machine Learning Intern",
-      company: "DeepMind Simulation",
-      stipend: "$1,500/mo",
-      location: "Remote",
-      posted: "1 week ago",
-      tags: ["Python", "TensorFlow", "Pandas"]
-    }
-  ];
+    // Fetch Jobs (Remote & Internships)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/jobs`)
+      .then(res => res.json())
+      .then(data => { 
+        if(Array.isArray(data)) {
+          setRemoteJobs(data.filter((j:any) => j.location?.toLowerCase().includes("remote") || j.type?.toLowerCase().includes("remote")));
+          setInternships(data.filter((j:any) => j.type?.toLowerCase().includes("intern") || j.title?.toLowerCase().includes("intern")));
+        }
+      })
+      .catch(console.error);
 
-  const events = [
-    {
-      id: "event-1",
-      title: "ZilVerse Global Hackathon 2026",
-      organizer: "ZilVerse Core",
-      date: "July 20–25, 2026",
-      location: "Online / WW",
-      price: "Free to Attend",
-      type: "Hackathon",
-      attending: "2,500+"
-    },
-    {
-      id: "event-2",
-      title: "AI & Web3 Synergy Summit",
-      organizer: "TechFuture Consortium",
-      date: "August 12, 2026",
-      location: "San Francisco, CA & Online",
-      price: "$149 (Free for students)",
-      type: "Conference",
-      attending: "1,200+"
-    },
-    {
-      id: "event-3",
-      title: "Next.js Core Performance Masterclass",
-      organizer: "Vercel Ecosystem Partners",
-      date: "June 28, 2026",
-      location: "Online",
-      price: "Free to Attend",
-      type: "Workshop",
-      attending: "850+"
-    }
-  ];
+    // Fetch Events
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/events`)
+      .then(res => res.json())
+      .then(data => { if(Array.isArray(data)) setEvents(data); })
+      .catch(console.error);
+  }, []);
+
+  // Update counts
+  categories[0].count = grants.length + remoteJobs.length + internships.length + events.length;
+  categories[1].count = grants.length;
+  categories[2].count = remoteJobs.length;
+  categories[3].count = internships.length;
+  categories[4].count = events.length;
 
   return (
     <div className={styles.page}>
@@ -244,8 +155,8 @@ export default function OpportunitiesPage() {
                     </div>
                   </div>
                   <h3 className={styles.cardTitle}>{grant.title}</h3>
-                  <p className={styles.cardMeta}>by {grant.org}</p>
-                  <p className={styles.cardDescription}>{grant.desc}</p>
+                  <p className={styles.cardMeta}>by {grant.organization || grant.org}</p>
+                  <p className={styles.cardDescription}>{grant.description || grant.desc}</p>
                   <div className={styles.cardHighlights}>
                     <div className={styles.highlightItem}>
                       <span className={styles.highlightLabel}>Amount</span>
@@ -257,7 +168,7 @@ export default function OpportunitiesPage() {
                     </div>
                   </div>
                   <div className={styles.cardTags}>
-                    {grant.tags.map(t => <span key={t} className={styles.cardTag}>{t}</span>)}
+                    {(grant.tags || ["Venture", "Funding"]).map((t:string) => <span key={t} className={styles.cardTag}>{t}</span>)}
                   </div>
                   <div className={styles.cardFooter}>
                     <Link href="/fund" className={styles.cardCta}>
@@ -300,7 +211,7 @@ export default function OpportunitiesPage() {
                   </div>
                   <h3 className={styles.cardTitle}>{job.title}</h3>
                   <p className={styles.cardMeta}>{job.company}</p>
-                  <p className={styles.cardDescription}>Join dynamic teams with fully distributed infrastructure and asynchronous workspace cultures.</p>
+                  <p className={styles.cardDescription}>{job.description || "Join dynamic teams with fully distributed infrastructure and asynchronous workspace cultures."}</p>
                   <div className={styles.cardHighlights}>
                     <div className={styles.highlightItem}>
                       <span className={styles.highlightLabel}>Compensation</span>
@@ -315,7 +226,7 @@ export default function OpportunitiesPage() {
                     </div>
                   </div>
                   <div className={styles.cardTags}>
-                    {job.tags.map(t => <span key={t} className={styles.cardTag}>{t}</span>)}
+                    {(job.tags || ["Remote", "Global"]).map((t:string) => <span key={t} className={styles.cardTag}>{t}</span>)}
                   </div>
                   <div className={styles.cardFooter}>
                     <Link href="/remote" className={styles.cardCta}>
@@ -358,11 +269,11 @@ export default function OpportunitiesPage() {
                   </div>
                   <h3 className={styles.cardTitle}>{intern.title}</h3>
                   <p className={styles.cardMeta}>{intern.company}</p>
-                  <p className={styles.cardDescription}>Build real portfolio modules, collaborate in Scrum pipelines, and earn certificates.</p>
+                  <p className={styles.cardDescription}>{intern.description || "Build real portfolio modules, collaborate in Scrum pipelines, and earn certificates."}</p>
                   <div className={styles.cardHighlights}>
                     <div className={styles.highlightItem}>
                       <span className={styles.highlightLabel}>Stipend</span>
-                      <span className={`${styles.highlightValue} ${styles.internColorText}`}>{intern.stipend}</span>
+                      <span className={`${styles.highlightValue} ${styles.internColorText}`}>{intern.stipend || intern.salary}</span>
                     </div>
                     <div className={styles.highlightItem}>
                       <span className={styles.highlightLabel}>Structure</span>
@@ -373,7 +284,7 @@ export default function OpportunitiesPage() {
                     </div>
                   </div>
                   <div className={styles.cardTags}>
-                    {intern.tags.map(t => <span key={t} className={styles.cardTag}>{t}</span>)}
+                    {(intern.tags || ["Learning", "Growth"]).map((t:string) => <span key={t} className={styles.cardTag}>{t}</span>)}
                   </div>
                   <div className={styles.cardFooter}>
                     <Link href="/internships" className={styles.cardCta}>
@@ -415,8 +326,8 @@ export default function OpportunitiesPage() {
                     </span>
                   </div>
                   <h3 className={styles.cardTitle}>{event.title}</h3>
-                  <p className={styles.cardMeta}>organized by {event.organizer}</p>
-                  <p className={styles.cardDescription}>Accelerated timelines, direct mentoring, project showcases, and prize pools.</p>
+                  <p className={styles.cardMeta}>organized by {event.organizer || "Community"}</p>
+                  <p className={styles.cardDescription}>{event.description || "Accelerated timelines, direct mentoring, project showcases, and prize pools."}</p>
                   <div className={styles.cardHighlights}>
                     <div className={styles.highlightItem}>
                       <span className={styles.highlightLabel}>Date & Time</span>
@@ -424,7 +335,7 @@ export default function OpportunitiesPage() {
                     </div>
                     <div className={styles.highlightItem}>
                       <span className={styles.highlightLabel}>Entry Fee</span>
-                      <span className={styles.highlightValue}>{event.price}</span>
+                      <span className={styles.highlightValue}>{event.price || "Free"}</span>
                     </div>
                   </div>
                   <div className={styles.cardFooter}>

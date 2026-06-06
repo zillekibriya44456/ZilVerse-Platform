@@ -2,6 +2,8 @@ import prisma from '../lib/prisma';
 import express from 'express';
 
 
+import { authenticateToken } from '../middleware/auth';
+
 const router = express.Router();
 
 
@@ -18,14 +20,13 @@ router.get('/', async (req, res) => {
 });
 
 // Create a new research paper entry
-router.post('/create', async (req, res) => {
+router.post('/create', authenticateToken, async (req: any, res: any) => {
   try {
-    const { title, authors, abstract, pdfUrl, category, userId } = req.body;
-    let uid = userId;
-
+    const { title, authors, abstract, pdfUrl, category } = req.body;
+    
+    const uid = req.user?.id;
     if (!uid) {
-      const user = await prisma.user.findFirst();
-      if (user) uid = user.id;
+       return res.status(401).json({ error: 'Unauthorized user context.' });
     }
 
     const paper = await prisma.researchPaper.create({
@@ -46,7 +47,7 @@ router.post('/create', async (req, res) => {
 });
 
 // Upvote a research paper
-router.post('/:id/upvote', async (req, res) => {
+router.post('/:id/upvote', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const paper = await prisma.researchPaper.findUnique({ where: { id } });

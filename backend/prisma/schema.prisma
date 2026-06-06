@@ -55,6 +55,7 @@ model User {
   storyViews         StoryView[]
   donationsSent      ReelDonation[]    @relation("DonationsSent")
   donationsReceived  ReelDonation[]    @relation("DonationsReceived")
+  reelReports        ReelReport[]
 }
 
 model DiscussionPost {
@@ -591,4 +592,17 @@ model ReelSave {
   @@unique([reelId, userId])
   @@index([reelId])
   @@index([userId])
+}
+
+model ReelReport {
+  id        String   @id @default(uuid())
+  reelId    String
+  userId    String
+  reason    String
+  createdAt DateTime @default(now())
+
+  reel      Reel     @relation(fields: [reelId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([reelId, userId])
 }

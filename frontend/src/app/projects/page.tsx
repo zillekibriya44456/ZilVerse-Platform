@@ -40,174 +40,7 @@ const CREATORS = [
   }
 ];
 
-const PROJECTS = [
-  // E-commerce
-  {
-    id: 1, title: "Full E-Commerce Platform", category: "E-Commerce",
-    desc: "Complete online store with product management, cart, payment gateway (Razorpay/Stripe), admin dashboard, and order tracking.",
-    tech: ["Next.js", "Node.js", "MongoDB", "Razorpay"],
-    price: 4999, originalPrice: 8000, inrPrice: true,
-    license: "Commercial", seller: "TechIlahi", rating: 4.9, sales: 42,
-    color: "linear-gradient(135deg, #A855F7, #3b82f6)",
-    badge: "Bestseller", icon: "🛒",
-    image: "/projects/ecommerce.png",
-  },
-  {
-    id: 2, title: "Multi-Vendor Marketplace", category: "E-Commerce",
-    desc: "Amazon-style multi-vendor platform with seller registration, product listing, commission system, and buyer checkout.",
-    tech: ["React", "Express", "PostgreSQL", "Stripe"],
-    price: 6999, originalPrice: 12000, inrPrice: true,
-    license: "Commercial", seller: "TechIlahi", rating: 4.8, sales: 18,
-    color: "linear-gradient(135deg, #10b981, #3b82f6)",
-    badge: "New", icon: "🏪",
-    image: "/projects/ecommerce.png",
-  },
-  // Academic / Final Year
-  {
-    id: 3, title: "Hospital Management System", category: "Academic",
-    desc: "Complete HMS with patient records, doctor appointments, billing, lab reports, and pharmacy management. Includes documentation + PPT.",
-    tech: ["PHP", "MySQL", "Bootstrap", "jQuery"],
-    price: 1499, originalPrice: 3000, inrPrice: true,
-    license: "Academic", seller: "DevStudent", rating: 4.9, sales: 156,
-    color: "linear-gradient(135deg, #ef4444, #f97316)",
-    badge: "Top Rated", icon: "🏥",
-    image: "/projects/hospital.png",
-  },
-  {
-    id: 4, title: "Student Result Management System", category: "Academic",
-    desc: "Web app to manage student marks, generate report cards, track attendance and export PDF results. With PPT and viva support.",
-    tech: ["Python", "Django", "SQLite", "Bootstrap"],
-    price: 999, originalPrice: 2000, inrPrice: true,
-    license: "Academic", seller: "CodeHelper", rating: 4.7, sales: 98,
-    color: "linear-gradient(135deg, #f59e0b, #ef4444)",
-    badge: null, icon: "📊",
-    image: "/projects/hospital.png",
-  },
-  {
-    id: 5, title: "Online Food Ordering App", category: "Academic",
-    desc: "Restaurant food ordering system with menu management, cart, real-time order tracking, and admin panel. Perfect final year project.",
-    tech: ["React", "Node.js", "MongoDB", "Socket.io"],
-    price: 1999, originalPrice: 4000, inrPrice: true,
-    license: "Academic", seller: "DevStudent", rating: 4.8, sales: 74,
-    color: "linear-gradient(135deg, #f97316, #eab308)",
-    badge: "Popular", icon: "🍔",
-    image: "/projects/food_app.png",
-  },
-  {
-    id: 6, title: "Library Management System", category: "Academic",
-    desc: "Book issue/return tracking, fine calculation, member management, and reports. Simple and complete for college submissions.",
-    tech: ["Java", "MySQL", "Swing UI"],
-    price: 799, originalPrice: 1500, inrPrice: true,
-    license: "Academic", seller: "CodeHelper", rating: 4.5, sales: 63,
-    color: "linear-gradient(135deg, #8b5cf6, #06b6d4)",
-    badge: null, icon: "📚",
-    image: "/projects/hospital.png",
-  },
-  // SaaS / Boilerplates
-  {
-    id: 7, title: "SaaS Starter Boilerplate", category: "SaaS",
-    desc: "Production-ready SaaS template with Next.js 14, Stripe billing, user authentication, dashboard layout, and Prisma ORM.",
-    tech: ["Next.js", "TypeScript", "Stripe", "Prisma"],
-    price: 7999, originalPrice: 15000, inrPrice: true,
-    license: "Commercial", seller: "TechIlahi", rating: 5.0, sales: 31,
-    color: "linear-gradient(135deg, #6366f1, #A855F7)",
-    badge: "Premium", icon: "🚀",
-    image: "/projects/saas.png",
-  },
-  {
-    id: 8, title: "Admin Dashboard Template", category: "SaaS",
-    desc: "Beautiful dark-mode admin dashboard with charts, data tables, user management, and real-time notifications. React + TailwindCSS.",
-    tech: ["React", "TailwindCSS", "Recharts", "REST API"],
-    price: 2499, originalPrice: 4500, inrPrice: true,
-    license: "Commercial", seller: "UILabs", rating: 4.8, sales: 87,
-    color: "linear-gradient(135deg, #3b82f6, #10b981)",
-    badge: "Bestseller", icon: "📈",
-    image: "/projects/saas.png",
-  },
-  // Mobile Apps
-  {
-    id: 9, title: "Grocery Delivery Flutter App", category: "Mobile App",
-    desc: "Full-featured grocery delivery app with customer app, delivery boy app, admin panel, Firebase backend and real-time tracking.",
-    tech: ["Flutter", "Firebase", "Google Maps", "Dart"],
-    price: 8999, originalPrice: 18000, inrPrice: true,
-    license: "Commercial", seller: "AppWorks", rating: 4.9, sales: 22,
-    color: "linear-gradient(135deg, #10b981, #06b6d4)",
-    badge: "Premium", icon: "🛵",
-    image: "/projects/food_app.png",
-  },
-  {
-    id: 10, title: "Chat App with React Native", category: "Mobile App",
-    desc: "Real-time chat app like WhatsApp. Features: group chat, media sharing, voice messages, online presence, and push notifications.",
-    tech: ["React Native", "Firebase", "Expo", "Redux"],
-    price: 4499, originalPrice: 8000, inrPrice: true,
-    license: "Commercial", seller: "AppWorks", rating: 4.7, sales: 35,
-    color: "linear-gradient(135deg, #A855F7, #ec4899)",
-    badge: "New", icon: "💬",
-    image: "/projects/food_app.png",
-  },
-  // Web Apps
-  {
-    id: 11, title: "Job Portal Website", category: "Web App",
-    desc: "LinkedIn-style job portal with employer/candidate profiles, job postings, applications tracking, and resume builder.",
-    tech: ["React", "Node.js", "PostgreSQL", "Cloudinary"],
-    price: 5499, originalPrice: 9000, inrPrice: true,
-    license: "Commercial", seller: "TechIlahi", rating: 4.8, sales: 29,
-    color: "linear-gradient(135deg, #f59e0b, #ef4444)",
-    badge: null, icon: "💼",
-    image: "/projects/saas.png",
-  },
-  {
-    id: 12, title: "Online Learning Platform (LMS)", category: "Web App",
-    desc: "Complete LMS with course creation, video hosting, quizzes, certificates, student dashboard, and Razorpay enrollment payment.",
-    tech: ["Next.js", "Mux", "Prisma", "Razorpay"],
-    price: 9999, originalPrice: 20000, inrPrice: true,
-    license: "Commercial", seller: "TechIlahi", rating: 5.0, sales: 15,
-    color: "linear-gradient(135deg, #6366f1, #3b82f6)",
-    badge: "Premium", icon: "🎓",
-    image: "/projects/lms.png",
-  },
-  {
-    id: 13, title: "Hotel Booking System", category: "Web App",
-    desc: "Full hotel management system with room booking, availability calendar, POS billing, guest profiles, and PDF invoices.",
-    tech: ["PHP", "Laravel", "MySQL", "Bootstrap"],
-    price: 3499, originalPrice: 6000, inrPrice: true,
-    license: "Commercial", seller: "WebMakers", rating: 4.6, sales: 41,
-    color: "linear-gradient(135deg, #06b6d4, #3b82f6)",
-    badge: null, icon: "🏨",
-    image: "/projects/ecommerce.png",
-  },
-  // Portfolio / Blog
-  {
-    id: 14, title: "Developer Portfolio Template", category: "Portfolio",
-    desc: "Stunning animated portfolio for developers with dark/light mode, project showcase, blog section, and contact form.",
-    tech: ["Next.js", "Framer Motion", "TailwindCSS"],
-    price: 999, originalPrice: 2000, inrPrice: true,
-    license: "Personal", seller: "UILabs", rating: 4.9, sales: 203,
-    color: "linear-gradient(135deg, #A855F7, #ec4899)",
-    badge: "Bestseller", icon: "🎨",
-    image: "/projects/portfolio.png",
-  },
-  {
-    id: 15, title: "Blog + CMS Platform", category: "Web App",
-    desc: "Self-hosted blog platform with Markdown editor, tag management, SEO optimization, newsletter signup, and dark mode.",
-    tech: ["Next.js", "MDX", "Prisma", "SendGrid"],
-    price: 2999, originalPrice: 5000, inrPrice: true,
-    license: "Commercial", seller: "TechIlahi", rating: 4.7, sales: 56,
-    color: "linear-gradient(135deg, #10b981, #6366f1)",
-    badge: null, icon: "✍️",
-    image: "/projects/portfolio.png",
-  },
-  {
-    id: 16, title: "Inventory Management System", category: "Academic",
-    desc: "Stock management system for shops and small businesses with purchase orders, sales reports, and low-stock alerts.",
-    tech: ["React", "Node.js", "MySQL", "Chart.js"],
-    price: 1799, originalPrice: 3500, inrPrice: true,
-    license: "Academic", seller: "CodeHelper", rating: 4.6, sales: 48,
-    color: "linear-gradient(135deg, #f97316, #A855F7)",
-    badge: null, icon: "📦",
-    image: "/projects/saas.png",
-  },
-];
+
 
 const CATEGORIES = ["All", "E-Commerce", "Academic", "SaaS", "Mobile App", "Web App", "Portfolio"];
 const SORT_OPTIONS = ["Popular", "Price: Low to High", "Price: High to Low", "Newest"];
@@ -386,7 +219,7 @@ export default function ProjectsPage() {
       videoUrl: p.videoUrl || null,
   }));
 
-  const ALL_PROJECTS = [...formattedDbProjects, ...PROJECTS];
+  const ALL_PROJECTS = [...formattedDbProjects];
 
   let filtered = ALL_PROJECTS.filter(p => {
     const matchCat = category === "All" || p.category === category || p.category === "Software";
@@ -419,7 +252,7 @@ export default function ProjectsPage() {
           </div>
           <div className={styles.headerStats}>
             <div className={styles.hStat}>
-              <span className={styles.hNum}>{PROJECTS.length}+</span>
+              <span className={styles.hNum}>{formattedDbProjects.length}+</span>
               <span className={styles.hLabel}>Projects</span>
             </div>
             <div className={styles.hStat}>
@@ -631,6 +464,7 @@ export default function ProjectsPage() {
         <PaymentModal
           projectTitle={selectedProject.title}
           price={selectedProject.price}
+          sellerId={selectedProject.sellerId || selectedProject.userId}
           onClose={() => setSelectedProject(null)}
           onSuccess={() => {
             alert(`Download link for ${selectedProject.title} has been sent to your email!`);

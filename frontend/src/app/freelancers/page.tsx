@@ -5,6 +5,7 @@ import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import styles from "./freelancers.module.css";
 import { useAuth } from "@/context/AuthContext";
+import { useCurrency } from "@/context/CurrencyContext";
 import { DollarSign, CheckCircle2, AlertTriangle, X, ShieldAlert, Award } from "lucide-react";
 
 interface FreelancerItem {
@@ -22,17 +23,11 @@ interface FreelancerItem {
   verified: boolean;
 }
 
-const MOCK_FREELANCERS = [
-  { initials: "AK", name: "Arjun Kumar", role: "Full-Stack Developer", rating: 4.9, reviews: 120, rate: "$35/hr", hourlyRateNum: 35, skills: ["React", "Node.js", "Next.js", "PostgreSQL"], color: "var(--primary)", verified: true },
-  { initials: "SD", name: "Sara Design", role: "UI/UX Designer", rating: 5.0, reviews: 89, rate: "$45/hr", hourlyRateNum: 45, skills: ["Figma", "Adobe XD", "Animation", "Branding"], color: "var(--secondary)", verified: true },
-  { initials: "MZ", name: "M. Zaid", role: "Mobile Developer", rating: 4.8, reviews: 64, rate: "$30/hr", hourlyRateNum: 30, skills: ["Flutter", "React Native", "Firebase", "Dart"], color: "var(--accent)", verified: false },
-  { initials: "FA", name: "Fatima Ali", role: "Backend Engineer", rating: 4.7, reviews: 48, rate: "$40/hr", hourlyRateNum: 40, skills: ["Python", "Django", "AWS", "PostgreSQL"], color: "#f59e0b", verified: true },
-  { initials: "RK", name: "Rahul Khan", role: "DevOps Engineer", rating: 4.9, reviews: 33, rate: "$55/hr", hourlyRateNum: 55, skills: ["Docker", "Kubernetes", "CI/CD", "Terraform"], color: "var(--primary)", verified: true },
-  { initials: "ZB", name: "Zara Butt", role: "Content Writer", rating: 4.6, reviews: 97, rate: "$20/hr", hourlyRateNum: 20, skills: ["SEO Writing", "Copywriting", "Blog Posts", "Research"], color: "var(--secondary)", verified: false },
-];
+
 
 export default function FreelancersPage() {
   const { user, token } = useAuth();
+  const { formatPrice, currency } = useCurrency();
   const [dbFreelancers, setDbFreelancers] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   
@@ -87,14 +82,14 @@ export default function FreelancersPage() {
     role: f.title,
     rating: 5.0,
     reviews: Math.floor(Math.random() * 40) + 10,
-    rate: `$${f.hourlyRate}/hr`,
+    rate: formatPrice(f.hourlyRate || 30) + "/hr",
     hourlyRateNum: f.hourlyRate || 30,
     skills: f.skills ? f.skills.split(',').map((s: string) => s.trim()) : [],
     color: "linear-gradient(135deg, #a855f7 0%, #3b82f6 100%)",
     verified: true
   }));
 
-  const freelancers = [...formattedDbFreelancers, ...MOCK_FREELANCERS];
+  const freelancers = [...formattedDbFreelancers];
 
   const filteredFreelancers = useMemo(() => {
     return freelancers.filter(f => {
@@ -337,7 +332,7 @@ export default function FreelancersPage() {
                 <CheckCircle2 size={48} color="#10b981" style={{ margin: "0 auto 1rem" }} />
                 <h4 style={{ color: "#10b981", fontSize: "1.2rem", fontWeight: "700", marginBottom: "0.5rem" }}>Hiring Completed!</h4>
                 <p style={{ color: "#a1a1aa", fontSize: "0.88rem", lineHeight: "1.5" }}>
-                  Milestone fund of <strong>${budget} USD</strong> is locked under platform Escrow. Work contract has been created.
+                  Milestone fund of <strong>{formatPrice(budget)}</strong> is locked under platform Escrow. Work contract has been created.
                 </p>
                 <button
                   className="btn btn-secondary"
