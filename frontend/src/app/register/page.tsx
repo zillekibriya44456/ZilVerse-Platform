@@ -361,7 +361,7 @@ export default function RegisterPage() {
       <CustomCursor />
       <AnimatePresence>
         {showWelcome && (
-          <WelcomeExperience name={formData.name} countryCode={formData.countryCode} stateName={formData.stateName} onContinue={() => router.push("/login?registered=true")} />
+          <WelcomeExperience name={formData.name} countryCode={formData.countryCode} stateName={formData.stateName} onContinue={() => window.location.href = "/login?registered=true"} />
         )}
       </AnimatePresence>
 

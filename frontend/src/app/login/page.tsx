@@ -36,12 +36,12 @@ export default function LoginPage() {
       try {
         const user = JSON.parse(decodeURIComponent(userStr));
         login(user, token);
-        router.push("/dashboard");
+        window.location.href = "/dashboard";
       } catch (err) {
         console.error("Failed to parse user from URL", err);
       }
     }
-  }, [login, router]);
+  }, [login]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,7 +61,7 @@ export default function LoginPage() {
       }
       
       // Better auth securely sets httpOnly cookies.
-      router.push("/dashboard");
+      window.location.href = "/dashboard";
     } catch (err: any) {
       setError("An unexpected error occurred. Please try again.");
       setLoading(false);
