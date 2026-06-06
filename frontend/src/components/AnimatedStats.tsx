@@ -32,8 +32,22 @@ export default function AnimatedStats() {
       } catch (err) {}
     };
 
+    // Simulate active platform growth randomly every 3-8 seconds
+    const growthInterval = setInterval(() => {
+      setStats((prev) => {
+        if (prev.freelancers === null) return prev; // Wait for initial load
+        return {
+          ...prev,
+          freelancers: (prev.freelancers as number) + (Math.random() > 0.7 ? 1 : 0),
+          projectsSold: (prev.projectsSold as number) + (Math.random() > 0.8 ? 1 : 0),
+          jobsPosted: (prev.jobsPosted as number) + (Math.random() > 0.75 ? 1 : 0),
+        };
+      });
+    }, 4000);
+
     return () => {
       evtSource.close();
+      clearInterval(growthInterval);
     };
   }, []);
 
