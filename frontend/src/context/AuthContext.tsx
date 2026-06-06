@@ -74,16 +74,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.error("Failed to sync social login with backend", err);
         });
       }
-    } else {
-      // If no Better Auth session exists, clear local storage token to prevent session mismatch
-      const storedToken = localStorage.getItem('zilverse_token');
-      if (storedToken) {
-        setUser(null);
-        setToken(null);
-        localStorage.removeItem('zilverse_token');
-        localStorage.removeItem('zilverse_user');
-        socket.disconnect();
-      }
     }
   }, [session, isPending]);
 
