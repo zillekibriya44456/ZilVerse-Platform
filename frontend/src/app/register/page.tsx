@@ -3,6 +3,7 @@ import { API_BASE } from "@/utils/api";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
 import { signUp } from "@/lib/auth-client";
 import { GraduationCap, Building2, Briefcase, UserCircle, CheckCircle2, Volume2, VolumeX, ArrowRight, Eye, EyeOff, Sparkles } from "lucide-react";
@@ -267,6 +268,13 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const router = useRouter();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      window.location.href = "/dashboard";
+    }
+  }, [user]);
 
   const clickSoundRef = useRef<HTMLAudioElement | null>(null);
 

@@ -19,7 +19,14 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, user } = useAuth();
+
+  // Redirect to dashboard if already logged in
+  useEffect(() => {
+    if (user) {
+      window.location.href = "/dashboard";
+    }
+  }, [user]);
 
   // Check if we just returned from Render's Social Login
   useEffect(() => {
