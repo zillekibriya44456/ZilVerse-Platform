@@ -11,14 +11,8 @@ const TiltCard = dynamic(() => import("@/components/TiltCard"));
 const InspirationalCarousel = dynamic(() => import("@/components/InspirationalCarousel"), { ssr: false });
 const GlobalMap = dynamic(() => import("@/components/GlobalMap"), { ssr: false });
 import styles from "./home.module.css";
+import AnimatedStats from "@/components/AnimatedStats";
 
-const stats = [
-  { num: "150+", label: "Countries" },
-  { num: "2,400+", label: "Freelancers" },
-  { num: "800+", label: "Projects Sold" },
-  { num: "1,200+", label: "Jobs Posted" },
-  { num: "98%", label: "Satisfaction" },
-];
 
 const features = [
   {
@@ -153,14 +147,7 @@ export default function Home() {
           </div>
 
           {/* Stats bar */}
-          <div className={styles.statsBar}>
-            {stats.map((s, i) => (
-              <div key={i} className={styles.stat}>
-                <span className={styles.statNum}>{s.num}</span>
-                <span className={styles.statLabel}>{s.label}</span>
-              </div>
-            ))}
-          </div>
+          <AnimatedStats />
         </div>
 
         {/* Interactive particle network */}
