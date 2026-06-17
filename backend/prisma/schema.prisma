@@ -572,6 +572,8 @@ model Testimonial {
   name      String
   role      String
   initials  String
+  avatar    String?
+  verified  Boolean  @default(true)
   color     String   @default("var(--primary)")
   createdAt DateTime @default(now())
 }

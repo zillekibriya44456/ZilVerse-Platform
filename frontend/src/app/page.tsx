@@ -9,8 +9,6 @@ import { useCountry } from "@/context/CountryContext";
 import dynamic from "next/dynamic";
 const ParticleNetwork = dynamic(() => import("@/components/ParticleNetwork"), { ssr: false });
 const TiltCard = dynamic(() => import("@/components/TiltCard"));
-const InspirationalCarousel = dynamic(() => import("@/components/InspirationalCarousel"), { ssr: false });
-const GlobalMap = dynamic(() => import("@/components/GlobalMap"), { ssr: false });
 import styles from "./home.module.css";
 import AnimatedStats from "@/components/AnimatedStats";
 
@@ -18,90 +16,52 @@ import AnimatedStats from "@/components/AnimatedStats";
 const features = [
   {
     href: "/freelancers",
-    color: "rgba(168,85,247,0.15)",
-    textColor: "var(--primary)",
-    image: "/images/freelancers_working.png",
+    icon: "👨‍💻",
     title: "Freelancer Marketplace",
     desc: "Hire verified developers, designers, and creators worldwide. Built-in skill testing & reviews.",
     link: "Browse Freelancers →",
   },
   {
     href: "/projects",
-    color: "rgba(59,130,246,0.15)",
-    textColor: "var(--accent)",
-    image: "/images/projects_development.png",
+    icon: "📦",
     title: "Project Marketplace",
     desc: "Buy & sell source code, SaaS boilerplates, and academic projects. Instant downloads.",
     link: "Browse Projects →",
   },
   {
     href: "/jobs",
-    color: "rgba(245,158,11,0.15)",
-    textColor: "#f59e0b",
-    image: "/images/job_board_hiring.png",
-    title: "Job Board",
-    desc: "Find remote jobs, internships and local tech opportunities across 150+ countries. Apply in one click.",
+    icon: "💼",
+    title: "Global Job Board",
+    desc: "Find remote jobs, internships and local tech opportunities across 150+ countries.",
     link: "Find Jobs →",
   },
   {
-    href: "/innovation",
-    color: "rgba(236,72,153,0.15)",
-    textColor: "#ec4899",
-    image: "/images/innovation_hub.png",
-    title: "Innovation Hub",
-    desc: "Collaborate with researchers, innovators, startups, and technology creators globally.",
-    link: "Explore Innovation →",
-  },
-  {
     href: "/community",
-    color: "rgba(14,165,233,0.15)",
-    textColor: "#0ea5e9",
-    image: "/images/community_networking.png",
+    icon: "🌐",
     title: "Global Community",
     desc: "Network and collaborate with professionals, developers, and entrepreneurs worldwide.",
     link: "Join Community →",
   },
 ];
 
-const steps = [
-  { num: "01", title: "Create Your Account", desc: "Sign up free in under 60 seconds. No credit card needed.", color: "var(--primary)" },
-  { num: "02", title: "Build Your Profile", desc: "Showcase your skills, portfolio, or post your project requirements.", color: "var(--accent)" },
-  { num: "03", title: "Connect & Transact", desc: "Hire talent, sell your work, or find your next job — all on one platform.", color: "var(--secondary)" },
-  { num: "04", title: "Get Paid Globally", desc: "Receive payments securely in your local currency from clients worldwide.", color: "#f59e0b" },
-];
-
-const regions = [
-  { flag: "🌍", label: "Africa", count: "32 countries" },
-  { flag: "🌎", label: "Americas", count: "45 countries" },
-  { flag: "🌏", label: "Asia Pacific", count: "48 countries" },
-  { flag: "🇪🇺", label: "Europe", count: "44 countries" },
-  { flag: "🕌", label: "Middle East", count: "18 countries" },
-];
-
-const DEFAULT_TESTIMONIALS = [
-  { stars: 5, text: "Got my e-commerce site built within a week! The team was professional and delivered exactly what I needed.", name: "Rahul Kapoor", role: "Buyer · Retail Business Owner, Delhi", initials: "RK", color: "var(--primary)" },
-  { stars: 5, text: "Sold 3 of my source code projects within the first month. The marketplace is clean, buyers are real. Best platform for student devs.", name: "Anjali Joshi", role: "Seller · CSE Student, Pune", initials: "AJ", color: "var(--accent)" },
-  { stars: 5, text: "As a freelancer, I've landed 5 clients through ZilVerse in 2 months. My income doubled this quarter!", name: "Mohammed Hassan", role: "Freelancer · Full-Stack Dev, Hyderabad", initials: "MH", color: "var(--secondary)" },
-  { stars: 5, text: "Found a hospital management system for my final year project with full documentation and viva support. Absolute lifesaver!", name: "Priya Sharma", role: "Buyer · BCA Student, Bengaluru", initials: "PS", color: "#f59e0b" },
-  { stars: 5, text: "Hired a React developer within 24 hours for my startup MVP. The quality was excellent. ZilVerse saved me weeks of searching.", name: "Zara Noor", role: "Buyer · Startup Founder, Dubai", initials: "ZN", color: "var(--primary)" },
-  { stars: 5, text: "The job board helped me find a remote internship in under a week. The interface is clean and applying is super simple!", name: "Karan Patel", role: "Jobseeker · IT Graduate, Mumbai", initials: "KP", color: "var(--accent)" },
-];
-
 export default function Home() {
   const { selectedCountry } = useCountry();
   const [dbTestimonials, setDbTestimonials] = useState<any[]>([]);
+  const [featured, setFeatured] = useState({ freelancers: [], projects: [], services: [] });
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [newFeedback, setNewFeedback] = useState({ text: '', name: '', role: '', stars: 5 });
 
   useEffect(() => {
+    // Load Testimonials
     axios.get(`${API_BASE}/api/testimonials`)
       .then(res => setDbTestimonials(res.data))
-      .catch(err => {
-        console.error("Failed to load testimonials", err);
-      });
-  }, []);
+      .catch(err => console.error("Failed to load testimonials", err));
 
-  const displayedTestimonials = dbTestimonials.length > 0 ? dbTestimonials : DEFAULT_TESTIMONIALS;
+    // Load Featured Content
+    axios.get(`${API_BASE}/api/homepage/featured`)
+      .then(res => setFeatured(res.data))
+      .catch(err => console.error("Failed to load featured content", err));
+  }, []);
 
   const handlePostFeedback = async () => {
     if (!newFeedback.text || !newFeedback.name || !newFeedback.role) {
@@ -110,11 +70,9 @@ export default function Home() {
     }
     try {
       await axios.post(`${API_BASE}/api/testimonials`, newFeedback);
-      alert("Feedback submitted successfully!");
+      alert("Feedback submitted successfully and is awaiting verification!");
       setNewFeedback({ text: '', name: '', role: '', stars: 5 });
       setIsFeedbackModalOpen(false);
-      const refreshRes = await axios.get(`${API_BASE}/api/testimonials`);
-      setDbTestimonials(refreshRes.data);
     } catch (err: any) {
       alert("Error submitting feedback: " + (err.response?.data?.error || err.message));
     }
@@ -123,58 +81,50 @@ export default function Home() {
   return (
     <div className={styles.page}>
 
-      {/* Hero */}
-      <section className={styles.hero} style={{ background: "linear-gradient(to bottom, rgba(15,15,17,0.6) 0%, rgba(15,15,17,1) 100%), url('/images/hero_global_collab.png') center/cover no-repeat" }}>
+      {/* Hero Section */}
+      <section className={styles.hero}>
+        <ParticleNetwork className={styles.particles} />
         <div className="container" style={{ position: "relative", zIndex: 10 }}>
-          <div className={`${styles.badge} shimmer-text`}>
-            {selectedCountry.flag} ZilVerse — Your Global Tech Ecosystem
+          <div className={styles.badge}>
+            <span>{selectedCountry.flag}</span>
+            <span>ZilVerse — Global Tech Ecosystem</span>
           </div>
           <h1 className={styles.title}>
-            Build. Work. Grow —<br />
+            Build. Work. Grow.<br />
             <span className="text-gradient">All in One Place.</span>
           </h1>
           <p className={styles.subtitle}>
-            The ultimate worldwide ecosystem combining freelancing, project marketplace,
-            job portals, and digital services — serving talent in{" "}
-            <span style={{ color: "var(--primary)", fontWeight: 600 }}>150+ countries</span>.
+            The ultimate ecosystem combining freelancing, digital marketplaces,
+            and global jobs — serving talent in <span style={{ color: "var(--foreground)" }}>150+ countries</span>.
           </p>
           <div className={styles.ctaGroup}>
-            <Link href="/register" className={`btn btn-primary ${styles.primaryBtn}`} id="hero-cta-register">
-              🚀 Get Started Free
+            <Link href="/register" className="btn btn-primary" id="hero-cta-register" style={{ padding: "0.8rem 1.8rem" }}>
+              Start for Free
             </Link>
-            <Link href="/freelancers" className="btn btn-secondary" id="hero-cta-hire">
-              🌐 Hire Global Talent
+            <Link href="/freelancers" className="btn btn-secondary" id="hero-cta-hire" style={{ padding: "0.8rem 1.8rem" }}>
+              Hire Talent
             </Link>
           </div>
 
-          {/* Stats bar */}
           <AnimatedStats />
         </div>
-
-        {/* Interactive particle network */}
-        <ParticleNetwork className={styles.particles} />
       </section>
 
-      {/* Global Freelancer Map */}
-      <GlobalMap />
-
-      {/* Features */}
+      {/* Features Grid */}
       <section className={styles.features}>
         <div className="container">
-          <h2 className={styles.sectionTitle}>Everything You Need in One Place</h2>
-          <p className={styles.sectionSub}>Four powerful modules, one unified global platform</p>
+          <h2 className={styles.sectionTitle}>Everything You Need</h2>
+          <p className={styles.sectionSub}>Four powerful modules, one unified platform</p>
           <div className={styles.featuresGrid}>
             {features.map((f) => (
-              <TiltCard key={f.href} className={`glass-panel ${styles.featureCard}`} style={{ padding: 0, overflow: 'hidden' }}>
-                <Link href={f.href} className={styles.featureCardInner} style={{ height: '100%' }}>
-                  <div style={{ position: 'relative', width: '100%', height: '180px' }}>
-                    <Image src={f.image} alt={f.title} fill sizes="(max-width: 768px) 100vw, 33vw" style={{ objectFit: 'cover' }} />
+              <TiltCard key={f.href} className={styles.featureCard}>
+                <Link href={f.href} style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', height: '100%' }}>
+                  <div className={styles.featureIcon} style={{ background: 'rgba(255,255,255,0.05)' }}>
+                    {f.icon}
                   </div>
-                  <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
-                    <h3 style={{ fontSize: '1.3rem', marginBottom: '0.5rem' }}>{f.title}</h3>
-                    <p style={{ color: '#a1a1aa', fontSize: '0.9rem', lineHeight: 1.6, flex: 1 }}>{f.desc}</p>
-                    <span className={styles.cardLink} style={{ color: f.textColor }}>{f.link}</span>
-                  </div>
+                  <h3>{f.title}</h3>
+                  <p>{f.desc}</p>
+                  <span className={styles.cardLink}>{f.link}</span>
                 </Link>
               </TiltCard>
             ))}
@@ -182,148 +132,173 @@ export default function Home() {
         </div>
       </section>
 
-      {/* How It Works */}
-      <section className={styles.howItWorks}>
-        <div className="container">
-          <h2 className={styles.sectionTitle}>How ZilVerse Works</h2>
-          <p className={styles.sectionSub}>Get started in minutes, grow without limits</p>
-          <div className={styles.stepsGrid}>
-            {steps.map((s) => (
-              <TiltCard key={s.num} className={`glass-panel ${styles.stepCard}`}>
-                <div className={styles.stepNum} style={{ color: s.color, borderColor: s.color }}>
-                  {s.num}
+      {/* Featured Freelancers */}
+      {featured.freelancers.length > 0 && (
+        <section className={styles.dynamicSection}>
+          <div className="container">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2rem' }}>
+              <div>
+                <h2 className={styles.sectionTitle} style={{ margin: 0, textAlign: 'left' }}>Top Rated Freelancers</h2>
+                <p className={styles.sectionSub} style={{ margin: '0.5rem 0 0', textAlign: 'left' }}>Hire world-class talent for your next big project</p>
+              </div>
+              <Link href="/freelancers" className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}>View All →</Link>
+            </div>
+            <div className={styles.grid4}>
+              {featured.freelancers.map((user: any) => (
+                <div key={user.id} className={styles.itemCard}>
+                  <div className={styles.itemHeader}>
+                    <img src={user.avatar || "/avatars/default.png"} alt={user.name} className={styles.itemAvatar} />
+                    <div style={{ overflow: 'hidden' }}>
+                      <h4 className={styles.itemTitle}>{user.name}</h4>
+                      <p className={styles.itemSub}>{user.freelancerProfile?.title || "Freelancer"}</p>
+                    </div>
+                  </div>
+                  <p className={styles.itemDesc}>{user.bio || "No bio available."}</p>
+                  <div className={styles.itemFooter}>
+                    <span className={styles.itemPrice}>${user.freelancerProfile?.hourlyRate || 0}/hr</span>
+                    <Link href={`/freelancers/${user.id}`} style={{ color: 'var(--foreground)', fontSize: '0.85rem', fontWeight: 500 }}>Profile →</Link>
+                  </div>
                 </div>
-                <h3 className={styles.stepTitle}>{s.title}</h3>
-                <p className={styles.stepDesc}>{s.desc}</p>
-              </TiltCard>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
-      {/* Dynamic Localized Carousel */}
-      <InspirationalCarousel />
+      {/* Featured Projects */}
+      {featured.projects.length > 0 && (
+        <section className={styles.dynamicSection}>
+          <div className="container">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2rem' }}>
+              <div>
+                <h2 className={styles.sectionTitle} style={{ margin: 0, textAlign: 'left' }}>Trending Projects</h2>
+                <p className={styles.sectionSub} style={{ margin: '0.5rem 0 0', textAlign: 'left' }}>Source code, SaaS templates, and boilerplate ready to deploy</p>
+              </div>
+              <Link href="/projects" className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}>Explore Marketplace →</Link>
+            </div>
+            <div className={styles.grid3}>
+              {featured.projects.map((project: any) => (
+                <div key={project.id} className={styles.itemCard}>
+                  <h4 className={styles.itemTitle}>{project.title}</h4>
+                  <p className={styles.itemDesc}>{project.description}</p>
+                  <div className={styles.itemFooter}>
+                    <span className={styles.itemPrice}>${project.price}</span>
+                    <div className={styles.itemMeta}>
+                      <img src={project.seller.avatar || "/avatars/default.png"} alt="seller" style={{ width: '20px', height: '20px', borderRadius: '50%' }} />
+                      <span>{project.seller.name}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Testimonials */}
       <section className={styles.testimonials}>
         <div className="container">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '3rem' }}>
             <div>
-              <h2 className={styles.sectionTitle} style={{ margin: 0, textAlign: 'left' }}>Loved by Our Global Community</h2>
-              <p className={styles.sectionSub} style={{ margin: '0.4rem 0 0', textAlign: 'left' }}>Real feedback from buyers, sellers, and freelancers on ZilVerse</p>
+              <h2 className={styles.sectionTitle} style={{ margin: 0, textAlign: 'left' }}>Loved by Global Teams</h2>
+              <p className={styles.sectionSub} style={{ margin: '0.5rem 0 0', textAlign: 'left' }}>Real feedback from the ZilVerse ecosystem</p>
             </div>
             <button 
               className="btn btn-secondary" 
               onClick={() => setIsFeedbackModalOpen(true)}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.6rem 1.2rem', fontSize: '0.9rem', border: '1px solid #333' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.6rem 1.2rem', fontSize: '0.85rem' }}
             >
-              ✍️ Share Your Feedback
+              ✍️ Share Feedback
             </button>
           </div>
+          
           <div className={styles.testimonialsGrid}>
-            {displayedTestimonials.map((t, i) => (
-              <TiltCard key={i} className={`glass-panel ${styles.testimonialCard}`}>
+            {dbTestimonials.map((t, i) => (
+              <TiltCard key={i} className={styles.testimonialCard}>
                 <div className={styles.stars}>{"⭐".repeat(t.stars)}</div>
                 <p className={styles.testimonialText}>&quot;{t.text}&quot;</p>
                 <div className={styles.testimonialAuthor}>
-                  <div className={styles.tAvatar} style={{ background: t.color }}>{t.initials}</div>
-                  <div>
-                    <strong>{t.name}</strong>
-                    <span>{t.role}</span>
+                  {t.avatar ? (
+                    <img src={t.avatar} alt={t.name} className={styles.tAvatar} />
+                  ) : (
+                    <div className={styles.tAvatar} style={{ background: t.color || '#333' }}>{t.initials}</div>
+                  )}
+                  <div className={styles.tInfo}>
+                    <span className={styles.tName}>
+                      {t.name}
+                      {t.verified && <span className={styles.verifiedBadge} title="Verified User">✓</span>}
+                    </span>
+                    <span className={styles.tRole}>{t.role}</span>
                   </div>
                 </div>
               </TiltCard>
             ))}
+            
+            {dbTestimonials.length === 0 && (
+              <div style={{ textAlign: 'center', color: 'var(--muted)', gridColumn: '1 / -1', padding: '3rem 0' }}>
+                Loading reviews from database...
+              </div>
+            )}
           </div>
         </div>
       </section>
 
-      {/* Share Feedback Modal */}
+      {/* Feedback Modal */}
       {isFeedbackModalOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#111', padding: '2rem', borderRadius: '16px', border: '1px solid #333', width: '90%', maxWidth: '450px' }}>
-            <h2 style={{ color: '#fff', marginBottom: '1.5rem' }}>Share Your Experience</h2>
-            
+          <div style={{ background: 'var(--surface)', padding: '2rem', borderRadius: '12px', border: '1px solid var(--card-border)', width: '90%', maxWidth: '450px' }}>
+            <h2 style={{ color: 'var(--foreground)', marginBottom: '1.5rem', fontSize: '1.2rem' }}>Share Your Experience</h2>
             <div style={{ marginBottom: '1rem' }}>
-              <label style={{ color: '#aaa', fontSize: '0.85rem', display: 'block', marginBottom: '0.4rem' }}>Your Name</label>
               <input 
-                type="text" 
-                placeholder="e.g. Rahul Kapoor" 
-                value={newFeedback.name}
+                type="text" placeholder="Your Name" value={newFeedback.name}
                 onChange={(e) => setNewFeedback({...newFeedback, name: e.target.value})}
-                style={{ width: '100%', padding: '0.8rem', background: '#000', border: '1px solid #333', color: '#fff', borderRadius: '8px' }}
+                style={{ width: '100%', padding: '0.8rem', background: 'var(--background)', border: '1px solid var(--card-border)', color: 'var(--foreground)', borderRadius: '8px' }}
               />
             </div>
-
             <div style={{ marginBottom: '1rem' }}>
-              <label style={{ color: '#aaa', fontSize: '0.85rem', display: 'block', marginBottom: '0.4rem' }}>Your Role / Title</label>
               <input 
-                type="text" 
-                placeholder="e.g. Buyer · Retail Business Owner" 
-                value={newFeedback.role}
+                type="text" placeholder="Your Role (e.g. Freelancer)" value={newFeedback.role}
                 onChange={(e) => setNewFeedback({...newFeedback, role: e.target.value})}
-                style={{ width: '100%', padding: '0.8rem', background: '#000', border: '1px solid #333', color: '#fff', borderRadius: '8px' }}
+                style={{ width: '100%', padding: '0.8rem', background: 'var(--background)', border: '1px solid var(--card-border)', color: 'var(--foreground)', borderRadius: '8px' }}
               />
             </div>
-
             <div style={{ marginBottom: '1rem' }}>
-              <label style={{ color: '#aaa', fontSize: '0.85rem', display: 'block', marginBottom: '0.4rem' }}>Rating</label>
               <select 
                 value={newFeedback.stars}
                 onChange={(e) => setNewFeedback({...newFeedback, stars: parseInt(e.target.value)})}
-                style={{ width: '100%', padding: '0.8rem', background: '#000', border: '1px solid #333', color: '#fff', borderRadius: '8px' }}
+                style={{ width: '100%', padding: '0.8rem', background: 'var(--background)', border: '1px solid var(--card-border)', color: 'var(--foreground)', borderRadius: '8px' }}
               >
-                <option value={5}>⭐⭐⭐⭐⭐ (5 Stars)</option>
-                <option value={4}>⭐⭐⭐⭐ (4 Stars)</option>
-                <option value={3}>⭐⭐⭐ (3 Stars)</option>
-                <option value={2}>⭐⭐ (2 Stars)</option>
-                <option value={1}>⭐ (1 Star)</option>
+                <option value={5}>5 Stars</option>
+                <option value={4}>4 Stars</option>
+                <option value={3}>3 Stars</option>
+                <option value={2}>2 Stars</option>
+                <option value={1}>1 Star</option>
               </select>
             </div>
-
             <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ color: '#aaa', fontSize: '0.85rem', display: 'block', marginBottom: '0.4rem' }}>Your Review / Feedback</label>
               <textarea 
-                placeholder="How was your experience buying, selling, or freelancing on ZilVerse?" 
-                value={newFeedback.text}
+                placeholder="Your review..." value={newFeedback.text}
                 onChange={(e) => setNewFeedback({...newFeedback, text: e.target.value})}
-                style={{ width: '100%', padding: '0.8rem', background: '#000', border: '1px solid #333', color: '#fff', borderRadius: '8px', minHeight: '80px' }}
+                style={{ width: '100%', padding: '0.8rem', background: 'var(--background)', border: '1px solid var(--card-border)', color: 'var(--foreground)', borderRadius: '8px', minHeight: '80px' }}
               />
             </div>
-
             <div style={{ display: 'flex', gap: '1rem' }}>
-              <button onClick={() => setIsFeedbackModalOpen(false)} style={{ flex: 1, padding: '0.8rem', background: '#333', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Cancel</button>
-              <button 
-                onClick={handlePostFeedback} 
-                disabled={!newFeedback.name || !newFeedback.role || !newFeedback.text}
-                style={{ flex: 1, padding: '0.8rem', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
-              >
-                Submit Feedback
-              </button>
+              <button onClick={() => setIsFeedbackModalOpen(false)} style={{ flex: 1, padding: '0.8rem', background: 'var(--card-border)', color: 'var(--foreground)', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={handlePostFeedback} style={{ flex: 1, padding: '0.8rem', background: 'var(--foreground)', color: 'var(--background)', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>Submit</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Country-aware CTA */}
+      {/* Footer CTA */}
       <section className={styles.ctaBanner}>
         <div className="container">
-          <div className={`glass-panel ${styles.ctaBox}`}>
-            <div className={styles.ctaFlag}>{selectedCountry.flag}</div>
-            <h2>
-              {selectedCountry.code === "WW"
-                ? "Ready to Build Your Digital Empire?"
-                : `Join ZilVerse from ${selectedCountry.name}`}
-            </h2>
-            <p>
-              {selectedCountry.code === "WW"
-                ? "Join thousands of freelancers, clients, and businesses on ZilVerse across 150+ countries."
-                : `Connect with global clients and talent — available right here in ${selectedCountry.name}.`}
-            </p>
-            <div className={styles.ctaGroup}>
-              <Link href="/register" className="btn btn-primary" id="cta-register">Create Free Account</Link>
-              <Link href="/login" className="btn btn-secondary" id="cta-signin">Sign In</Link>
-            </div>
+          <div className={styles.ctaBox}>
+            <h2>Ready to Join the Network?</h2>
+            <p>Connect with global clients and top-tier talent available around the world.</p>
+            <Link href="/register" className="btn btn-primary" style={{ padding: "0.8rem 2rem", fontSize: "1rem" }}>
+              Create Account
+            </Link>
           </div>
         </div>
       </section>

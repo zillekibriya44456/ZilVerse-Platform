@@ -4,49 +4,39 @@ import { eventBus } from '../utils/eventBus';
 
 const router = express.Router();
 
-// Cache variables
 let cachedStats: any = null;
 let lastFetchTime = 0;
 const CACHE_TTL = 30000; // 30 seconds
 
 async function fetchLiveStatistics() {
   try {
-    // 1. Countries (Since User doesn't have countryCode yet, we count distinct locations in Jobs and Courses as a proxy for global reach, or just return real registered users count as proxy if needed. Actually we'll count unique locations in jobs as proxy)
     const jobsWithLocations = await prisma.job.findMany({ select: { location: true }, distinct: ['location'] });
     const coursesWithCountries = await prisma.academyCourse.findMany({ select: { countryCode: true }, distinct: ['countryCode'] });
-    const uniqueCountriesCount = Math.max(1, new Set([...jobsWithLocations.map(j => j.location), ...coursesWithCountries.map((c: any) => c.countryCode)]).size);
+    const countriesCount = new Set([...jobsWithLocations.map(j => j.location), ...coursesWithCountries.map((c: any) => c.countryCode)]).size;
 
-    // 2. Freelancers
-    const freelancersCount = await prisma.user.count({
-      where: { role: 'FREELANCER' }
-    });
-
-    // 3. Projects Sold
-    const projectsSold = await prisma.transaction.count({
-      where: { status: 'COMPLETED' }
-    });
-
-    // 4. Jobs Posted
+    const usersCount = await prisma.user.count();
+    const freelancersCount = await prisma.user.count({ where: { role: 'FREELANCER' } });
+    const projectsSold = await prisma.transaction.count({ where: { status: 'COMPLETED', type: 'ESCROW_RELEASE' } });
     const jobsPosted = await prisma.job.count();
 
-    // 5. Satisfaction
+    const revenueResult = await prisma.transaction.aggregate({
+      _sum: { amount: true },
+      where: { status: 'COMPLETED' }
+    });
+    const revenue = revenueResult._sum.amount || 0;
+
     const serviceRatings = await prisma.digitalService.aggregate({ _avg: { rating: true }, _count: { rating: true } });
     const avgRating = serviceRatings._avg.rating || 5.0;
     const satisfaction = Math.min(100, Math.round((avgRating / 5) * 100));
 
-    // Base numbers from original design
-    const BASE_COUNTRIES = 150;
-    const BASE_FREELANCERS = 2400;
-    const BASE_PROJECTS = 800;
-    const BASE_JOBS = 1200;
-    const BASE_SATISFACTION = 98;
-
     return {
-      countries: BASE_COUNTRIES + uniqueCountriesCount,
-      freelancers: BASE_FREELANCERS + freelancersCount,
-      projectsSold: BASE_PROJECTS + projectsSold,
-      jobsPosted: BASE_JOBS + jobsPosted,
-      satisfaction: avgRating === 5.0 && serviceRatings._count?.rating === 0 ? BASE_SATISFACTION : Math.max(BASE_SATISFACTION, satisfaction)
+      countries: countriesCount,
+      users: usersCount,
+      freelancers: freelancersCount,
+      projectsSold: projectsSold,
+      jobsPosted: jobsPosted,
+      revenue: revenue,
+      satisfaction: satisfaction
     };
   } catch (error) {
     console.error("Error fetching statistics:", error);
@@ -54,7 +44,6 @@ async function fetchLiveStatistics() {
   }
 }
 
-// Get standard stats
 router.get('/', async (req: Request, res: Response) => {
   const now = Date.now();
   if (cachedStats && now - lastFetchTime < CACHE_TTL) {
@@ -71,14 +60,12 @@ router.get('/', async (req: Request, res: Response) => {
   }
 });
 
-// SSE Stream for Real-Time Updates
 router.get('/stream', (req: Request, res: Response) => {
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
   res.flushHeaders();
 
-  // Send initial data immediately
   if (cachedStats) {
     res.write(`data: ${JSON.stringify(cachedStats)}\n\n`);
   } else {
@@ -91,7 +78,6 @@ router.get('/stream', (req: Request, res: Response) => {
     });
   }
 
-  // Listen to event bus for updates
   const onUpdate = async () => {
     const stats = await fetchLiveStatistics();
     if (stats) {

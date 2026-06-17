@@ -6,10 +6,11 @@ import { API_BASE } from "@/utils/api";
 export default function AnimatedStats() {
   const [stats, setStats] = useState({
     countries: null,
+    users: null,
     freelancers: null,
     projectsSold: null,
     jobsPosted: null,
-    satisfaction: null,
+    revenue: null,
   });
 
   useEffect(() => {
@@ -32,31 +33,24 @@ export default function AnimatedStats() {
       } catch (err) {}
     };
 
-    // Simulate active platform growth randomly every 3-8 seconds
-    const growthInterval = setInterval(() => {
-      setStats((prev) => {
-        if (prev.freelancers === null) return prev; // Wait for initial load
-        return {
-          ...prev,
-          freelancers: (prev.freelancers as number) + (Math.random() > 0.7 ? 1 : 0),
-          projectsSold: (prev.projectsSold as number) + (Math.random() > 0.8 ? 1 : 0),
-          jobsPosted: (prev.jobsPosted as number) + (Math.random() > 0.75 ? 1 : 0),
-        };
-      });
-    }, 4000);
-
     return () => {
       evtSource.close();
-      clearInterval(growthInterval);
     };
   }, []);
 
+  const formatCurrency = (v: number) => {
+    if (v >= 1000000) return `$${(v / 1000000).toFixed(1)}M+`;
+    if (v >= 1000) return `$${(v / 1000).toFixed(1)}K+`;
+    return `$${v.toLocaleString()}`;
+  };
+
   const statItems = [
     { key: "countries", label: "Countries", format: (v: number) => `${v}+` },
+    { key: "users", label: "Global Users", format: (v: number) => `${v.toLocaleString()}+` },
     { key: "freelancers", label: "Freelancers", format: (v: number) => `${v.toLocaleString()}+` },
     { key: "projectsSold", label: "Projects Sold", format: (v: number) => `${v.toLocaleString()}+` },
     { key: "jobsPosted", label: "Jobs Posted", format: (v: number) => `${v.toLocaleString()}+` },
-    { key: "satisfaction", label: "Satisfaction", format: (v: number) => `${v}%` },
+    { key: "revenue", label: "Revenue Processed", format: formatCurrency },
   ];
 
   return (

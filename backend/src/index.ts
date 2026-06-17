@@ -39,6 +39,7 @@ import chatRoutes from './routes/chat';
 import spotlightRoutes from './routes/spotlights';
 import testimonialRoutes from './routes/testimonials';
 import statisticsRoutes from './routes/statistics';
+import homepageRoutes from './routes/homepage';
 const app = express();
 const PORT = process.env.PORT || 5002;
 
@@ -86,6 +87,7 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/spotlights', spotlightRoutes);
 app.use('/api/testimonials', testimonialRoutes);
 app.use('/api/statistics', statisticsRoutes);
+app.use('/api/homepage', homepageRoutes);
 
 app.get('/', (req, res) => {
   res.send('ZilVerse API is running...');
