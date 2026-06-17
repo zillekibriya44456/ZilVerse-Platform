@@ -16,6 +16,7 @@ import AIAssistant from "@/components/AIAssistant";
 import GlobalNotificationBar from "@/components/GlobalNotificationBar";
 import CookieConsent from "@/components/CookieConsent";
 import ThemeStudio from "@/components/ThemeStudio";
+import ThemeStudioButton from "@/components/ThemeStudioButton";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 const outfit = Outfit({ variable: "--font-outfit", subsets: ["latin"] });
@@ -152,6 +153,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                     <GlobalNotificationBar />
                     <CookieConsent />
                     <ThemeStudio />
+                    <ThemeStudioButton />
                   </ThemeProvider>
                 </AuthProvider>
               </TimezoneProvider>

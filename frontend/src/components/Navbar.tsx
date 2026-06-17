@@ -5,11 +5,12 @@ import Link from "next/link";
 import axios from "axios";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/context/ThemeContext";
 import { 
   User, Briefcase, Code2, Play, Users, Globe, BookOpen, Lightbulb, 
   FileText, Award, MessageSquare, Search, ChevronDown, Sparkles, 
   Layers, PhoneCall, Handshake, Users2, Building2, HelpCircle,
-  Video, RefreshCw, Box, GraduationCap, Calendar, Coins, Moon,
+  Video, RefreshCw, Box, GraduationCap, Calendar, Coins, Palette,
   Zap, BarChart2, MessageCircle, Send, HeadphonesIcon, FileOutput, Grip,
   UserPlus, LogIn
 } from "lucide-react";
@@ -81,6 +82,7 @@ const MEGA_COLUMNS: any[] = [
 
 export default function Navbar() {
   const { user, logout, isHydrated } = useAuth();
+  const { openStudio } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
@@ -277,8 +279,13 @@ export default function Navbar() {
           <button className={styles.langBtn}>
             <Globe size={16} /> EN <ChevronDown size={14} />
           </button>
-          <button className={styles.iconBtn}>
-            <Moon size={18} />
+          <button
+            className={styles.iconBtn}
+            onClick={openStudio}
+            aria-label="Open Theme Studio"
+            title="Theme Studio"
+          >
+            <Palette size={18} />
           </button>
           
           {/* ── Auth section — suppresses flicker until localStorage is read ── */}

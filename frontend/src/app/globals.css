@@ -113,6 +113,44 @@ input:focus, textarea:focus, select:focus {
   border-color: rgba(255, 255, 255, 0.15);
 }
 
+/* ── Theme Studio — data-attribute hooks ─────────────────────────────── */
+
+/* Disable glassmorphism when toggled off */
+[data-glass="0"] .glass,
+[data-glass="0"] .glass-panel,
+[data-glass="0"] [class*="glass"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Kill ALL transitions/animations when user turns off animations */
+.no-animations *,
+.no-animations *::before,
+.no-animations *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+
+/* Disable gradients on text when toggled off */
+[data-gradients="0"] [class*="textGradient"],
+[data-gradients="0"] [class*="gradient"] {
+  background-image: none !important;
+  -webkit-text-fill-color: var(--foreground) !important;
+}
+
+/* Compact layout density */
+[data-compact="1"] section {
+  padding-top: 1.5rem !important;
+  padding-bottom: 1.5rem !important;
+}
+
+/* ThemeStudio backdrop fade-in */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 /* ---- Buttons ---- */
 .btn {
   display: inline-flex;
