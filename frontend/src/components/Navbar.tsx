@@ -21,6 +21,7 @@ const TYPE_ICONS: Record<string, string> = {
 };
 
 const NAV_ITEMS = [
+  { label: "Home", href: "/", isMega: false },
   {
     label: "Services",
     href: "/services",
@@ -58,7 +59,7 @@ const NAV_ITEMS = [
     ]
   },
   {
-    label: "Jobs & Opps",
+    label: "Opportunities",
     href: "/opportunities",
     isMega: true,
     sections: [
@@ -95,7 +96,7 @@ const NAV_ITEMS = [
     }
   },
   {
-    label: "Academy",
+    label: "Learn & Grow",
     href: "/academy",
     isMega: false,
     items: [
@@ -127,7 +128,6 @@ export default function Navbar() {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
   const closeTimeout = useRef<NodeJS.Timeout | null>(null);
 
   // Notification Bell State
@@ -144,16 +144,7 @@ export default function Navbar() {
       setNotifications(prev => [notif, ...prev]);
     };
     socket.on('new_notification', handleNewNotif);
-
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    window.addEventListener('scroll', handleScroll);
-
-    return () => { 
-      socket.off('new_notification', handleNewNotif); 
-      window.removeEventListener('scroll', handleScroll);
-    };
+    return () => { socket.off('new_notification', handleNewNotif); };
   }, []);
 
   useEffect(() => {
@@ -188,7 +179,7 @@ export default function Navbar() {
   };
 
   return (
-    <div className={`${styles.headerContainer} ${isScrolled ? styles.scrolled : ''}`}>
+    <>
       <header className={styles.header}>
         <Link href="/" className={styles.logo}>
           Zil<span className={styles.logoAccent}>Verse</span>
@@ -440,6 +431,6 @@ export default function Navbar() {
           <span>Profile</span>
         </Link>
       </nav>
-    </div>
+    </>
   );
 }
