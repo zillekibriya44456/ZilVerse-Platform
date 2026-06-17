@@ -141,7 +141,7 @@ export default function Home() {
       </section>
 
       {/* Featured Freelancers */}
-      {featured?.freelancers?.length > 0 && (
+      {Array.isArray(featured?.freelancers) && featured.freelancers.length > 0 && (
         <section className={styles.dynamicSection}>
           <div className="container">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2rem' }}>
@@ -174,7 +174,7 @@ export default function Home() {
       )}
 
       {/* Featured Projects */}
-      {featured?.projects?.length > 0 && (
+      {Array.isArray(featured?.projects) && featured.projects.length > 0 && (
         <section className={styles.dynamicSection}>
           <div className="container">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2rem' }}>
@@ -223,7 +223,7 @@ export default function Home() {
           <div className={styles.testimonialsGrid}>
             {Array.isArray(dbTestimonials) && dbTestimonials.map((t, i) => (
               <TiltCard key={i} className={styles.testimonialCard}>
-                <div className={styles.stars}>{"⭐".repeat(t.stars)}</div>
+                <div className={styles.stars}>{"⭐".repeat(Math.max(1, Math.min(5, Number(t.stars) || 5)))}</div>
                 <p className={styles.testimonialText}>&quot;{t.text}&quot;</p>
                 <div className={styles.testimonialAuthor}>
                   {t.avatar ? (

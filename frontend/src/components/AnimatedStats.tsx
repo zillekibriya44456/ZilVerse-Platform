@@ -58,8 +58,8 @@ export default function AnimatedStats() {
       {statItems.map((s, i) => (
         <div key={i} className={styles.stat}>
           <span className={styles.statNum}>
-            {stats[s.key as keyof typeof stats] !== null 
-              ? <CountUp end={stats[s.key as keyof typeof stats] as number} format={s.format} /> 
+            {stats && stats[s.key as keyof typeof stats] !== null && !isNaN(Number(stats[s.key as keyof typeof stats]))
+              ? <CountUp end={Number(stats[s.key as keyof typeof stats]) || 0} format={s.format} /> 
               : "--"}
           </span>
           <span className={styles.statLabel}>{s.label}</span>
