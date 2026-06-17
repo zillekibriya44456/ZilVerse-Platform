@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import styles from "./LiveActivityMap.module.css";
 
 interface Node {
@@ -13,27 +14,24 @@ interface Node {
 }
 
 const NODES: Node[] = [
-  { id: "sf", x: 15, y: 35, name: "Sarah - UI Designer", location: "San Francisco, USA", flag: "🇺🇸" },
-  { id: "ny", x: 25, y: 33, name: "Michael - Full Stack Dev", location: "New York, USA", flag: "🇺🇸" },
-  { id: "sp", x: 32, y: 72, name: "Lucas - Mobile Dev", location: "São Paulo, Brazil", flag: "🇧🇷" },
-  { id: "ldn", x: 47, y: 25, name: "Emma - Product Manager", location: "London, UK", flag: "🇬🇧" },
-  { id: "par", x: 50, y: 28, name: "Chloe - UX Lead", location: "Paris, France", flag: "🇫🇷" },
-  { id: "lag", x: 52, y: 56, name: "David - Backend Eng", location: "Lagos, Nigeria", flag: "🇳🇬" },
-  { id: "dxb", x: 62, y: 42, name: "Omar - DevOps", location: "Dubai, UAE", flag: "🇦🇪" },
-  { id: "blr", x: 70, y: 48, name: "Rahul - AI Dev", location: "Bengaluru, India", flag: "🇮🇳" },
-  { id: "sgp", x: 78, y: 58, name: "Wei - Web3 Dev", location: "Singapore", flag: "🇸🇬" },
-  { id: "tok", x: 86, y: 32, name: "Yuki - ML Engineer", location: "Tokyo, Japan", flag: "🇯🇵" },
-  { id: "syd", x: 88, y: 80, name: "Liam - Video", location: "Sydney, Australia", flag: "🇦🇺" }
+  { id: "sf", x: 15, y: 35, name: "Sarah", location: "USA", flag: "🇺🇸" },
+  { id: "ny", x: 25, y: 33, name: "Michael", location: "USA", flag: "🇺🇸" },
+  { id: "sp", x: 32, y: 72, name: "Lucas", location: "Brazil", flag: "🇧🇷" },
+  { id: "ldn", x: 47, y: 25, name: "Emma", location: "UK", flag: "🇬🇧" },
+  { id: "ber", x: 50, y: 22, name: "Hans", location: "Germany", flag: "🇩🇪" },
+  { id: "dxb", x: 62, y: 42, name: "Omar", location: "UAE", flag: "🇦🇪" },
+  { id: "blr", x: 70, y: 48, name: "Rahul", location: "India", flag: "🇮🇳" },
+  { id: "sgp", x: 78, y: 58, name: "Wei", location: "Singapore", flag: "🇸🇬" },
+  { id: "tok", x: 86, y: 32, name: "Yuki", location: "Japan", flag: "🇯🇵" },
+  { id: "syd", x: 88, y: 80, name: "Liam", location: "Australia", flag: "🇦🇺" }
 ];
 
 const COLLABORATIONS = [
-  { from: "blr", to: "sf", type: "New Freelancer Joined", label: "Rahul joined the ZilVerse network", color: "#8B5CF6" },
-  { from: "lag", to: "ldn", type: "New Job Opportunity", label: "Backend Engineering role posted in London", color: "#22C55E" },
-  { from: "tok", to: "ny", type: "New Project Posted", label: "Generative Art marketplace smart contract", color: "#06B6D4" },
-  { from: "sgp", to: "dxb", type: "Active Project", label: "Multi-sig escrow protocol completed", color: "#F59E0B" },
-  { from: "sp", to: "sf", type: "New Freelancer Joined", label: "Lucas updated iOS mobile app code", color: "#EC4899" },
-  { from: "par", to: "syd", type: "New Project Posted", label: "Brand assets for decentralized database", color: "#8B5CF6" },
-  { from: "sf", to: "dxb", type: "New Job Opportunity", label: "Web3 terminal controls design role", color: "#22C55E" }
+  { from: "blr", to: "sf", type: "New Freelancer Joined", label: "Rahul joined from India", color: "#8B5CF6" },
+  { from: "ldn", to: "ny", type: "New Job Posted", label: "Backend Dev needed in NYC", color: "#22C55E" },
+  { from: "tok", to: "ber", type: "New Project Sold", label: "React Template purchased", color: "#06B6D4" },
+  { from: "sgp", to: "dxb", type: "New Startup Registered", label: "Web3 Protocol launched", color: "#F59E0B" },
+  { from: "sp", to: "sf", type: "Freelancer Hired", label: "Lucas hired for Mobile App", color: "#EC4899" }
 ];
 
 interface ActiveArc {
@@ -42,8 +40,6 @@ interface ActiveArc {
   progress: number;
   color: string;
   speed: number;
-  type: string;
-  label: string;
 }
 
 interface PulseRing {
@@ -55,20 +51,31 @@ interface PulseRing {
   color: string;
 }
 
+interface FloatingCard {
+  id: string;
+  x: number;
+  y: number;
+  type: string;
+  label: string;
+  color: string;
+}
+
 export default function LiveActivityMap() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [nodes, setNodes] = useState<Node[]>(NODES);
   const [activeNode, setActiveNode] = useState<Node | null>(null);
-  const [logs, setLogs] = useState<{ id: string; time: string; text: string; color: string; type: string }[]>([]);
+  const [floatingCards, setFloatingCards] = useState<FloatingCard[]>([]);
   const activeArcsRef = useRef<ActiveArc[]>([]);
   const pulseRingsRef = useRef<PulseRing[]>([]);
 
-  const pushLog = (type: string, text: string, color: string) => {
-    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    setLogs(prev => [
-      { id: Math.random().toString(), time, text, color, type },
-      ...prev.slice(0, 3)
-    ]);
+  const pushCard = (x: number, y: number, type: string, label: string, color: string) => {
+    const id = Math.random().toString();
+    setFloatingCards(prev => [...prev.slice(-2), { id, x, y, type, label, color }]);
+    
+    // Remove after 4 seconds
+    setTimeout(() => {
+      setFloatingCards(prev => prev.filter(c => c.id !== id));
+    }, 4000);
   };
 
   const triggerActivity = () => {
@@ -83,17 +90,17 @@ export default function LiveActivityMap() {
         progress: 0,
         color: randomCol.color,
         speed: 0.01 + Math.random() * 0.005,
-        type: randomCol.type,
-        label: randomCol.label
       });
       setActiveNode(fromNode);
+      
+      // Spawn card at 'toNode' coordinates immediately
+      pushCard(toNode.x, toNode.y, randomCol.type, randomCol.label, randomCol.color);
     }
   };
 
   useEffect(() => {
-    const spawnInterval = setInterval(triggerActivity, 3000);
+    const spawnInterval = setInterval(triggerActivity, 3500);
     setTimeout(triggerActivity, 1000); 
-
     return () => clearInterval(spawnInterval);
   }, []);
 
@@ -169,7 +176,6 @@ export default function LiveActivityMap() {
           ctx.shadowBlur = 0; 
         } else {
           pulseRingsRef.current.push({ x: x2, y: y2, radius: 4, maxRadius: 30, alpha: 1, color: arc.color });
-          pushLog(arc.type, arc.label, arc.color);
           return false;
         }
         return true;
@@ -189,7 +195,12 @@ export default function LiveActivityMap() {
   return (
     <div className={styles.mapContainer}>
       <div className={styles.mapBase}>
-        <div className={styles.mapGraphic} />
+        {/* SVG World Map Background for premium feel */}
+        <div className={styles.mapGraphic} style={{ backgroundImage: "url('/images/world-map-dots.svg')" }}>
+           {/* Fallback to radial grid if SVG is missing */}
+           <div className={styles.fallbackGrid} />
+        </div>
+        
         <canvas ref={canvasRef} className={styles.canvasOverlay} />
 
         {nodes.map(node => {
@@ -216,28 +227,30 @@ export default function LiveActivityMap() {
           );
         })}
         
-        <div className={styles.scanLine} />
-      </div>
-
-      <div className={styles.loggerOverlay}>
-        <div className={styles.loggerTitle}>
-          <span className={styles.pulseIndicator} />
-          <h4>Live Activity Feed</h4>
-        </div>
-        <div className={styles.loggerContent}>
-          {logs.map(log => (
-            <div key={log.id} className={styles.logItem}>
-              <span className={styles.logTime}>[{log.time}]</span>
-              <span className={styles.logType} style={{ color: log.color }}>{log.type}:</span>
-              <span className={styles.logText}>{log.text}</span>
-            </div>
+        <AnimatePresence>
+          {floatingCards.map((card) => (
+            <motion.div
+              key={card.id}
+              initial={{ opacity: 0, y: 10, scale: 0.9 }}
+              animate={{ opacity: 1, y: -20, scale: 1 }}
+              exit={{ opacity: 0, y: -40, scale: 0.9 }}
+              transition={{ duration: 0.5 }}
+              className={styles.floatingCard}
+              style={{
+                left: `calc(${card.x}% - 80px)`,
+                top: `calc(${card.y}% - 40px)`
+              }}
+            >
+              <div className={styles.fcIndicator} style={{ background: card.color, boxShadow: `0 0 8px ${card.color}` }} />
+              <div className={styles.fcContent}>
+                <div className={styles.fcType} style={{ color: card.color }}>{card.type}</div>
+                <div className={styles.fcLabel}>{card.label}</div>
+              </div>
+            </motion.div>
           ))}
-          {logs.length === 0 && (
-            <div style={{ color: 'var(--muted)', fontSize: '0.8rem', padding: '0.5rem 0' }}>
-              Monitoring global network...
-            </div>
-          )}
-        </div>
+        </AnimatePresence>
+        
+        <div className={styles.scanLine} />
       </div>
     </div>
   );
