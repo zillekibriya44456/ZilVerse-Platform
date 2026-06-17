@@ -163,7 +163,7 @@ export default function Home() {
               transition={{ duration: 0.5, delay: 0.2 }}
               className={styles.subtitle}
             >
-              The ultimate worldwide ecosystem combining freelancing, project marketplace, job portals, and digital services — serving talent in 150+ countries.
+              The ultimate worldwide ecosystem combining freelancing, project marketplace, job portals, and digital services — serving talent in <span style={{ color: "var(--highlight)" }}>150+ countries.</span>
             </motion.p>
 
             <motion.div 
