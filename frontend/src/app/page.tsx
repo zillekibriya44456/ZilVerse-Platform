@@ -124,8 +124,11 @@ export default function Home() {
     <div className={styles.page}>
 
       {/* Hero */}
-      <section className={styles.hero} style={{ background: "linear-gradient(to bottom, rgba(15,15,17,0.6) 0%, rgba(15,15,17,1) 100%), url('/images/hero_global_collab.png') center/cover no-repeat" }}>
-        <div className="container" style={{ position: "relative", zIndex: 10 }}>
+      <section className={styles.hero}>
+        <div className={styles.glowOrb1}></div>
+        <div className={styles.glowOrb2}></div>
+        
+        <div className="container animate-fade-up">
           <div className={`${styles.badge} shimmer-text`}>
             {selectedCountry.flag} ZilVerse — Your Global Tech Ecosystem
           </div>
@@ -138,17 +141,19 @@ export default function Home() {
             job portals, and digital services — serving talent in{" "}
             <span style={{ color: "var(--primary)", fontWeight: 600 }}>150+ countries</span>.
           </p>
-          <div className={styles.ctaGroup}>
+          <div className={`${styles.ctaGroup} animate-fade-up`} style={{ animationDelay: '0.2s' }}>
             <Link href="/register" className={`btn btn-primary ${styles.primaryBtn}`} id="hero-cta-register">
-              🚀 Get Started Free
+              🚀 Enter ZilVerse
             </Link>
             <Link href="/freelancers" className="btn btn-secondary" id="hero-cta-hire">
-              🌐 Hire Global Talent
+              🌐 Explore Talent
             </Link>
           </div>
 
           {/* Stats bar */}
-          <AnimatedStats />
+          <div className="animate-scale-in" style={{ animationDelay: '0.4s' }}>
+            <AnimatedStats />
+          </div>
         </div>
 
         {/* Interactive particle network */}
@@ -161,18 +166,18 @@ export default function Home() {
       {/* Features */}
       <section className={styles.features}>
         <div className="container">
-          <h2 className={styles.sectionTitle}>Everything You Need in One Place</h2>
-          <p className={styles.sectionSub}>Four powerful modules, one unified global platform</p>
+          <h2 className={styles.sectionTitle}>The Future of Work is Here</h2>
+          <p className={styles.sectionSub}>A seamless spatial ecosystem connecting you to global opportunities</p>
           <div className={styles.featuresGrid}>
             {features.map((f) => (
-              <TiltCard key={f.href} className={`glass-panel ${styles.featureCard}`} style={{ padding: 0, overflow: 'hidden' }}>
+              <TiltCard key={f.href} className={`glass-panel ${styles.featureCard}`} style={{ padding: 0 }}>
                 <Link href={f.href} className={styles.featureCardInner} style={{ height: '100%' }}>
-                  <div style={{ position: 'relative', width: '100%', height: '180px' }}>
+                  <div className={styles.featureImageWrapper}>
                     <Image src={f.image} alt={f.title} fill sizes="(max-width: 768px) 100vw, 33vw" style={{ objectFit: 'cover' }} />
                   </div>
-                  <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
-                    <h3 style={{ fontSize: '1.3rem', marginBottom: '0.5rem' }}>{f.title}</h3>
-                    <p style={{ color: '#a1a1aa', fontSize: '0.9rem', lineHeight: 1.6, flex: 1 }}>{f.desc}</p>
+                  <div style={{ padding: '0 1.75rem 1.75rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                    <h3>{f.title}</h3>
+                    <p>{f.desc}</p>
                     <span className={styles.cardLink} style={{ color: f.textColor }}>{f.link}</span>
                   </div>
                 </Link>
