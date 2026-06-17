@@ -121,6 +121,7 @@ export default function Navbar() {
               key={col.title} 
               className={styles.navItemWrapper}
               onMouseEnter={() => handleMouseEnterNav(col.title)}
+              onMouseLeave={handleMouseLeaveNav}
             >
               <button 
                 className={`${styles.navLink} ${activeMenu === col.title ? styles.active : ""}`}
@@ -131,6 +132,69 @@ export default function Navbar() {
                  col.title === "COMMUNITY" ? "Community" : "Company"}
                 <ChevronDown size={14} className={styles.chevron} />
               </button>
+
+              {/* Individual Dropdown */}
+              {activeMenu === col.title && (
+                <div 
+                  className={styles.dropdownContainer}
+                  onMouseEnter={() => {
+                    if (closeTimeout.current) clearTimeout(closeTimeout.current);
+                  }}
+                >
+                  <div className={styles.megaColumn}>
+                    <div className={styles.megaItemList}>
+                      {col.items.map((item: any, idx: number) => {
+                        const Icon = item.icon;
+                        const hexToRgb = (hex: string) => {
+                          const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+                          return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '139, 92, 246';
+                        };
+                        
+                        return (
+                          <Link key={idx} href={item.href} className={styles.megaItem}>
+                            <div className={styles.megaIconWrapper} style={{ color: item.color, background: `rgba(${hexToRgb(item.color)}, 0.15)` }}>
+                              <Icon size={18} />
+                            </div>
+                            <div className={styles.megaItemContent}>
+                              <div className={styles.megaItemLabel}>{item.label}</div>
+                              <div className={styles.megaItemDesc}>{item.desc}</div>
+                            </div>
+                          </Link>
+                        );
+                      })}
+                    </div>
+
+                    {/* Bottom Card */}
+                    <Link href={col.card.href} className={styles.megaCard} style={{ borderColor: "rgba(255,255,255,0.05)" }}>
+                      <div className={styles.megaCardTop}>
+                        {col.card.isAvatarGroup ? (
+                          <div className={styles.megaCardAvatars}>
+                            <img src="/avatars/default.png" alt="A" />
+                            <img src="/avatars/default.png" alt="B" />
+                            <img src="/avatars/default.png" alt="C" />
+                          </div>
+                        ) : col.card.isImage ? (
+                          <div className={styles.megaCardImage} style={{ background: 'url(/images/ai-course.jpg) center/cover', border: '1px solid rgba(139, 92, 246, 0.3)' }}></div>
+                        ) : (
+                          <div className={styles.megaCardIcon} style={{ color: col.card.color, background: `rgba(${
+                            (() => {
+                              const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(col.card.color);
+                              return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '139, 92, 246';
+                            })()
+                          }, 0.15)` }}>
+                            <col.card.icon size={20} />
+                          </div>
+                        )}
+                        <div className={styles.megaCardInfo}>
+                          <div className={styles.megaCardTitle}>{col.card.title}</div>
+                          <div className={styles.megaCardDesc}>{col.card.desc}</div>
+                        </div>
+                      </div>
+                      <div className={styles.megaCardLink} style={{ color: col.card.linkColor }}>{col.card.link}</div>
+                    </Link>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </nav>
@@ -162,77 +226,6 @@ export default function Navbar() {
           </button>
         </div>
 
-        {/* Massive Megamenu */}
-        {isMegaOpen && (
-          <div 
-            className={styles.megaMenuContainer} 
-            ref={megaRef}
-            onMouseEnter={() => {
-              if (closeTimeout.current) clearTimeout(closeTimeout.current);
-            }}
-            onMouseLeave={handleMouseLeaveNav}
-          >
-            <div className={styles.megaMenuInner}>
-              {MEGA_COLUMNS.map((col) => (
-                <div key={col.title} className={styles.megaColumn}>
-                  <h4 className={styles.megaColTitle} style={{ color: col.titleColor }}>{col.title}</h4>
-                  <div className={styles.megaItemList}>
-                    {col.items.map((item, idx) => {
-                      const Icon = item.icon;
-                      // Convert hex to rgb for background opacity
-                      const hexToRgb = (hex: string) => {
-                        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-                        return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '139, 92, 246';
-                      };
-                      
-                      return (
-                        <Link key={idx} href={item.href} className={styles.megaItem}>
-                          <div className={styles.megaIconWrapper} style={{ color: item.color, background: `rgba(${hexToRgb(item.color)}, 0.15)` }}>
-                            <Icon size={18} />
-                          </div>
-                          <div className={styles.megaItemContent}>
-                            <div className={styles.megaItemLabel}>{item.label}</div>
-                            <div className={styles.megaItemDesc}>{item.desc}</div>
-                          </div>
-                        </Link>
-                      );
-                    })}
-                  </div>
-
-                  {/* Bottom Card */}
-                  <Link href={col.card.href} className={styles.megaCard} style={{ borderColor: "rgba(255,255,255,0.05)" }}>
-                    <div className={styles.megaCardTop}>
-                      {col.card.isAvatarGroup ? (
-                        <div className={styles.megaCardAvatars}>
-                          <img src="/avatars/default.png" alt="A" />
-                          <img src="/avatars/default.png" alt="B" />
-                          <img src="/avatars/default.png" alt="C" />
-                        </div>
-                      ) : col.card.isImage ? (
-                        <div className={styles.megaCardImage} style={{ background: 'url(/images/ai-course.jpg) center/cover', border: '1px solid rgba(139, 92, 246, 0.3)' }}></div>
-                      ) : (
-                        <div className={styles.megaCardIcon} style={{ color: col.card.color, background: `rgba(${
-                          (() => {
-                            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(col.card.color);
-                            return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '139, 92, 246';
-                          })()
-                        }, 0.15)` }}>
-                          <col.card.icon size={20} />
-                        </div>
-                      )}
-                      <div className={styles.megaCardInfo}>
-                        <div className={styles.megaCardTitle}>{col.card.title}</div>
-                        <div className={styles.megaCardDesc}>{col.card.desc}</div>
-                      </div>
-                    </div>
-                    <div className={styles.megaCardLink} style={{ color: col.card.linkColor }}>{col.card.link}</div>
-                  </Link>
-
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </header>
     </>
   );
