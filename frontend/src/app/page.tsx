@@ -86,17 +86,17 @@ const ecosystemCards = [
 ];
 
 const dummyFreelancers = [
-  { id: 'f1', name: 'Alex Johnson', avatar: '/avatars/default.png', freelancerProfile: { title: 'Senior React Developer', hourlyRate: 65 } },
-  { id: 'f2', name: 'Maria Garcia', avatar: '/avatars/default.png', freelancerProfile: { title: 'UI/UX Designer', hourlyRate: 45 } },
-  { id: 'f3', name: 'David Smith', avatar: '/avatars/default.png', freelancerProfile: { title: 'Full Stack Engineer', hourlyRate: 80 } },
-  { id: 'f4', name: 'Sarah Chen', avatar: '/avatars/default.png', freelancerProfile: { title: 'Data Scientist', hourlyRate: 90 } },
+  { id: 'f1', name: 'Alex Johnson', avatar: 'https://i.pravatar.cc/150?u=f1', freelancerProfile: { title: 'Senior React Developer', hourlyRate: 65 } },
+  { id: 'f2', name: 'Maria Garcia', avatar: 'https://i.pravatar.cc/150?u=f2', freelancerProfile: { title: 'UI/UX Designer', hourlyRate: 45 } },
+  { id: 'f3', name: 'David Smith', avatar: 'https://i.pravatar.cc/150?u=f3', freelancerProfile: { title: 'Full Stack Engineer', hourlyRate: 80 } },
+  { id: 'f4', name: 'Sarah Chen', avatar: 'https://i.pravatar.cc/150?u=f4', freelancerProfile: { title: 'Data Scientist', hourlyRate: 90 } },
 ];
 
 const dummyProjects = [
-  { id: 'p1', title: 'E-commerce React Template', category: { name: 'Web Dev' }, price: 49, images: [] },
-  { id: 'p2', title: 'SaaS Dashboard UI Kit', category: { name: 'Design' }, price: 29, images: [] },
-  { id: 'p3', title: 'AI Chatbot Integration', category: { name: 'AI & ML' }, price: 199, images: [] },
-  { id: 'p4', title: 'Mobile App Wireframes', category: { name: 'UI/UX' }, price: 39, images: [] },
+  { id: 'p1', title: 'E-commerce React Template', category: { name: 'Web Dev' }, price: 49, images: ['https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=400&q=80'] },
+  { id: 'p2', title: 'SaaS Dashboard UI Kit', category: { name: 'Design' }, price: 29, images: ['https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=400&q=80'] },
+  { id: 'p3', title: 'AI Chatbot Integration', category: { name: 'AI & ML' }, price: 199, images: ['https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&w=400&q=80'] },
+  { id: 'p4', title: 'Mobile App Wireframes', category: { name: 'UI/UX' }, price: 39, images: ['https://images.unsplash.com/photo-1618761714954-0b8cd0026356?auto=format&fit=crop&w=400&q=80'] },
 ];
 
 export default function Home() {
@@ -204,10 +204,10 @@ export default function Home() {
               className={styles.socialProof}
             >
               <div className={styles.avatars}>
-                <img src="/avatars/default.png" alt="User" />
-                <img src="/avatars/default.png" alt="User" />
-                <img src="/avatars/default.png" alt="User" />
-                <img src="/avatars/default.png" alt="User" />
+                <img src="https://i.pravatar.cc/150?u=1" alt="User" />
+                <img src="https://i.pravatar.cc/150?u=2" alt="User" />
+                <img src="https://i.pravatar.cc/150?u=3" alt="User" />
+                <img src="https://i.pravatar.cc/150?u=4" alt="User" />
               </div>
               <span>Trusted by 25,000+ people worldwide</span>
               <CheckCircle2 size={16} color="#22C55E" />
@@ -292,7 +292,7 @@ export default function Home() {
               <div className={styles.columnList}>
                 {renderFreelancers.slice(0, 4).map((user: any, idx: number) => (
                   <div key={user.id} className={styles.talentListItem}>
-                    <img src={user.avatar || "/avatars/default.png"} alt={user.name} className={styles.listAvatar} />
+                    <img src={user.avatar || "https://i.pravatar.cc/150"} alt={user.name} className={styles.listAvatar} />
                     <div className={styles.listInfo}>
                       <h4>{user.name}</h4>
                       <p>{user.freelancerProfile?.title || "Freelancer"}</p>
@@ -315,7 +315,7 @@ export default function Home() {
               <div className={styles.columnList}>
                 {renderProjects.slice(0, 4).map((project: any, idx: number) => (
                   <div key={project.id} className={styles.projectListItem}>
-                    <img src={project.images?.[0] || '/images/default_project.jpg'} alt={project.title} className={styles.listProjectImg} />
+                    <img src={project.images?.[0] || 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=400&q=80'} alt={project.title} className={styles.listProjectImg} />
                     <div className={styles.listInfo}>
                       <h4>{project.title}</h4>
                       <p>{project.category?.name || "Code"}</p>
@@ -338,7 +338,7 @@ export default function Home() {
                   "ZilVerse helped me find amazing clients and grow my freelance business globally. My income has tripled in just 6 months!"
                 </p>
                 <div className={styles.storyAuthor}>
-                  <img src="/avatars/default.png" alt="Wade Warren" className={styles.storyAvatar} />
+                  <img src="https://i.pravatar.cc/150?u=wade" alt="Wade Warren" className={styles.storyAvatar} />
                   <div>
                     <h4>Wade Warren</h4>
                     <p>Full Stack Developer</p>

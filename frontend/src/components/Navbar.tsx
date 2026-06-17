@@ -169,12 +169,12 @@ export default function Navbar() {
                       <div className={styles.megaCardTop}>
                         {col.card.isAvatarGroup ? (
                           <div className={styles.megaCardAvatars}>
-                            <img src="/avatars/default.png" alt="A" />
-                            <img src="/avatars/default.png" alt="B" />
-                            <img src="/avatars/default.png" alt="C" />
+                            <img src="https://i.pravatar.cc/150?u=a1" alt="A" />
+                            <img src="https://i.pravatar.cc/150?u=a2" alt="B" />
+                            <img src="https://i.pravatar.cc/150?u=a3" alt="C" />
                           </div>
                         ) : col.card.isImage ? (
-                          <div className={styles.megaCardImage} style={{ background: 'url(/images/ai-course.jpg) center/cover', border: '1px solid rgba(139, 92, 246, 0.3)' }}></div>
+                          <div className={styles.megaCardImage} style={{ background: 'url(https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&w=400&q=80) center/cover', border: '1px solid rgba(139, 92, 246, 0.3)' }}></div>
                         ) : (
                           <div className={styles.megaCardIcon} style={{ color: col.card.color, background: `rgba(${
                             (() => {
