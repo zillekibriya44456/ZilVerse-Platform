@@ -15,7 +15,7 @@ import {
 import styles from "./Navbar.module.css";
 import { socket } from "@/utils/socket";
 
-const MEGA_COLUMNS = [
+const MEGA_COLUMNS: any[] = [
   {
     title: "MARKETPLACE",
     titleColor: "#c084fc",
