@@ -54,12 +54,20 @@ export default function Home() {
   useEffect(() => {
     // Load Testimonials
     axios.get(`${API_BASE}/api/testimonials`)
-      .then(res => setDbTestimonials(res.data))
+      .then(res => {
+        if (Array.isArray(res.data)) {
+          setDbTestimonials(res.data);
+        }
+      })
       .catch(err => console.error("Failed to load testimonials", err));
 
     // Load Featured Content
     axios.get(`${API_BASE}/api/homepage/featured`)
-      .then(res => setFeatured(res.data))
+      .then(res => {
+        if (res.data && res.data.freelancers && res.data.projects && res.data.services) {
+          setFeatured(res.data);
+        }
+      })
       .catch(err => console.error("Failed to load featured content", err));
   }, []);
 
@@ -133,7 +141,7 @@ export default function Home() {
       </section>
 
       {/* Featured Freelancers */}
-      {featured.freelancers.length > 0 && (
+      {featured?.freelancers?.length > 0 && (
         <section className={styles.dynamicSection}>
           <div className="container">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2rem' }}>
@@ -166,7 +174,7 @@ export default function Home() {
       )}
 
       {/* Featured Projects */}
-      {featured.projects.length > 0 && (
+      {featured?.projects?.length > 0 && (
         <section className={styles.dynamicSection}>
           <div className="container">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2rem' }}>
@@ -213,7 +221,7 @@ export default function Home() {
           </div>
           
           <div className={styles.testimonialsGrid}>
-            {dbTestimonials.map((t, i) => (
+            {Array.isArray(dbTestimonials) && dbTestimonials.map((t, i) => (
               <TiltCard key={i} className={styles.testimonialCard}>
                 <div className={styles.stars}>{"⭐".repeat(t.stars)}</div>
                 <p className={styles.testimonialText}>&quot;{t.text}&quot;</p>
@@ -234,7 +242,7 @@ export default function Home() {
               </TiltCard>
             ))}
             
-            {dbTestimonials.length === 0 && (
+            {(!dbTestimonials || dbTestimonials.length === 0) && (
               <div style={{ textAlign: 'center', color: 'var(--muted)', gridColumn: '1 / -1', padding: '3rem 0' }}>
                 Loading reviews from database...
               </div>
