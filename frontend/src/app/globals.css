@@ -187,6 +187,20 @@ input:focus, textarea:focus, select:focus {
   padding: 0 1.5rem;
 }
 
+/* ---- Wide container — Hero, Stats, Footer ---- */
+.container-wide {
+  width: 100%;
+  max-width: 1680px;
+  margin: 0 auto;
+  padding: 0 clamp(1.5rem, 4vw, 5rem);
+}
+
+@media (max-width: 1280px) {
+  .container-wide {
+    padding: 0 clamp(1.5rem, 3vw, 3rem);
+  }
+}
+
 /* ---- Glow ring utility ---- */
 .glow-ring {
   box-shadow: var(--glow-primary);

@@ -149,7 +149,7 @@ export default function Home() {
         <div className={styles.particles} style={{ display: "flex", alignItems: "center", justifyContent: "center", zIndex: 0, opacity: 0.6 }}>
           <CobeGlobe />
         </div>
-        <div className={`container ${styles.heroContainer}`}>
+        <div className={`container-wide ${styles.heroContainer}`}>
           <div className={styles.heroContent}>
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className={styles.badge}>
               <div className={styles.badgeDot}></div>
@@ -190,7 +190,7 @@ export default function Home() {
 
       {/* ── Live Stats ───────────────────────────────────────────── */}
       <section className={styles.statsSection}>
-        <div className="container">
+        <div className="container-wide">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className={styles.statsGlassContainer}>
             <AnimatedStats />
           </motion.div>

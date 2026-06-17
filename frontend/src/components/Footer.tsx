@@ -63,7 +63,7 @@ export default function Footer() {
 
   return (
     <footer className={styles.footer}>
-      <div className="container">
+      <div className="container-wide">
         <div className={styles.top}>
 
           {/* Column 1: Brand & Socials */}
