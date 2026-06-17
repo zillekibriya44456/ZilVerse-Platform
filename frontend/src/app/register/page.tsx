@@ -387,7 +387,7 @@ export default function RegisterPage() {
           <div style={{ position: "relative", zIndex: 1 }}>
             <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
               <Link href="/" style={{ fontSize: "1.5rem", fontWeight: 800, textDecoration: "none", color: "#fff", cursor: "none" }}>
-                Technical Ilahi <span style={{ color: "#a78bfa" }}>Hub</span>
+                Zil<span style={{ color: "#a78bfa" }}>Verse</span>
               </Link>
               <h1 style={{ fontSize: "2.2rem", fontWeight: 700, margin: "1rem 0 0.5rem", color: "#fff" }}>Create your Account</h1>
               <p style={{ color: "#a1a1aa", fontSize: "1rem" }}>Join the world's most premium platform.</p>

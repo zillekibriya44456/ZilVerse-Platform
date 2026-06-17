@@ -80,7 +80,7 @@ const MEGA_COLUMNS: any[] = [
 ];
 
 export default function Navbar() {
-  const { user, logout } = useAuth();
+  const { user, logout, isHydrated } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
@@ -281,7 +281,11 @@ export default function Navbar() {
             <Moon size={18} />
           </button>
           
-          {!user ? (
+          {/* ── Auth section — suppresses flicker until localStorage is read ── */}
+          {!isHydrated ? (
+            // Hydration placeholder — prevents SSR mismatch flash
+            <div style={{ width: 120, height: 36, borderRadius: 20, background: 'rgba(255,255,255,0.05)' }} />
+          ) : !user ? (
             <div 
               className={styles.joinWrapper}
               onMouseEnter={() => setIsJoinOpen(true)}
@@ -321,12 +325,25 @@ export default function Navbar() {
             </div>
           ) : (
             <div className={styles.userMenu}>
-              <Link href="/dashboard" className={styles.userAvatar}>
-                <img src={user.avatar || `https://ui-avatars.com/api/?name=${user.name}&background=8B5CF6&color=fff`} alt={user.name} />
+              <Link href="/dashboard" className={styles.userAvatar} title="Dashboard">
+                <img 
+                  src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&background=8B5CF6&color=fff`} 
+                  alt={user.name} 
+                />
               </Link>
-              <button onClick={async () => { await logout(); router.push("/"); }} className={styles.signInBtn}>Logout</button>
+              <Link href="/dashboard" style={{ color: '#e4e4e7', fontSize: '0.85rem', fontWeight: 600, textDecoration: 'none' }}>
+                {user.name?.split(' ')[0]}
+              </Link>
+              <button 
+                onClick={async () => { logout(); router.push("/"); }} 
+                className={styles.signInBtn}
+                style={{ color: '#a1a1aa', fontSize: '0.82rem' }}
+              >
+                Logout
+              </button>
             </div>
           )}
+
 
           <button className={styles.mobileMenuToggle} onClick={() => setIsMobileOpen(true)} aria-label="Open menu">
             <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none">

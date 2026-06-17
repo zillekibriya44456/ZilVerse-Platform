@@ -69,10 +69,12 @@ router.post('/login', async (req: Request, res: Response): Promise<any> => {
     res.json({
       token,
       user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
+        id:       user.id,
+        email:    user.email,
+        name:     user.name,
+        role:     user.role,
+        avatar:   user.avatar   || null,
+        verified: user.verified || false,
       },
     });
   } catch (error) {
