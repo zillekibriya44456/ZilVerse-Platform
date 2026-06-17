@@ -50,11 +50,11 @@ export default function Footer() {
           {/* Brand + Contact */}
           <div className={styles.brand}>
             <div className={styles.logo}>
-              Technical Ilahi <span>Hub</span>
+              Zil<span>Verse</span>
             </div>
             <p className={styles.tagline}>
-              Build. Work. Grow — All in One Place.<br />
-              Your complete digital ecosystem for freelancing, projects & services.
+              Build. Work. Grow. All in One Place.<br />
+              The ultimate worldwide ecosystem combining freelancing, project marketplace, job portals, and digital services.
             </p>
 
             <div className={styles.contactList}>
@@ -123,7 +123,7 @@ export default function Footer() {
         </div>
 
         <div className={styles.bottom}>
-          <p>© {new Date().getFullYear()} Technical Ilahi Hub — ZilVerse. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} ZilVerse. All rights reserved.</p>
           <p>Made with ❤️ in Bengaluru, India 🇮🇳</p>
         </div>
       </div>

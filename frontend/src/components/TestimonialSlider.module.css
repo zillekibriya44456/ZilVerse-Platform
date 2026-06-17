@@ -1,0 +1,111 @@
+.sliderContainer {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  padding: 1rem 0;
+}
+
+.sliderTrack {
+  display: flex;
+  gap: 1.5rem;
+  width: max-content;
+}
+
+.slideItem {
+  width: 350px;
+  flex-shrink: 0;
+}
+
+.testimonialCard {
+  background: var(--surface);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  height: 100%;
+}
+
+.stars {
+  font-size: 0.9rem;
+  letter-spacing: 2px;
+}
+
+.testimonialText {
+  color: var(--foreground);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  flex: 1;
+}
+
+.testimonialAuthor {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--card-border);
+}
+
+.tAvatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--card-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #fff;
+}
+
+.tInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.tName {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--foreground);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.verifiedBadge {
+  color: var(--secondary);
+  font-size: 0.8rem;
+}
+
+.tRole {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.fadeLeft,
+.fadeRight {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.fadeLeft {
+  left: 0;
+  background: linear-gradient(to right, var(--background), transparent);
+}
+
+.fadeRight {
+  right: 0;
+  background: linear-gradient(to left, var(--background), transparent);
+}
+
+@media (max-width: 768px) {
+  .slideItem {
+    width: 280px;
+  }
+}

@@ -2,44 +2,72 @@
 import { API_BASE } from "@/utils/api";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useCountry } from "@/context/CountryContext";
 import dynamic from "next/dynamic";
+import styles from "./home.module.css";
+
+// Components
+import AnimatedStats from "@/components/AnimatedStats";
+import LiveActivityMap from "@/components/LiveActivityMap";
+import TestimonialSlider from "@/components/TestimonialSlider";
+import { motion } from "framer-motion";
+
+// Icons
+import { 
+  Briefcase, 
+  Code2, 
+  Globe, 
+  Users, 
+  GraduationCap, 
+  Layers 
+} from "lucide-react";
+
 const ParticleNetwork = dynamic(() => import("@/components/ParticleNetwork"), { ssr: false });
 const TiltCard = dynamic(() => import("@/components/TiltCard"));
-import styles from "./home.module.css";
-import AnimatedStats from "@/components/AnimatedStats";
 
-
-const features = [
+const ecosystemCards = [
+  {
+    href: "/services",
+    icon: Layers,
+    title: "Services",
+    desc: "Hire agencies and experts for digital services, from web development to AI solutions.",
+    link: "Explore Services →",
+  },
   {
     href: "/freelancers",
-    icon: "👨‍💻",
-    title: "Freelancer Marketplace",
-    desc: "Hire verified developers, designers, and creators worldwide. Built-in skill testing & reviews.",
-    link: "Browse Freelancers →",
+    icon: Users,
+    title: "Talent",
+    desc: "Find and hire world-class freelancers and vetted developers globally.",
+    link: "Find Talent →",
   },
   {
     href: "/projects",
-    icon: "📦",
-    title: "Project Marketplace",
-    desc: "Buy & sell source code, SaaS boilerplates, and academic projects. Instant downloads.",
-    link: "Browse Projects →",
+    icon: Code2,
+    title: "Marketplace",
+    desc: "Buy and sell source code, SaaS boilerplates, and digital products.",
+    link: "Browse Marketplace →",
   },
   {
     href: "/jobs",
-    icon: "💼",
-    title: "Global Job Board",
-    desc: "Find remote jobs, internships and local tech opportunities across 150+ countries.",
-    link: "Find Jobs →",
+    icon: Briefcase,
+    title: "Opportunities",
+    desc: "Discover remote jobs, internships, and freelance contracts worldwide.",
+    link: "Find Opportunities →",
+  },
+  {
+    href: "/academy",
+    icon: GraduationCap,
+    title: "Learn & Grow",
+    desc: "AI interview prep, certifications, and career development resources.",
+    link: "Start Learning →",
   },
   {
     href: "/community",
-    icon: "🌐",
-    title: "Global Community",
-    desc: "Network and collaborate with professionals, developers, and entrepreneurs worldwide.",
+    icon: Globe,
+    title: "Community",
+    desc: "Connect, collaborate, and share with tech professionals globally.",
     link: "Join Community →",
   },
 ];
@@ -64,7 +92,7 @@ export default function Home() {
     // Load Featured Content
     axios.get(`${API_BASE}/api/homepage/featured`)
       .then(res => {
-        if (res.data && res.data.freelancers && res.data.projects && res.data.services) {
+        if (res.data && res.data.freelancers && res.data.projects) {
           setFeatured(res.data);
         }
       })
@@ -92,224 +120,292 @@ export default function Home() {
       {/* Hero Section */}
       <section className={styles.hero}>
         <ParticleNetwork className={styles.particles} />
-        <div className="container" style={{ position: "relative", zIndex: 10 }}>
-          <div className={styles.badge}>
-            <span>{selectedCountry.flag}</span>
-            <span>ZilVerse — Global Tech Ecosystem</span>
-          </div>
-          <h1 className={styles.title}>
-            Build. Work. Grow.<br />
-            <span className="text-gradient">All in One Place.</span>
-          </h1>
-          <p className={styles.subtitle}>
-            The ultimate ecosystem combining freelancing, digital marketplaces,
-            and global jobs — serving talent in <span style={{ color: "var(--foreground)" }}>150+ countries</span>.
-          </p>
-          <div className={styles.ctaGroup}>
-            <Link href="/register" className="btn btn-primary" id="hero-cta-register" style={{ padding: "0.8rem 1.8rem" }}>
-              Start for Free
-            </Link>
-            <Link href="/freelancers" className="btn btn-secondary" id="hero-cta-hire" style={{ padding: "0.8rem 1.8rem" }}>
-              Hire Talent
-            </Link>
+        <div className={`container ${styles.heroContainer}`}>
+          
+          {/* Left Column */}
+          <div className={styles.heroContent}>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className={styles.badge}
+            >
+              <span className={styles.badgeIcon}>{selectedCountry.flag}</span>
+              <span>ZILVERSE — YOUR GLOBAL TECH ECOSYSTEM</span>
+            </motion.div>
+
+            <motion.h1 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className={styles.title}
+            >
+              Build. Work. Grow.<br />
+              <span className={styles.textGradient}>All in One Place.</span>
+            </motion.h1>
+
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className={styles.subtitle}
+            >
+              The ultimate worldwide ecosystem combining freelancing, project marketplace, job portals, and digital services serving talent across 150+ countries.
+            </motion.p>
+
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className={styles.ctaGroup}
+            >
+              <Link href="/register" className={styles.btnPrimary}>
+                Get Started Free
+              </Link>
+              <Link href="/opportunities" className={styles.btnSecondary}>
+                Explore Opportunities
+              </Link>
+            </motion.div>
+
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.5 }}
+              className={styles.socialProof}
+            >
+              <div className={styles.avatars}>
+                <img src="/avatars/default.png" alt="User" />
+                <img src="/avatars/default.png" alt="User" />
+                <img src="/avatars/default.png" alt="User" />
+                <div className={styles.avatarMore}>+25k</div>
+              </div>
+              <span>Trusted by 25,000+ people worldwide</span>
+            </motion.div>
           </div>
 
-          <AnimatedStats />
+          {/* Right Column (Map) */}
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.7, delay: 0.2 }}
+            className={styles.heroVisual}
+          >
+            <LiveActivityMap />
+          </motion.div>
+          
         </div>
       </section>
 
-      {/* Features Grid */}
-      <section className={styles.features}>
+      {/* Live Stats Section */}
+      <section className={styles.statsSection}>
         <div className="container">
-          <h2 className={styles.sectionTitle}>Everything You Need</h2>
-          <p className={styles.sectionSub}>Four powerful modules, one unified platform</p>
-          <div className={styles.featuresGrid}>
-            {features.map((f) => (
-              <TiltCard key={f.href} className={styles.featureCard}>
-                <Link href={f.href} style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', height: '100%' }}>
-                  <div className={styles.featureIcon} style={{ background: 'rgba(255,255,255,0.05)' }}>
-                    {f.icon}
-                  </div>
-                  <h3>{f.title}</h3>
-                  <p>{f.desc}</p>
-                  <span className={styles.cardLink}>{f.link}</span>
-                </Link>
-              </TiltCard>
-            ))}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className={styles.statsGlassContainer}
+          >
+            <AnimatedStats />
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Core Ecosystem Section */}
+      <section className={styles.ecosystemSection}>
+        <div className="container">
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>Everything You Need In One Place</h2>
+            <p className={styles.sectionSubtitle}>Powerful modules combined into one unified platform.</p>
+          </div>
+          
+          <div className={styles.ecosystemGrid}>
+            {ecosystemCards.map((card, idx) => {
+              const Icon = card.icon;
+              return (
+                <motion.div 
+                  key={card.href}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.1 }}
+                >
+                  <TiltCard className={styles.ecosystemCard}>
+                    <Link href={card.href} className={styles.ecosystemLink}>
+                      <div className={styles.ecoIconWrapper}>
+                        <Icon size={24} className={styles.ecoIcon} />
+                      </div>
+                      <h3 className={styles.ecoTitle}>{card.title}</h3>
+                      <p className={styles.ecoDesc}>{card.desc}</p>
+                      <span className={styles.ecoCta}>{card.link}</span>
+                    </Link>
+                  </TiltCard>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* Featured Freelancers */}
+      {/* Featured Talent Section */}
       {Array.isArray(featured?.freelancers) && featured.freelancers.length > 0 && (
-        <section className={styles.dynamicSection}>
+        <section className={styles.talentSection}>
           <div className="container">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2rem' }}>
+            <div className={styles.sectionHeaderRow}>
               <div>
-                <h2 className={styles.sectionTitle} style={{ margin: 0, textAlign: 'left' }}>Top Rated Freelancers</h2>
-                <p className={styles.sectionSub} style={{ margin: '0.5rem 0 0', textAlign: 'left' }}>Hire world-class talent for your next big project</p>
+                <h2 className={styles.sectionTitle}>Featured Talent</h2>
+                <p className={styles.sectionSubtitle}>Hire world-class professionals</p>
               </div>
-              <Link href="/freelancers" className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}>View All →</Link>
+              <Link href="/freelancers" className={styles.btnSecondarySmall}>View All →</Link>
             </div>
+            
             <div className={styles.grid4}>
-              {featured.freelancers.map((user: any) => (
-                <div key={user.id} className={styles.itemCard}>
-                  <div className={styles.itemHeader}>
-                    <img src={user.avatar || "/avatars/default.png"} alt={user.name} className={styles.itemAvatar} />
-                    <div style={{ overflow: 'hidden' }}>
-                      <h4 className={styles.itemTitle}>{user.name}</h4>
-                      <p className={styles.itemSub}>{user.freelancerProfile?.title || "Freelancer"}</p>
+              {featured.freelancers.map((user: any, idx) => (
+                <motion.div 
+                  key={user.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.1 }}
+                  className={styles.talentCard}
+                >
+                  <div className={styles.talentHeader}>
+                    <img src={user.avatar || "/avatars/default.png"} alt={user.name} className={styles.talentAvatar} />
+                    <div className={styles.talentInfo}>
+                      <h4>{user.name}</h4>
+                      <p>{user.freelancerProfile?.title || "Freelancer"}</p>
                     </div>
                   </div>
-                  <p className={styles.itemDesc}>{user.bio || "No bio available."}</p>
-                  <div className={styles.itemFooter}>
-                    <span className={styles.itemPrice}>${user.freelancerProfile?.hourlyRate || 0}/hr</span>
-                    <Link href={`/freelancers/${user.id}`} style={{ color: 'var(--foreground)', fontSize: '0.85rem', fontWeight: 500 }}>Profile →</Link>
+                  <div className={styles.talentMeta}>
+                    <span className={styles.talentRating}>⭐ 5.0</span>
+                    <span className={styles.talentRate}>${user.freelancerProfile?.hourlyRate || 0}/hr</span>
                   </div>
-                </div>
+                  <Link href={`/freelancers/${user.id}`} className={styles.talentLink}>View Profile</Link>
+                </motion.div>
               ))}
             </div>
           </div>
         </section>
       )}
 
-      {/* Featured Projects */}
+      {/* Featured Projects Section */}
       {Array.isArray(featured?.projects) && featured.projects.length > 0 && (
-        <section className={styles.dynamicSection}>
+        <section className={styles.projectsSection}>
           <div className="container">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2rem' }}>
+            <div className={styles.sectionHeaderRow}>
               <div>
-                <h2 className={styles.sectionTitle} style={{ margin: 0, textAlign: 'left' }}>Trending Projects</h2>
-                <p className={styles.sectionSub} style={{ margin: '0.5rem 0 0', textAlign: 'left' }}>Source code, SaaS templates, and boilerplate ready to deploy</p>
+                <h2 className={styles.sectionTitle}>Featured Projects</h2>
+                <p className={styles.sectionSubtitle}>Top-tier source code and boilerplate</p>
               </div>
-              <Link href="/projects" className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}>Explore Marketplace →</Link>
+              <Link href="/projects" className={styles.btnSecondarySmall}>Explore →</Link>
             </div>
+            
             <div className={styles.grid3}>
-              {featured.projects.map((project: any) => (
-                <div key={project.id} className={styles.itemCard}>
-                  <h4 className={styles.itemTitle}>{project.title}</h4>
-                  <p className={styles.itemDesc}>{project.description}</p>
-                  <div className={styles.itemFooter}>
-                    <span className={styles.itemPrice}>${project.price}</span>
-                    <div className={styles.itemMeta}>
-                      <img src={project.seller.avatar || "/avatars/default.png"} alt="seller" style={{ width: '20px', height: '20px', borderRadius: '50%' }} />
-                      <span>{project.seller.name}</span>
+              {featured.projects.map((project: any, idx) => (
+                <motion.div 
+                  key={project.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.1 }}
+                  className={styles.projectCard}
+                >
+                  <div className={styles.projectImage} style={{ backgroundImage: `url(${project.images?.[0] || '/images/default_project.jpg'})` }}>
+                    <div className={styles.projectCategory}>{project.category?.name || "Code"}</div>
+                  </div>
+                  <div className={styles.projectContent}>
+                    <h4>{project.title}</h4>
+                    <div className={styles.projectFooter}>
+                      <span className={styles.projectPrice}>${project.price}</span>
+                      <Link href={`/projects/${project.id}`} className={styles.projectLink}>Details</Link>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>
         </section>
       )}
 
-      {/* Testimonials */}
-      <section className={styles.testimonials}>
-        <div className="container">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '3rem' }}>
+      {/* Success Stories Section */}
+      <section className={styles.successSection}>
+        <div className="container" style={{ overflow: 'hidden' }}>
+          <div className={styles.sectionHeaderRow}>
             <div>
-              <h2 className={styles.sectionTitle} style={{ margin: 0, textAlign: 'left' }}>Loved by Global Teams</h2>
-              <p className={styles.sectionSub} style={{ margin: '0.5rem 0 0', textAlign: 'left' }}>Real feedback from the ZilVerse ecosystem</p>
+              <h2 className={styles.sectionTitle}>Success Stories</h2>
+              <p className={styles.sectionSubtitle}>See what our global network says</p>
             </div>
             <button 
-              className="btn btn-secondary" 
+              className={styles.btnSecondarySmall} 
               onClick={() => setIsFeedbackModalOpen(true)}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.6rem 1.2rem', fontSize: '0.85rem' }}
             >
-              ✍️ Share Feedback
+              Share Story
             </button>
           </div>
           
-          <div className={styles.testimonialsGrid}>
-            {Array.isArray(dbTestimonials) && dbTestimonials.map((t, i) => (
-              <TiltCard key={i} className={styles.testimonialCard}>
-                <div className={styles.stars}>{"⭐".repeat(Math.max(1, Math.min(5, Number(t.stars) || 5)))}</div>
-                <p className={styles.testimonialText}>&quot;{t.text}&quot;</p>
-                <div className={styles.testimonialAuthor}>
-                  {t.avatar ? (
-                    <img src={t.avatar} alt={t.name} className={styles.tAvatar} />
-                  ) : (
-                    <div className={styles.tAvatar} style={{ background: t.color || '#333' }}>{t.initials}</div>
-                  )}
-                  <div className={styles.tInfo}>
-                    <span className={styles.tName}>
-                      {t.name}
-                      {t.verified && <span className={styles.verifiedBadge} title="Verified User">✓</span>}
-                    </span>
-                    <span className={styles.tRole}>{t.role}</span>
-                  </div>
-                </div>
-              </TiltCard>
-            ))}
-            
-            {(!dbTestimonials || dbTestimonials.length === 0) && (
-              <div style={{ textAlign: 'center', color: 'var(--muted)', gridColumn: '1 / -1', padding: '3rem 0' }}>
-                Loading reviews from database...
+          <TestimonialSlider testimonials={dbTestimonials} />
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className={styles.finalCtaSection}>
+        <div className="container">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className={styles.ctaBanner}
+          >
+            <div className={styles.ctaContent}>
+              <h2>Join the Global Opportunity Ecosystem</h2>
+              <p>Build, work, and grow alongside thousands of professionals worldwide.</p>
+              <div className={styles.ctaGroup} style={{ justifyContent: 'center' }}>
+                <Link href="/register" className={styles.btnPrimary}>Create Free Account</Link>
+                <Link href="/about" className={styles.btnSecondary}>How It Works</Link>
               </div>
-            )}
-          </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
       {/* Feedback Modal */}
       {isFeedbackModalOpen && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: 'var(--surface)', padding: '2rem', borderRadius: '12px', border: '1px solid var(--card-border)', width: '90%', maxWidth: '450px' }}>
-            <h2 style={{ color: 'var(--foreground)', marginBottom: '1.5rem', fontSize: '1.2rem' }}>Share Your Experience</h2>
-            <div style={{ marginBottom: '1rem' }}>
-              <input 
-                type="text" placeholder="Your Name" value={newFeedback.name}
-                onChange={(e) => setNewFeedback({...newFeedback, name: e.target.value})}
-                style={{ width: '100%', padding: '0.8rem', background: 'var(--background)', border: '1px solid var(--card-border)', color: 'var(--foreground)', borderRadius: '8px' }}
-              />
-            </div>
-            <div style={{ marginBottom: '1rem' }}>
-              <input 
-                type="text" placeholder="Your Role (e.g. Freelancer)" value={newFeedback.role}
-                onChange={(e) => setNewFeedback({...newFeedback, role: e.target.value})}
-                style={{ width: '100%', padding: '0.8rem', background: 'var(--background)', border: '1px solid var(--card-border)', color: 'var(--foreground)', borderRadius: '8px' }}
-              />
-            </div>
-            <div style={{ marginBottom: '1rem' }}>
-              <select 
-                value={newFeedback.stars}
-                onChange={(e) => setNewFeedback({...newFeedback, stars: parseInt(e.target.value)})}
-                style={{ width: '100%', padding: '0.8rem', background: 'var(--background)', border: '1px solid var(--card-border)', color: 'var(--foreground)', borderRadius: '8px' }}
-              >
-                <option value={5}>5 Stars</option>
-                <option value={4}>4 Stars</option>
-                <option value={3}>3 Stars</option>
-                <option value={2}>2 Stars</option>
-                <option value={1}>1 Star</option>
-              </select>
-            </div>
-            <div style={{ marginBottom: '1.5rem' }}>
-              <textarea 
-                placeholder="Your review..." value={newFeedback.text}
-                onChange={(e) => setNewFeedback({...newFeedback, text: e.target.value})}
-                style={{ width: '100%', padding: '0.8rem', background: 'var(--background)', border: '1px solid var(--card-border)', color: 'var(--foreground)', borderRadius: '8px', minHeight: '80px' }}
-              />
-            </div>
-            <div style={{ display: 'flex', gap: '1rem' }}>
-              <button onClick={() => setIsFeedbackModalOpen(false)} style={{ flex: 1, padding: '0.8rem', background: 'var(--card-border)', color: 'var(--foreground)', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Cancel</button>
-              <button onClick={handlePostFeedback} style={{ flex: 1, padding: '0.8rem', background: 'var(--foreground)', color: 'var(--background)', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>Submit</button>
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <h3>Share Your Experience</h3>
+            <input 
+              type="text" placeholder="Your Name" value={newFeedback.name}
+              onChange={(e) => setNewFeedback({...newFeedback, name: e.target.value})}
+              className={styles.inputField}
+            />
+            <input 
+              type="text" placeholder="Your Role" value={newFeedback.role}
+              onChange={(e) => setNewFeedback({...newFeedback, role: e.target.value})}
+              className={styles.inputField}
+            />
+            <select 
+              value={newFeedback.stars}
+              onChange={(e) => setNewFeedback({...newFeedback, stars: parseInt(e.target.value)})}
+              className={styles.inputField}
+            >
+              <option value={5}>5 Stars</option>
+              <option value={4}>4 Stars</option>
+              <option value={3}>3 Stars</option>
+              <option value={2}>2 Stars</option>
+              <option value={1}>1 Star</option>
+            </select>
+            <textarea 
+              placeholder="Your review..." value={newFeedback.text}
+              onChange={(e) => setNewFeedback({...newFeedback, text: e.target.value})}
+              className={styles.textArea}
+            />
+            <div className={styles.modalActions}>
+              <button onClick={() => setIsFeedbackModalOpen(false)} className={styles.btnSecondarySmall}>Cancel</button>
+              <button onClick={handlePostFeedback} className={styles.btnPrimary}>Submit</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Footer CTA */}
-      <section className={styles.ctaBanner}>
-        <div className="container">
-          <div className={styles.ctaBox}>
-            <h2>Ready to Join the Network?</h2>
-            <p>Connect with global clients and top-tier talent available around the world.</p>
-            <Link href="/register" className="btn btn-primary" style={{ padding: "0.8rem 2rem", fontSize: "1rem" }}>
-              Create Account
-            </Link>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }
