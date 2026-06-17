@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 import CountrySelector from "./CountrySelector";
 import LanguageSelector from "./LanguageSelector";
-import ThemeSelector from "./ThemeSelector";
 import CurrencySelector from "./CurrencySelector";
 import TimezoneSelector from "./TimezoneSelector";
 import styles from "./Navbar.module.css";
@@ -262,7 +261,6 @@ export default function Navbar() {
             <CountrySelector />
             <CurrencySelector />
             <TimezoneSelector />
-            <ThemeSelector />
           </div>
 
           {/* 🔔 Notification Bell */}

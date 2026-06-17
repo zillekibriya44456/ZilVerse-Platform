@@ -5,7 +5,6 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { CountryProvider } from "@/context/CountryContext";
 import { LanguageProvider } from "@/context/LanguageContext";
-import { ThemeProvider } from "@/context/ThemeContext";
 import { CurrencyProvider } from "@/context/CurrencyContext";
 import { TimezoneProvider } from "@/context/TimezoneContext";
 import Navbar from "@/components/Navbar";
@@ -15,7 +14,6 @@ import CustomCursor from "@/components/CustomCursor";
 import AIAssistant from "@/components/AIAssistant";
 import GlobalNotificationBar from "@/components/GlobalNotificationBar";
 import CookieConsent from "@/components/CookieConsent";
-import ThemeCustomizerModal from "@/components/ThemeCustomizerModal";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 const outfit = Outfit({ variable: "--font-outfit", subsets: ["latin"] });
@@ -87,29 +85,26 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         {/* Hidden Google Translate Element — required for the API to work */}
         <div id="google_translate_element" style={{ display: "none" }} />
 
-        <ThemeProvider>
-          <LanguageProvider>
-            <CountryProvider>
-              <CurrencyProvider>
-                <TimezoneProvider>
-                  <AuthProvider>
-                    <Navbar />
-                    <main style={{ minHeight: "calc(100vh - 73px)" }}>
-                      {children}
-                    </main>
-                    <Footer />
-                    <WhatsAppButton />
-                    <AIAssistant />
-                    <CustomCursor />
-                    <GlobalNotificationBar />
-                    <CookieConsent />
-                    <ThemeCustomizerModal />
-                  </AuthProvider>
-                </TimezoneProvider>
-              </CurrencyProvider>
-            </CountryProvider>
-          </LanguageProvider>
-        </ThemeProvider>
+        <LanguageProvider>
+          <CountryProvider>
+            <CurrencyProvider>
+              <TimezoneProvider>
+                <AuthProvider>
+                  <Navbar />
+                  <main style={{ minHeight: "calc(100vh - 73px)" }}>
+                    {children}
+                  </main>
+                  <Footer />
+                  <WhatsAppButton />
+                  <AIAssistant />
+                  <CustomCursor />
+                  <GlobalNotificationBar />
+                  <CookieConsent />
+                </AuthProvider>
+              </TimezoneProvider>
+            </CurrencyProvider>
+          </CountryProvider>
+        </LanguageProvider>
 
         {/* Google Translate Script — loads after page is interactive */}
         <Script

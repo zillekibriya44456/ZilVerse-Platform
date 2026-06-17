@@ -174,22 +174,18 @@
 
 /* Mega Menu */
 .megaMenu {
-  position: fixed;
-  top: 70px;
-  left: 50vw;
-  transform: translateX(-50%);
   width: max-content;
-  max-width: 95vw;
+  max-width: 1200px; /* Increased from 900px to allow more columns without cutting off */
   padding: 1.5rem;
 }
 
 .megaMenuLayout {
   display: flex;
-  gap: 1.5rem;
+  gap: 2rem;
 }
 
 .featuredCard {
-  width: 250px;
+  width: 280px;
   background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(59, 130, 246, 0.1));
   border: 1px solid rgba(124, 58, 237, 0.2);
   border-radius: 12px;
@@ -248,13 +244,13 @@
 
 .megaSections {
   display: flex;
-  gap: 1.5rem;
+  gap: 2rem;
 }
 
 .megaSection {
   display: flex;
   flex-direction: column;
-  min-width: 160px;
+  min-width: 200px;
 }
 
 .megaSectionTitle {

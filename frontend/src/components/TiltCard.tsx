@@ -20,19 +20,19 @@ export default function TiltCard({ children, className, style }: Props) {
     const y = e.clientY - rect.top;
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
-    const rotateX = ((y - centerY) / centerY) * -12;
-    const rotateY = ((x - centerX) / centerX) * 12;
+    const rotateX = ((y - centerY) / centerY) * -8;
+    const rotateY = ((x - centerX) / centerX) * 8;
 
-    setTransform(`perspective(1200px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.03, 1.03, 1.03)`);
+    setTransform(`perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`);
     setGlare({
       x: (x / rect.width) * 100,
       y: (y / rect.height) * 100,
-      opacity: 0.2,
+      opacity: 0.12,
     });
   };
 
   const handleMouseLeave = () => {
-    setTransform("perspective(1200px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)");
+    setTransform("perspective(800px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)");
     setGlare({ x: 50, y: 50, opacity: 0 });
   };
 
@@ -45,7 +45,7 @@ export default function TiltCard({ children, className, style }: Props) {
       style={{
         ...style,
         transform,
-        transition: "transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
+        transition: "transform 0.2s ease-out",
         transformStyle: "preserve-3d",
         position: "relative",
         overflow: "hidden",
@@ -59,9 +59,9 @@ export default function TiltCard({ children, className, style }: Props) {
           inset: 0,
           borderRadius: "inherit",
           pointerEvents: "none",
-          background: `radial-gradient(circle at ${glare.x}% ${glare.y}%, rgba(255,255,255,${glare.opacity}), transparent 70%)`,
-          transition: "background 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
-          zIndex: 10,
+          background: `radial-gradient(circle at ${glare.x}% ${glare.y}%, rgba(255,255,255,${glare.opacity}), transparent 60%)`,
+          transition: "background 0.2s ease-out",
+          zIndex: 1,
         }}
       />
     </div>
