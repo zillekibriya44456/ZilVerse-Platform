@@ -9,7 +9,8 @@ import {
   User, Briefcase, Code2, Play, Users, Globe, BookOpen, Lightbulb, 
   FileText, Award, MessageSquare, Search, ChevronDown, Sparkles, 
   Layers, PhoneCall, Handshake, Users2, Building2, HelpCircle,
-  Video, RefreshCw, Box, GraduationCap, Calendar, Coins, Moon
+  Video, RefreshCw, Box, GraduationCap, Calendar, Coins, Moon,
+  Zap, BarChart2, MessageCircle, Send, HeadphonesIcon, FileOutput, Grip
 } from "lucide-react";
 import styles from "./Navbar.module.css";
 import { socket } from "@/utils/socket";
@@ -17,57 +18,62 @@ import { socket } from "@/utils/socket";
 const MEGA_COLUMNS = [
   {
     title: "MARKETPLACE",
+    titleColor: "#c084fc",
     items: [
-      { label: "Freelancers", desc: "Hire verified global talent", href: "/freelancers", icon: User, color: "#8B5CF6" },
-      { label: "Projects", desc: "Buy & sell projects", href: "/projects", icon: Box, color: "#3B82F6" },
-      { label: "Digital Services", desc: "Web, App, AI & more", href: "/services", icon: Layers, color: "#22C55E" },
-      { label: "Marketplace Categories", desc: "Explore all categories", href: "/categories", icon: Layers, color: "#F59E0B" },
+      { label: "Freelancers", desc: "Hire verified global talent", href: "/freelancers", icon: User, color: "#a855f7" },
+      { label: "Projects", desc: "Buy & sell projects", href: "/projects", icon: Box, color: "#3b82f6" },
+      { label: "Digital Services", desc: "Web, App, AI & more", href: "/services", icon: Zap, color: "#22c55e" },
+      { label: "Marketplace Categories", desc: "Explore all categories", href: "/categories", icon: Grip, color: "#f59e0b" },
     ],
-    card: { title: "Top Global Talent", desc: "Access 2,400+ verified professionals worldwide.", link: "Explore Talent →", href: "/freelancers", icon: Sparkles, color: "#8B5CF6", bg: "rgba(139, 92, 246, 0.1)" }
+    card: { title: "Top Global Talent", desc: "Access 2,400+ verified professionals worldwide", link: "Explore Talent →", href: "/freelancers", icon: Sparkles, color: "#a855f7", linkColor: "#c084fc" }
   },
   {
     title: "OPPORTUNITIES",
+    titleColor: "#3b82f6",
     items: [
-      { label: "Jobs", desc: "Find remote & local jobs", href: "/jobs", icon: Briefcase, color: "#3B82F6" },
-      { label: "Grants & Funding", desc: "Get funding for ideas", href: "/fund", icon: Coins, color: "#22C55E" },
-      { label: "Events", desc: "Join virtual & global events", href: "/events", icon: Calendar, color: "#8B5CF6" },
-      { label: "Internships", desc: "Kickstart your career", href: "/internships", icon: GraduationCap, color: "#F59E0B" },
-      { label: "Remote Opportunities", desc: "Work from anywhere", href: "/remote", icon: Globe, color: "#06B6D4" },
+      { label: "Jobs", desc: "Find remote & local jobs", href: "/jobs", icon: Briefcase, color: "#3b82f6" },
+      { label: "Grants & Funding", desc: "Get funding for ideas", href: "/fund", icon: Coins, color: "#22c55e" },
+      { label: "Events", desc: "Join virtual & global events", href: "/events", icon: Calendar, color: "#a855f7" },
+      { label: "Internships", desc: "Kickstart your career", href: "/internships", icon: GraduationCap, color: "#f59e0b" },
+      { label: "Remote Opportunities", desc: "Work from anywhere", href: "/remote", icon: Globe, color: "#06b6d4" },
     ],
-    card: { title: "New Opportunities", desc: "100+ new jobs posted daily", link: "View Opportunities →", href: "/opportunities", icon: Sparkles, color: "#3B82F6", bg: "rgba(59, 130, 246, 0.1)" }
+    card: { title: "New Opportunities", desc: "100+ new jobs posted daily", link: "View Opportunities →", href: "/opportunities", icon: Sparkles, color: "#3b82f6", linkColor: "#60a5fa" }
   },
   {
     title: "LEARN & INNOVATE",
+    titleColor: "#c084fc",
     items: [
-      { label: "Academy", desc: "Upskill with top courses", href: "/academy", icon: BookOpen, color: "#8B5CF6" },
-      { label: "Innovation Hub", desc: "Explore innovative ideas", href: "/innovation", icon: Lightbulb, color: "#22C55E" },
-      { label: "Research", desc: "Access global research", href: "/research", icon: FileText, color: "#3B82F6" },
-      { label: "Certifications", desc: "Earn global certificates", href: "/certifications", icon: Award, color: "#F59E0B" },
-      { label: "Learning Resources", desc: "Guides, tutorials & more", href: "/resources", icon: FileText, color: "#06B6D4" },
+      { label: "Academy", desc: "Upskill with top courses", href: "/academy", icon: BookOpen, color: "#a855f7" },
+      { label: "Innovation Hub", desc: "Explore innovative ideas", href: "/innovation", icon: Lightbulb, color: "#22c55e" },
+      { label: "Research", desc: "Access global research", href: "/research", icon: BarChart2, color: "#3b82f6" },
+      { label: "Certifications", desc: "Earn global certificates", href: "/certifications", icon: Award, color: "#f59e0b" },
+      { label: "Learning Resources", desc: "Guides, tutorials & more", href: "/resources", icon: FileOutput, color: "#06b6d4" },
     ],
-    card: { title: "Featured Course", desc: "AI for Everyone", link: "Start Learning →", href: "/academy/course", icon: Play, color: "#8B5CF6", bg: "rgba(139, 92, 246, 0.1)", isImage: true }
+    card: { title: "Featured Course", desc: "AI for Everyone", link: "Start Learning →", href: "/academy/course", icon: Play, color: "#a855f7", linkColor: "#c084fc", isImage: true }
   },
   {
     title: "COMMUNITY",
+    titleColor: "#3b82f6",
     items: [
-      { label: "InnoReels", desc: "Share & watch innovation", href: "/reels", icon: Video, color: "#EC4899" },
-      { label: "Exchange", desc: "Ideas, skills & resources", href: "/exchange", icon: RefreshCw, color: "#22C55E" },
-      { label: "Creator Network", desc: "Connect with creators", href: "/creators", icon: Users2, color: "#F59E0B" },
-      { label: "Discussions", desc: "Ask, share & learn", href: "/discussions", icon: MessageSquare, color: "#22C55E" },
-      { label: "Global Community", desc: "150+ countries connected", href: "/community", icon: Globe, color: "#3B82F6" },
+      { label: "InnoReels", desc: "Share & watch innovation", href: "/reels", icon: Play, color: "#ec4899" },
+      { label: "Exchange", desc: "Ideas, skills & resources", href: "/exchange", icon: RefreshCw, color: "#22c55e" },
+      { label: "Creator Network", desc: "Connect with creators", href: "/creators", icon: Users2, color: "#f59e0b" },
+      { label: "Discussions", desc: "Ask, share & learn", href: "/discussions", icon: MessageCircle, color: "#22c55e" },
+      { label: "Global Community", desc: "150+ countries connected", href: "/community", icon: Globe, color: "#3b82f6" },
     ],
-    card: { title: "Community Highlight", desc: "Join 25K+ members worldwide", link: "Join Now →", href: "/community", icon: Users, color: "#EC4899", bg: "rgba(236, 72, 153, 0.1)", isAvatarGroup: true }
+    card: { title: "Community Highlight", desc: "Join 25K+ members worldwide", link: "Join Now →", href: "/community", icon: Users, color: "#3b82f6", linkColor: "#60a5fa", isAvatarGroup: true }
   },
   {
     title: "COMPANY",
+    titleColor: "#c084fc",
     items: [
-      { label: "About ZilVerse", desc: "Our mission & story", href: "/about", icon: Building2, color: "#8B5CF6" },
-      { label: "Contact Us", desc: "We'd love to hear from you", href: "/contact", icon: PhoneCall, color: "#22C55E" },
-      { label: "Apply to ZilVerse", desc: "Join as a partner", href: "/apply", icon: Handshake, color: "#3B82F6" },
-      { label: "Careers", desc: "Work with us", href: "/careers", icon: Briefcase, color: "#F59E0B" },
-      { label: "Support Center", desc: "Help & resources", href: "/support", icon: HelpCircle, color: "#06B6D4" },
+      { label: "About ZilVerse", desc: "Our mission & story", href: "/about", icon: Building2, color: "#a855f7" },
+      { label: "Contact Us", desc: "We'd love to hear from you", href: "/contact", icon: PhoneCall, color: "#22c55e" },
+      { label: "Apply to ZilVerse", desc: "Join as a partner", href: "/apply", icon: Send, color: "#3b82f6" },
+      { label: "Careers", desc: "Work with us", href: "/careers", icon: Briefcase, color: "#f59e0b" },
+      { label: "Support Center", desc: "Help & resources", href: "/support", icon: HeadphonesIcon, color: "#06b6d4" },
     ],
-    card: { title: "We're Hiring!", desc: "Join our global team", link: "View Openings →", href: "/careers", icon: Briefcase, color: "#8B5CF6", bg: "rgba(139, 92, 246, 0.1)" }
+    card: { title: "We're Hiring!", desc: "Join our global team", link: "View Openings →", href: "/careers", icon: Briefcase, color: "#a855f7", linkColor: "#c084fc" }
   }
 ];
 
@@ -169,13 +175,19 @@ export default function Navbar() {
             <div className={styles.megaMenuInner}>
               {MEGA_COLUMNS.map((col) => (
                 <div key={col.title} className={styles.megaColumn}>
-                  <h4 className={styles.megaColTitle}>{col.title}</h4>
+                  <h4 className={styles.megaColTitle} style={{ color: col.titleColor }}>{col.title}</h4>
                   <div className={styles.megaItemList}>
                     {col.items.map((item, idx) => {
                       const Icon = item.icon;
+                      // Convert hex to rgb for background opacity
+                      const hexToRgb = (hex: string) => {
+                        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+                        return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '139, 92, 246';
+                      };
+                      
                       return (
                         <Link key={idx} href={item.href} className={styles.megaItem}>
-                          <div className={styles.megaIconWrapper} style={{ color: item.color }}>
+                          <div className={styles.megaIconWrapper} style={{ color: item.color, background: `rgba(${hexToRgb(item.color)}, 0.15)` }}>
                             <Icon size={18} />
                           </div>
                           <div className={styles.megaItemContent}>
@@ -197,11 +209,14 @@ export default function Navbar() {
                           <img src="/avatars/default.png" alt="C" />
                         </div>
                       ) : col.card.isImage ? (
-                        <div className={styles.megaCardImage} style={{ background: 'linear-gradient(45deg, #8B5CF6, #06B6D4)' }}>
-                          <Play size={20} color="#fff" />
-                        </div>
+                        <div className={styles.megaCardImage} style={{ background: 'url(/images/ai-course.jpg) center/cover', border: '1px solid rgba(139, 92, 246, 0.3)' }}></div>
                       ) : (
-                        <div className={styles.megaCardIcon} style={{ background: col.card.bg, color: col.card.color }}>
+                        <div className={styles.megaCardIcon} style={{ color: col.card.color, background: `rgba(${
+                          (() => {
+                            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(col.card.color);
+                            return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '139, 92, 246';
+                          })()
+                        }, 0.15)` }}>
                           <col.card.icon size={20} />
                         </div>
                       )}
@@ -210,7 +225,7 @@ export default function Navbar() {
                         <div className={styles.megaCardDesc}>{col.card.desc}</div>
                       </div>
                     </div>
-                    <div className={styles.megaCardLink}>{col.card.link}</div>
+                    <div className={styles.megaCardLink} style={{ color: col.card.linkColor }}>{col.card.link}</div>
                   </Link>
 
                 </div>
