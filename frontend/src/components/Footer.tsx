@@ -1,43 +1,36 @@
 import Link from "next/link";
 import styles from "./Footer.module.css";
-
-const PHONE = "7091780179";
-const WA_LINK = `https://wa.me/91${PHONE}`;
-
-const EMAIL = "zilverse01@gmail.com";
+import { Facebook, Twitter, Linkedin, Instagram, Youtube, Send, Globe } from "lucide-react";
 
 const socialLinks = [
-  { label: "WhatsApp", href: WA_LINK, icon: "💬", color: "#25D366" },
-  { label: "LinkedIn", href: "https://www.linkedin.com/company/zilverse/", icon: "💼", color: "#0A66C2" },
-  { label: "X (Twitter)", href: "https://x.com/zilverse01gmai", icon: "🐦", color: "#1DA1F2" },
-  { label: "YouTube", href: "https://www.youtube.com/@TheZilVerse", icon: "▶️", color: "#FF0000" },
-  { label: "Facebook", href: "https://m.facebook.com/zille.kibriya.3", icon: "📘", color: "#1877F2" },
-  { label: "Medium", href: "https://medium.com/@zilverse01", icon: "✍️", color: "#fff" },
+  { icon: Facebook, href: "https://m.facebook.com/zille.kibriya.3" },
+  { icon: Twitter, href: "https://x.com/zilverse01gmai" },
+  { icon: Linkedin, href: "https://www.linkedin.com/company/zilverse/" },
+  { icon: Instagram, href: "#" },
+  { icon: Youtube, href: "https://www.youtube.com/@TheZilVerse" },
 ];
 
 const navLinks = [
   { group: "Platform", links: [
-    { label: "Home", href: "/" },
     { label: "Services", href: "/services" },
-    { label: "Freelancers", href: "/freelancers" },
-    { label: "Projects", href: "/projects" },
-    { label: "Job Board", href: "/jobs" },
+    { label: "Talent", href: "/freelancers" },
+    { label: "Marketplace", href: "/projects" },
+    { label: "Opportunities", href: "/jobs" },
+    { label: "Community", href: "/community" },
   ]},
-  { group: "Company", links: [
-    { label: "Sign In", href: "/login" },
-    { label: "Register", href: "/register" },
-    { label: "Careers", href: "/careers" },
-    { label: "Press Kit", href: "/press" },
-    { label: "Investors", href: "/investors" },
+  { group: "Resources", links: [
+    { label: "Blog", href: "/blog" },
+    { label: "Guides", href: "/guides" },
+    { label: "Help Center", href: "/help" },
+    { label: "FAQs", href: "/faqs" },
     { label: "Contact Us", href: "/contact" },
   ]},
-  { group: "Resources & Legal", links: [
-    { label: "API Docs", href: "/docs" },
-    { label: "Help Center", href: "/help" },
-    { label: "Community Guidelines", href: "/guidelines" },
-    { label: "Terms of Service", href: "/terms" },
-    { label: "Privacy Policy", href: "/privacy" },
-    { label: "Cookie Policy", href: "/cookies" },
+  { group: "Company", links: [
+    { label: "About Us", href: "/about" },
+    { label: "Careers", href: "/careers" },
+    { label: "Press", href: "/press" },
+    { label: "Partners", href: "/partners" },
+    { label: "Terms & Privacy", href: "/terms" },
   ]},
 ];
 
@@ -47,46 +40,27 @@ export default function Footer() {
       <div className="container">
         <div className={styles.top}>
 
-          {/* Brand + Contact */}
-          <div className={styles.brand}>
+          {/* Column 1: Brand & Socials */}
+          <div className={styles.brandCol}>
             <div className={styles.logo}>
-              Zil<span>Verse</span>
+              <span className={styles.logoIcon}></span> Zil<span>Verse</span>
             </div>
             <p className={styles.tagline}>
-              Build. Work. Grow. All in One Place.<br />
-              The ultimate worldwide ecosystem combining freelancing, project marketplace, job portals, and digital services.
+              Building the future of work through technology, talent, and global opportunities.
             </p>
-
-            <div className={styles.contactList}>
-              <a href={WA_LINK} target="_blank" rel="noreferrer" className={styles.contactItem}>
-                <span className={styles.contactIcon} style={{ background: "#25D36620" }}>💬</span>
-                <div>
-                  <span className={styles.contactLabel}>WhatsApp Us</span>
-                  <span className={styles.contactValue}>+91 {PHONE}</span>
-                </div>
-              </a>
-              <a href={`tel:+91${PHONE}`} className={styles.contactItem}>
-                <span className={styles.contactIcon} style={{ background: "rgba(168,85,247,0.12)" }}>📞</span>
-                <div>
-                  <span className={styles.contactLabel}>Call Us</span>
-                  <span className={styles.contactValue}>+91 {PHONE}</span>
-                </div>
-              </a>
-              <div className={styles.contactItem}>
-                <span className={styles.contactIcon} style={{ background: "rgba(59,130,246,0.12)" }}>📍</span>
-                <div>
-                  <span className={styles.contactLabel}>Address</span>
-                  <span className={styles.contactValue}>
-                    31 B, 2nd Cross, Navy Layout,<br />
-                    Next to Kirloskar Layout,<br />
-                    Bengaluru — 560090
-                  </span>
-                </div>
-              </div>
+            <div className={styles.socials}>
+              {socialLinks.map((s, idx) => {
+                const Icon = s.icon;
+                return (
+                  <a key={idx} href={s.href} target="_blank" rel="noreferrer" className={styles.socialBtn}>
+                    <Icon size={16} />
+                  </a>
+                )
+              })}
             </div>
           </div>
 
-          {/* Navigation Groups */}
+          {/* Navigation Columns */}
           {navLinks.map(group => (
             <div key={group.group} className={styles.linkGroup}>
               <h4 className={styles.groupTitle}>{group.group}</h4>
@@ -100,31 +74,25 @@ export default function Footer() {
             </div>
           ))}
 
-          {/* Social Media */}
-          <div className={styles.linkGroup}>
-            <h4 className={styles.groupTitle}>Follow Us</h4>
-            <div className={styles.socials}>
-              {socialLinks.map(s => (
-                <a
-                  key={s.label}
-                  href={s.href}
-                  target="_blank"
-                  rel="noreferrer"
-                  className={styles.socialBtn}
-                  title={s.label}
-                  style={{ "--social-color": s.color } as React.CSSProperties}
-                >
-                  <span>{s.icon}</span>
-                  <span className={styles.socialLabel}>{s.label}</span>
-                </a>
-              ))}
-            </div>
+          {/* Column 5: Newsletter */}
+          <div className={styles.newsletterCol}>
+            <h4 className={styles.groupTitle}>Stay Updated</h4>
+            <p className={styles.newsletterDesc}>Subscribe to our newsletter</p>
+            <form className={styles.newsletterForm} onSubmit={(e) => e.preventDefault()}>
+              <input type="email" placeholder="Enter your email" className={styles.newsletterInput} />
+              <button type="submit" className={styles.newsletterBtn}>
+                <Send size={16} />
+              </button>
+            </form>
           </div>
+
         </div>
 
         <div className={styles.bottom}>
-          <p>© {new Date().getFullYear()} ZilVerse. All rights reserved.</p>
-          <p>Made with ❤️ in Bengaluru, India 🇮🇳</p>
+          <p>© 2024 ZilVerse. All rights reserved.</p>
+          <div className={styles.langSelector}>
+            <Globe size={16} /> English <span>v</span>
+          </div>
         </div>
       </div>
     </footer>

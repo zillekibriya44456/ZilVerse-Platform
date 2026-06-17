@@ -21,7 +21,14 @@ import {
   Globe, 
   Users, 
   GraduationCap, 
-  Layers 
+  Layers,
+  Rocket,
+  PlayCircle,
+  CheckCircle2,
+  ShoppingBag,
+  Users2,
+  Quote,
+  UserPlus
 } from "lucide-react";
 
 const ParticleNetwork = dynamic(() => import("@/components/ParticleNetwork"), { ssr: false });
@@ -32,43 +39,49 @@ const ecosystemCards = [
     href: "/services",
     icon: Layers,
     title: "Services",
-    desc: "Hire agencies and experts for digital services, from web development to AI solutions.",
-    link: "Explore Services →",
+    desc: "Offer & hire services across 500+ categories worldwide.",
+    link: "Explore →",
+    color: "#D946EF", bg: "rgba(217, 70, 239, 0.15)"
   },
   {
     href: "/freelancers",
     icon: Users,
     title: "Talent",
-    desc: "Find and hire world-class freelancers and vetted developers globally.",
-    link: "Find Talent →",
+    desc: "Find verified talent or discover global opportunities.",
+    link: "Explore →",
+    color: "#3B82F6", bg: "rgba(59, 130, 246, 0.15)"
   },
   {
     href: "/projects",
-    icon: Code2,
+    icon: ShoppingBag,
     title: "Marketplace",
-    desc: "Buy and sell source code, SaaS boilerplates, and digital products.",
-    link: "Browse Marketplace →",
+    desc: "Buy & sell digital products, templates, code & more.",
+    link: "Explore →",
+    color: "#22C55E", bg: "rgba(34, 197, 94, 0.15)"
   },
   {
     href: "/jobs",
     icon: Briefcase,
     title: "Opportunities",
-    desc: "Discover remote jobs, internships, and freelance contracts worldwide.",
-    link: "Find Opportunities →",
+    desc: "Explore jobs, internships, grants & global opportunities.",
+    link: "Explore →",
+    color: "#22C55E", bg: "rgba(34, 197, 94, 0.15)"
   },
   {
     href: "/academy",
     icon: GraduationCap,
     title: "Learn & Grow",
-    desc: "AI interview prep, certifications, and career development resources.",
-    link: "Start Learning →",
+    desc: "Upskill with courses, certifications & career resources.",
+    link: "Explore →",
+    color: "#F59E0B", bg: "rgba(245, 158, 11, 0.15)"
   },
   {
     href: "/community",
-    icon: Globe,
+    icon: Users2,
     title: "Community",
-    desc: "Connect, collaborate, and share with tech professionals globally.",
-    link: "Join Community →",
+    desc: "Connect, collaborate & grow with global professionals.",
+    link: "Explore →",
+    color: "#EC4899", bg: "rgba(236, 72, 153, 0.15)"
   },
 ];
 
@@ -130,7 +143,7 @@ export default function Home() {
               transition={{ duration: 0.5 }}
               className={styles.badge}
             >
-              <span className={styles.badgeIcon}>{selectedCountry.flag}</span>
+              <div className={styles.badgeDot}></div>
               <span>ZILVERSE — YOUR GLOBAL TECH ECOSYSTEM</span>
             </motion.div>
 
@@ -141,7 +154,7 @@ export default function Home() {
               className={styles.title}
             >
               Build. Work. Grow.<br />
-              <span className={styles.textGradient}>All in One Place.</span>
+              <span className={styles.textGradient}>All In One Place.</span>
             </motion.h1>
 
             <motion.p 
@@ -150,7 +163,7 @@ export default function Home() {
               transition={{ duration: 0.5, delay: 0.2 }}
               className={styles.subtitle}
             >
-              The ultimate worldwide ecosystem combining freelancing, project marketplace, job portals, and digital services serving talent across 150+ countries.
+              The ultimate worldwide ecosystem combining freelancing, project marketplace, job portals, and digital services — serving talent in 150+ countries.
             </motion.p>
 
             <motion.div 
@@ -159,11 +172,11 @@ export default function Home() {
               transition={{ duration: 0.5, delay: 0.3 }}
               className={styles.ctaGroup}
             >
-              <Link href="/register" className={styles.btnPrimary}>
-                Get Started Free
+              <Link href="/register" className={styles.btnPrimaryGradient}>
+                <Rocket size={18} /> Get Started Free
               </Link>
               <Link href="/opportunities" className={styles.btnSecondary}>
-                Explore Opportunities
+                <PlayCircle size={18} /> Explore Opportunities
               </Link>
             </motion.div>
 
@@ -177,9 +190,10 @@ export default function Home() {
                 <img src="/avatars/default.png" alt="User" />
                 <img src="/avatars/default.png" alt="User" />
                 <img src="/avatars/default.png" alt="User" />
-                <div className={styles.avatarMore}>+25k</div>
+                <img src="/avatars/default.png" alt="User" />
               </div>
               <span>Trusted by 25,000+ people worldwide</span>
+              <CheckCircle2 size={16} color="#22C55E" />
             </motion.div>
           </div>
 
@@ -214,8 +228,9 @@ export default function Home() {
       <section className={styles.ecosystemSection}>
         <div className="container">
           <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>Everything You Need In One Place</h2>
-            <p className={styles.sectionSubtitle}>Powerful modules combined into one unified platform.</p>
+            <div className={styles.ecoPretitle}>THE ZILVERSE ECOSYSTEM</div>
+            <h2 className={styles.sectionTitle}>Everything You Need, In One Place</h2>
+            <p className={styles.sectionSubtitle}>Powerful modules combined into one unified platform to help you<br/>build, work, and grow without boundaries.</p>
           </div>
           
           <div className={styles.ecosystemGrid}>
@@ -231,7 +246,7 @@ export default function Home() {
                 >
                   <TiltCard className={styles.ecosystemCard}>
                     <Link href={card.href} className={styles.ecosystemLink}>
-                      <div className={styles.ecoIconWrapper}>
+                      <div className={styles.ecoIconWrapper} style={{ color: card.color, background: card.bg }}>
                         <Icon size={24} className={styles.ecoIcon} />
                       </div>
                       <h3 className={styles.ecoTitle}>{card.title}</h3>
@@ -246,103 +261,82 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Featured Talent Section */}
-      {Array.isArray(featured?.freelancers) && featured.freelancers.length > 0 && (
-        <section className={styles.talentSection}>
-          <div className="container">
-            <div className={styles.sectionHeaderRow}>
-              <div>
-                <h2 className={styles.sectionTitle}>Featured Talent</h2>
-                <p className={styles.sectionSubtitle}>Hire world-class professionals</p>
-              </div>
-              <Link href="/freelancers" className={styles.btnSecondarySmall}>View All →</Link>
-            </div>
+      {/* 3-Column Content Block */}
+      <section className={styles.featuredGridSection}>
+        <div className="container">
+          <div className={styles.grid3Block}>
             
-            <div className={styles.grid4}>
-              {featured.freelancers.map((user: any, idx) => (
-                <motion.div 
-                  key={user.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: idx * 0.1 }}
-                  className={styles.talentCard}
-                >
-                  <div className={styles.talentHeader}>
-                    <img src={user.avatar || "/avatars/default.png"} alt={user.name} className={styles.talentAvatar} />
-                    <div className={styles.talentInfo}>
+            {/* Column 1: Top Rated Talent */}
+            <div className={styles.contentColumn}>
+              <div className={styles.columnHeader}>
+                <h3 className={styles.columnTitle}>Top Rated Talent</h3>
+                <Link href="/freelancers" className={styles.columnLink}>View All →</Link>
+              </div>
+              <div className={styles.columnList}>
+                {featured?.freelancers?.slice(0, 4).map((user: any, idx: number) => (
+                  <div key={user.id} className={styles.talentListItem}>
+                    <img src={user.avatar || "/avatars/default.png"} alt={user.name} className={styles.listAvatar} />
+                    <div className={styles.listInfo}>
                       <h4>{user.name}</h4>
                       <p>{user.freelancerProfile?.title || "Freelancer"}</p>
                     </div>
-                  </div>
-                  <div className={styles.talentMeta}>
-                    <span className={styles.talentRating}>⭐ 5.0</span>
-                    <span className={styles.talentRate}>${user.freelancerProfile?.hourlyRate || 0}/hr</span>
-                  </div>
-                  <Link href={`/freelancers/${user.id}`} className={styles.talentLink}>View Profile</Link>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Featured Projects Section */}
-      {Array.isArray(featured?.projects) && featured.projects.length > 0 && (
-        <section className={styles.projectsSection}>
-          <div className="container">
-            <div className={styles.sectionHeaderRow}>
-              <div>
-                <h2 className={styles.sectionTitle}>Featured Projects</h2>
-                <p className={styles.sectionSubtitle}>Top-tier source code and boilerplate</p>
-              </div>
-              <Link href="/projects" className={styles.btnSecondarySmall}>Explore →</Link>
-            </div>
-            
-            <div className={styles.grid3}>
-              {featured.projects.map((project: any, idx) => (
-                <motion.div 
-                  key={project.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: idx * 0.1 }}
-                  className={styles.projectCard}
-                >
-                  <div className={styles.projectImage} style={{ backgroundImage: `url(${project.images?.[0] || '/images/default_project.jpg'})` }}>
-                    <div className={styles.projectCategory}>{project.category?.name || "Code"}</div>
-                  </div>
-                  <div className={styles.projectContent}>
-                    <h4>{project.title}</h4>
-                    <div className={styles.projectFooter}>
-                      <span className={styles.projectPrice}>${project.price}</span>
-                      <Link href={`/projects/${project.id}`} className={styles.projectLink}>Details</Link>
+                    <div className={styles.listRating}>
+                      <span className={styles.star}>⭐ 5.0</span>
                     </div>
+                    <div className={styles.listRate}>${user.freelancerProfile?.hourlyRate || 0}/hr</div>
                   </div>
-                </motion.div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        </section>
-      )}
 
-      {/* Success Stories Section */}
-      <section className={styles.successSection}>
-        <div className="container" style={{ overflow: 'hidden' }}>
-          <div className={styles.sectionHeaderRow}>
-            <div>
-              <h2 className={styles.sectionTitle}>Success Stories</h2>
-              <p className={styles.sectionSubtitle}>See what our global network says</p>
+            {/* Column 2: Featured Projects */}
+            <div className={styles.contentColumn}>
+              <div className={styles.columnHeader}>
+                <h3 className={styles.columnTitle}>Featured Projects</h3>
+                <Link href="/projects" className={styles.columnLink}>View All →</Link>
+              </div>
+              <div className={styles.columnList}>
+                {featured?.projects?.slice(0, 4).map((project: any, idx: number) => (
+                  <div key={project.id} className={styles.projectListItem}>
+                    <img src={project.images?.[0] || '/images/default_project.jpg'} alt={project.title} className={styles.listProjectImg} />
+                    <div className={styles.listInfo}>
+                      <h4>{project.title}</h4>
+                      <p>{project.category?.name || "Code"}</p>
+                    </div>
+                    <div className={styles.listPrice}>${project.price}</div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <button 
-              className={styles.btnSecondarySmall} 
-              onClick={() => setIsFeedbackModalOpen(true)}
-            >
-              Share Story
-            </button>
+
+            {/* Column 3: Success Stories */}
+            <div className={styles.contentColumn}>
+              <div className={styles.columnHeader}>
+                <h3 className={styles.columnTitle}>Success Stories</h3>
+                <button onClick={() => setIsFeedbackModalOpen(true)} className={styles.columnLink}>View All →</button>
+              </div>
+              <div className={styles.storyCard}>
+                <Quote size={24} color="#22C55E" style={{ marginBottom: '1rem' }} />
+                <p className={styles.storyText}>
+                  "ZilVerse helped me find amazing clients and grow my freelance business globally. My income has tripled in just 6 months!"
+                </p>
+                <div className={styles.storyAuthor}>
+                  <img src="/avatars/default.png" alt="Wade Warren" className={styles.storyAvatar} />
+                  <div>
+                    <h4>Wade Warren</h4>
+                    <p>Full Stack Developer</p>
+                  </div>
+                </div>
+                <div className={styles.storyDots}>
+                  <span className={styles.dotActive}></span>
+                  <span className={styles.dot}></span>
+                  <span className={styles.dot}></span>
+                  <span className={styles.dot}></span>
+                </div>
+              </div>
+            </div>
+
           </div>
-          
-          <TestimonialSlider testimonials={dbTestimonials} />
         </div>
       </section>
 
@@ -359,8 +353,12 @@ export default function Home() {
               <h2>Join the Global Opportunity Ecosystem</h2>
               <p>Build, work, and grow alongside thousands of professionals worldwide.</p>
               <div className={styles.ctaGroup} style={{ justifyContent: 'center' }}>
-                <Link href="/register" className={styles.btnPrimary}>Create Free Account</Link>
-                <Link href="/about" className={styles.btnSecondary}>How It Works</Link>
+                <Link href="/register" className={styles.btnPrimaryGreen}>
+                  <UserPlus size={18} /> Create Free Account
+                </Link>
+                <Link href="/about" className={styles.btnSecondary}>
+                  <PlayCircle size={18} /> How It Works
+                </Link>
               </div>
             </div>
           </motion.div>

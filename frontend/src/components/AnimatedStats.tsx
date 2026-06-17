@@ -1,98 +1,85 @@
 "use client";
-import { useEffect, useState } from "react";
+
+import { useState, useEffect } from "react";
+import { motion, useAnimation } from "framer-motion";
+import { useInView } from "react-intersection-observer";
 import styles from "../app/home.module.css";
-import { API_BASE } from "@/utils/api";
+import { Globe, Users, Briefcase, Star, DollarSign } from "lucide-react";
 
-export default function AnimatedStats() {
-  const [stats, setStats] = useState({
-    countries: null,
-    users: null,
-    freelancers: null,
-    projectsSold: null,
-    jobsPosted: null,
-    revenue: null,
-  });
-
-  useEffect(() => {
-    // Initial fetch
-    fetch(`${API_BASE}/api/statistics`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (!data.error) setStats(data);
-      })
-      .catch((err) => console.error(err));
-
-    // Real-time SSE connection
-    const evtSource = new EventSource(`${API_BASE}/api/statistics/stream`);
-    evtSource.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (!data.error) {
-          setStats(data);
-        }
-      } catch (err) {}
-    };
-
-    return () => {
-      evtSource.close();
-    };
-  }, []);
-
-  const formatCurrency = (v: number) => {
-    if (v >= 1000000) return `$${(v / 1000000).toFixed(1)}M+`;
-    if (v >= 1000) return `$${(v / 1000).toFixed(1)}K+`;
-    return `$${v.toLocaleString()}`;
-  };
-
-  const statItems = [
-    { key: "countries", label: "Countries", format: (v: number) => `${v}+` },
-    { key: "users", label: "Global Users", format: (v: number) => `${v.toLocaleString()}+` },
-    { key: "freelancers", label: "Freelancers", format: (v: number) => `${v.toLocaleString()}+` },
-    { key: "projectsSold", label: "Projects Sold", format: (v: number) => `${v.toLocaleString()}+` },
-    { key: "jobsPosted", label: "Jobs Posted", format: (v: number) => `${v.toLocaleString()}+` },
-    { key: "revenue", label: "Revenue Processed", format: formatCurrency },
-  ];
-
-  return (
-    <div className={styles.statsBar}>
-      {statItems.map((s, i) => (
-        <div key={i} className={styles.stat}>
-          <span className={styles.statNum}>
-            {stats && stats[s.key as keyof typeof stats] !== null && !isNaN(Number(stats[s.key as keyof typeof stats]))
-              ? <CountUp end={Number(stats[s.key as keyof typeof stats]) || 0} format={s.format} /> 
-              : "--"}
-          </span>
-          <span className={styles.statLabel}>{s.label}</span>
-        </div>
-      ))}
-    </div>
-  );
+interface StatItem {
+  icon: any;
+  value: number;
+  suffix: string;
+  label: string;
+  prefix?: string;
+  color: string;
+  bg: string;
 }
 
-function CountUp({ end, format }: { end: number; format: (val: number) => string }) {
+const STATS: StatItem[] = [
+  { icon: Globe, value: 150, suffix: "+", label: "Countries", color: "#8B5CF6", bg: "rgba(139, 92, 246, 0.15)" },
+  { icon: Users, value: 2400, suffix: "+", label: "Freelancers", color: "#8B5CF6", bg: "rgba(139, 92, 246, 0.15)" },
+  { icon: Briefcase, value: 800, suffix: "+", label: "Projects Sold", color: "#3B82F6", bg: "rgba(59, 130, 246, 0.15)" },
+  { icon: Briefcase, value: 1200, suffix: "+", label: "Jobs Posted", color: "#22C55E", bg: "rgba(34, 197, 94, 0.15)" },
+  { icon: Star, value: 98, suffix: "%", label: "Satisfaction Rate", color: "#F59E0B", bg: "rgba(245, 158, 11, 0.15)" },
+  { icon: DollarSign, prefix: "$", value: 2.4, suffix: "M+", label: "Earned by Freelancers", color: "#22C55E", bg: "rgba(34, 197, 94, 0.15)" }
+];
+
+function CountUp({ end, duration = 2 }: { end: number; duration?: number }) {
   const [count, setCount] = useState(0);
+  const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.5 });
 
   useEffect(() => {
-    let startTime: number;
-    const duration = 1500; // 1.5 seconds
+    if (inView) {
+      let start = 0;
+      const increment = end / (duration * 60);
+      const timer = setInterval(() => {
+        start += increment;
+        if (start >= end) {
+          setCount(end);
+          clearInterval(timer);
+        } else {
+          setCount(start);
+        }
+      }, 1000 / 60);
+      return () => clearInterval(timer);
+    }
+  }, [inView, end, duration]);
 
-    const animate = (timestamp: number) => {
-      if (!startTime) startTime = timestamp;
-      const progress = timestamp - startTime;
-      
-      // easeOutExpo
-      const easeProgress = progress === duration ? 1 : 1 - Math.pow(2, -10 * progress / duration);
-      
-      if (progress < duration) {
-        setCount(Math.floor(end * easeProgress));
-        requestAnimationFrame(animate);
-      } else {
-        setCount(end);
-      }
-    };
+  // Handle floats for 2.4M
+  return <span ref={ref}>{end % 1 === 0 ? Math.floor(count) : count.toFixed(1)}</span>;
+}
 
-    requestAnimationFrame(animate);
-  }, [end]);
-
-  return <>{format(count)}</>;
+export default function AnimatedStats() {
+  return (
+    <div className={styles.statsBar}>
+      {STATS.map((stat, idx) => {
+        const Icon = stat.icon;
+        return (
+          <div key={idx} className={styles.stat}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              background: stat.bg,
+              color: stat.color,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: '1rem',
+              margin: '0 auto 1rem auto'
+            }}>
+              <Icon size={20} />
+            </div>
+            <div className={styles.statNum}>
+              {stat.prefix}
+              <CountUp end={stat.value} duration={2} />
+              {stat.suffix}
+            </div>
+            <div className={styles.statLabel}>{stat.label}</div>
+          </div>
+        )
+      })}
+    </div>
+  );
 }

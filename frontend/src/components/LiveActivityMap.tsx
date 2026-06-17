@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import styles from "./LiveActivityMap.module.css";
+import { Briefcase, UserPlus, FolderOpen, Activity } from "lucide-react";
 
 interface Node {
   id: string;
@@ -10,98 +11,69 @@ interface Node {
   y: number;
   name: string;
   location: string;
-  flag: string;
 }
 
 const NODES: Node[] = [
-  { id: "sf", x: 15, y: 35, name: "Sarah", location: "USA", flag: "🇺🇸" },
-  { id: "ny", x: 25, y: 33, name: "Michael", location: "USA", flag: "🇺🇸" },
-  { id: "sp", x: 32, y: 72, name: "Lucas", location: "Brazil", flag: "🇧🇷" },
-  { id: "ldn", x: 47, y: 25, name: "Emma", location: "UK", flag: "🇬🇧" },
-  { id: "ber", x: 50, y: 22, name: "Hans", location: "Germany", flag: "🇩🇪" },
-  { id: "dxb", x: 62, y: 42, name: "Omar", location: "UAE", flag: "🇦🇪" },
-  { id: "blr", x: 70, y: 48, name: "Rahul", location: "India", flag: "🇮🇳" },
-  { id: "sgp", x: 78, y: 58, name: "Wei", location: "Singapore", flag: "🇸🇬" },
-  { id: "tok", x: 86, y: 32, name: "Yuki", location: "Japan", flag: "🇯🇵" },
-  { id: "syd", x: 88, y: 80, name: "Liam", location: "Australia", flag: "🇦🇺" }
+  { id: "na1", x: 20, y: 30, name: "New York", location: "USA" },
+  { id: "na2", x: 25, y: 45, name: "Miami", location: "USA" },
+  { id: "na3", x: 15, y: 35, name: "San Francisco", location: "USA" },
+  { id: "sa1", x: 30, y: 70, name: "São Paulo", location: "Brazil" },
+  { id: "sa2", x: 25, y: 60, name: "Bogota", location: "Colombia" },
+  { id: "eu1", x: 48, y: 28, name: "London", location: "UK" },
+  { id: "eu2", x: 52, y: 32, name: "Berlin", location: "Germany" },
+  { id: "eu3", x: 55, y: 25, name: "Stockholm", location: "Sweden" },
+  { id: "af1", x: 50, y: 55, name: "Lagos", location: "Nigeria" },
+  { id: "af2", x: 55, y: 75, name: "Cape Town", location: "South Africa" },
+  { id: "as1", x: 72, y: 45, name: "Mumbai", location: "India" },
+  { id: "as2", x: 75, y: 55, name: "Bangalore", location: "India" },
+  { id: "as3", x: 80, y: 35, name: "Beijing", location: "China" },
+  { id: "as4", x: 85, y: 40, name: "Tokyo", location: "Japan" },
+  { id: "oc1", x: 85, y: 80, name: "Sydney", location: "Australia" },
 ];
 
-const COLLABORATIONS = [
-  { from: "blr", to: "sf", type: "New Freelancer Joined", label: "Rahul joined from India", color: "#8B5CF6" },
-  { from: "ldn", to: "ny", type: "New Job Posted", label: "Backend Dev needed in NYC", color: "#22C55E" },
-  { from: "tok", to: "ber", type: "New Project Sold", label: "React Template purchased", color: "#06B6D4" },
-  { from: "sgp", to: "dxb", type: "New Startup Registered", label: "Web3 Protocol launched", color: "#F59E0B" },
-  { from: "sp", to: "sf", type: "Freelancer Hired", label: "Lucas hired for Mobile App", color: "#EC4899" }
+const STATIC_CARDS = [
+  { id: 'sc1', x: 45, y: 15, icon: FolderOpen, title: "New Project", subtitle: "Posted", color: "#8B5CF6", bg: "rgba(139, 92, 246, 0.15)" },
+  { id: 'sc2', x: 85, y: 10, icon: UserPlus, title: "New Freelancer", subtitle: "Joined", color: "#22C55E", bg: "rgba(34, 197, 94, 0.15)" },
+  { id: 'sc3', x: 45, y: 80, icon: Briefcase, title: "New Job", subtitle: "Opportunity", color: "#3B82F6", bg: "rgba(59, 130, 246, 0.15)" },
 ];
 
 interface ActiveArc {
   fromNode: Node;
   toNode: Node;
   progress: number;
-  color: string;
-  speed: number;
-}
-
-interface PulseRing {
-  x: number;
-  y: number;
-  radius: number;
-  maxRadius: number;
-  alpha: number;
-  color: string;
-}
-
-interface FloatingCard {
-  id: string;
-  x: number;
-  y: number;
-  type: string;
-  label: string;
-  color: string;
 }
 
 export default function LiveActivityMap() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [nodes, setNodes] = useState<Node[]>(NODES);
-  const [activeNode, setActiveNode] = useState<Node | null>(null);
-  const [floatingCards, setFloatingCards] = useState<FloatingCard[]>([]);
   const activeArcsRef = useRef<ActiveArc[]>([]);
-  const pulseRingsRef = useRef<PulseRing[]>([]);
-
-  const pushCard = (x: number, y: number, type: string, label: string, color: string) => {
-    const id = Math.random().toString();
-    setFloatingCards(prev => [...prev.slice(-2), { id, x, y, type, label, color }]);
-    
-    // Remove after 4 seconds
-    setTimeout(() => {
-      setFloatingCards(prev => prev.filter(c => c.id !== id));
-    }, 4000);
-  };
-
-  const triggerActivity = () => {
-    const randomCol = COLLABORATIONS[Math.floor(Math.random() * COLLABORATIONS.length)];
-    const fromNode = NODES.find(n => n.id === randomCol.from);
-    const toNode = NODES.find(n => n.id === randomCol.to);
-
-    if (fromNode && toNode) {
-      activeArcsRef.current.push({
-        fromNode,
-        toNode,
-        progress: 0,
-        color: randomCol.color,
-        speed: 0.01 + Math.random() * 0.005,
-      });
-      setActiveNode(fromNode);
-      
-      // Spawn card at 'toNode' coordinates immediately
-      pushCard(toNode.x, toNode.y, randomCol.type, randomCol.label, randomCol.color);
-    }
-  };
+  const [pulseRings, setPulseRings] = useState<{x: number, y: number, id: string}[]>([]);
 
   useEffect(() => {
-    const spawnInterval = setInterval(triggerActivity, 3500);
-    setTimeout(triggerActivity, 1000); 
-    return () => clearInterval(spawnInterval);
+    const triggerArc = () => {
+      const from = NODES[Math.floor(Math.random() * NODES.length)];
+      let to = NODES[Math.floor(Math.random() * NODES.length)];
+      while (from.id === to.id) {
+        to = NODES[Math.floor(Math.random() * NODES.length)];
+      }
+
+      activeArcsRef.current.push({
+        fromNode: from,
+        toNode: to,
+        progress: 0,
+      });
+
+      // Show pulse at source
+      const id = Math.random().toString();
+      setPulseRings(prev => [...prev, { x: from.x, y: from.y, id }]);
+      setTimeout(() => {
+        setPulseRings(prev => prev.filter(r => r.id !== id));
+      }, 2000);
+    };
+
+    const interval = setInterval(triggerArc, 1500);
+    for (let i = 0; i < 5; i++) triggerArc();
+
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -126,20 +98,6 @@ export default function LiveActivityMap() {
       const w = canvas.width;
       const h = canvas.height;
 
-      pulseRingsRef.current = pulseRingsRef.current.filter(ring => {
-        ring.radius += 0.5;
-        ring.alpha = 1 - (ring.radius / ring.maxRadius);
-        if (ring.alpha <= 0) return false;
-        ctx.strokeStyle = ring.color;
-        ctx.lineWidth = 1.5;
-        ctx.globalAlpha = ring.alpha;
-        ctx.beginPath();
-        ctx.arc(ring.x, ring.y, ring.radius, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.globalAlpha = 1;
-        return true;
-      });
-
       activeArcsRef.current = activeArcsRef.current.filter(arc => {
         const x1 = (arc.fromNode.x / 100) * w;
         const y1 = (arc.fromNode.y / 100) * h;
@@ -148,34 +106,32 @@ export default function LiveActivityMap() {
 
         const dx = x2 - x1;
         const dy = y2 - y1;
-        const cx1 = x1 + dx * 0.25;
-        const cy1 = y1 + dy * 0.25 - 40; 
-        const cx2 = x1 + dx * 0.75;
-        const cy2 = y1 + dy * 0.75 - 40;
+        const cx = x1 + dx * 0.5;
+        const cy = y1 + dy * 0.5 - Math.abs(dx) * 0.2; 
 
-        ctx.strokeStyle = "rgba(139, 92, 246, 0.1)";
-        ctx.lineWidth = 1.5;
+        // Draw path
+        ctx.strokeStyle = "rgba(139, 92, 246, 0.15)";
+        ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(x1, y1);
-        ctx.bezierCurveTo(cx1, cy1, cx2, cy2, x2, y2);
+        ctx.quadraticCurveTo(cx, cy, x2, y2);
         ctx.stroke();
 
-        arc.progress += arc.speed;
-
+        // Draw moving dot
+        arc.progress += 0.005;
         if (arc.progress < 1) {
           const t = arc.progress;
-          const px = (1 - t) ** 3 * x1 + 3 * (1 - t) ** 2 * t * cx1 + 3 * (1 - t) * t ** 2 * cx2 + t ** 3 * x2;
-          const py = (1 - t) ** 3 * y1 + 3 * (1 - t) ** 2 * t * cy1 + 3 * (1 - t) * t ** 2 * cy2 + t ** 3 * y2;
+          const px = (1 - t) * (1 - t) * x1 + 2 * (1 - t) * t * cx + t * t * x2;
+          const py = (1 - t) * (1 - t) * y1 + 2 * (1 - t) * t * cy + t * t * y2;
 
           ctx.shadowBlur = 10;
-          ctx.shadowColor = arc.color;
-          ctx.fillStyle = arc.color;
+          ctx.shadowColor = "#8B5CF6";
+          ctx.fillStyle = "#8B5CF6";
           ctx.beginPath();
-          ctx.arc(px, py, 3, 0, Math.PI * 2);
+          ctx.arc(px, py, 2, 0, Math.PI * 2);
           ctx.fill();
           ctx.shadowBlur = 0; 
         } else {
-          pulseRingsRef.current.push({ x: x2, y: y2, radius: 4, maxRadius: 30, alpha: 1, color: arc.color });
           return false;
         }
         return true;
@@ -195,62 +151,80 @@ export default function LiveActivityMap() {
   return (
     <div className={styles.mapContainer}>
       <div className={styles.mapBase}>
-        {/* SVG World Map Background for premium feel */}
+        {/* Map Background */}
         <div className={styles.mapGraphic} style={{ backgroundImage: "url('/images/world-map-dots.svg')" }}>
-           {/* Fallback to radial grid if SVG is missing */}
            <div className={styles.fallbackGrid} />
         </div>
         
         <canvas ref={canvasRef} className={styles.canvasOverlay} />
 
-        {nodes.map(node => {
-          const isActive = activeNode?.id === node.id;
-          return (
-            <div 
-              key={node.id} 
-              className={`${styles.node} ${isActive ? styles.nodeActive : ''}`}
-              style={{ left: `${node.x}%`, top: `${node.y}%` }}
-              onMouseEnter={() => setActiveNode(node)}
-              onMouseLeave={() => setActiveNode(null)}
-            >
-              <div className={styles.pulseRing} />
-              <div className={styles.dot} />
-              
-              <div className={`${styles.tooltip} ${isActive ? styles.tooltipVisible : ''}`}>
-                <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
-                  <span style={{ fontSize: '1rem' }}>{node.flag}</span>
-                  <span className={styles.tooltipName}>{node.name}</span>
-                </div>
-                <span className={styles.tooltipLocation}>{node.location}</span>
-              </div>
-            </div>
-          );
-        })}
+        {/* Nodes */}
+        {NODES.map(node => (
+          <div 
+            key={node.id} 
+            className={styles.node}
+            style={{ left: `${node.x}%`, top: `${node.y}%` }}
+          >
+            <div className={styles.dot} />
+          </div>
+        ))}
+
+        {/* Pulses */}
+        {pulseRings.map(ring => (
+          <div 
+            key={ring.id}
+            className={styles.pulseRingAnimated}
+            style={{ left: `${ring.x}%`, top: `${ring.y}%` }}
+          />
+        ))}
         
-        <AnimatePresence>
-          {floatingCards.map((card) => (
+        {/* Static Floating Cards */}
+        {STATIC_CARDS.map(card => {
+          const Icon = card.icon;
+          return (
             <motion.div
               key={card.id}
-              initial={{ opacity: 0, y: 10, scale: 0.9 }}
-              animate={{ opacity: 1, y: -20, scale: 1 }}
-              exit={{ opacity: 0, y: -40, scale: 0.9 }}
-              transition={{ duration: 0.5 }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, delay: 0.5 }}
               className={styles.floatingCard}
               style={{
-                left: `calc(${card.x}% - 80px)`,
-                top: `calc(${card.y}% - 40px)`
+                left: `${card.x}%`,
+                top: `${card.y}%`
               }}
             >
-              <div className={styles.fcIndicator} style={{ background: card.color, boxShadow: `0 0 8px ${card.color}` }} />
+              <div className={styles.fcIconWrapper} style={{ background: card.bg, color: card.color }}>
+                <Icon size={14} />
+              </div>
               <div className={styles.fcContent}>
-                <div className={styles.fcType} style={{ color: card.color }}>{card.type}</div>
-                <div className={styles.fcLabel}>{card.label}</div>
+                <div className={styles.fcTitle}>{card.title}</div>
+                <div className={styles.fcSubtitle}>{card.subtitle}</div>
               </div>
             </motion.div>
-          ))}
-        </AnimatePresence>
-        
-        <div className={styles.scanLine} />
+          );
+        })}
+
+        {/* Bottom Right Live Activity Card */}
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 1, delay: 1 }}
+          className={styles.liveActivityCard}
+        >
+          <div className={styles.liveHeader}>
+            <div className={styles.liveDot} />
+            <span className={styles.liveTitle}>Live Activity</span>
+          </div>
+          <div className={styles.liveSub}>+12,580 new activities today</div>
+          <div className={styles.liveAvatars}>
+            <img src="/avatars/default.png" alt="A" />
+            <img src="/avatars/default.png" alt="B" />
+            <img src="/avatars/default.png" alt="C" />
+            <img src="/avatars/default.png" alt="D" />
+            <img src="/avatars/default.png" alt="E" />
+          </div>
+        </motion.div>
+
       </div>
     </div>
   );
