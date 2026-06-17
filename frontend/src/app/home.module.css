@@ -179,6 +179,43 @@
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
 }
 
+.statsBar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0;
+  flex-wrap: wrap;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0 2rem;
+  border-right: 1px solid var(--card-border);
+}
+
+.stat:last-child {
+  border-right: none;
+}
+
+.statNum {
+  font-size: 1.7rem;
+  font-weight: 700;
+  font-family: 'Inter', sans-serif;
+  color: var(--foreground);
+  letter-spacing: -0.02em;
+}
+
+.statLabel {
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
 /* ===== ECOSYSTEM SECTION ===== */
 .ecosystemSection {
   padding: 6rem 0;
@@ -583,4 +620,8 @@
   .sectionHeaderRow { flex-direction: column; align-items: flex-start; gap: 1rem; }
   .ctaGroup { flex-direction: column; width: 100%; }
   .btnPrimary, .btnSecondary { width: 100%; }
+  
+  .statsBar { flex-direction: column; gap: 1rem; align-items: stretch; }
+  .stat { border-right: none; border-bottom: 1px solid var(--card-border); padding: 1rem 0; text-align: center; }
+  .stat:last-child { border-bottom: none; padding-bottom: 0; }
 }
