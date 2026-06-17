@@ -53,7 +53,8 @@ export default function FreelancerRegisterPage() {
     try {
       await axios.post(`${API_BASE}/api/auth/register`, { name, email, password, role: "FREELANCER" });
       const loginRes = await axios.post(`${API_BASE}/api/auth/login`, { email, password });
-      login(loginRes.data.user, loginRes.data.token);
+      const { accessToken, refreshToken, user: userData } = loginRes.data;
+      login(userData, accessToken, refreshToken);
       const fd = new FormData();
       fd.append("phone", phone); fd.append("city", city); fd.append("bio", bio);
       fd.append("skills", JSON.stringify(skills)); fd.append("experience", experience);
@@ -62,7 +63,7 @@ export default function FreelancerRegisterPage() {
       if (profilePhoto) fd.append("profilePhoto", profilePhoto);
       if (resume) fd.append("resume", resume);
       await axios.post(`${API_BASE}/api/profiles/freelancer`, fd, {
-        headers: { "Authorization": `Bearer ${loginRes.data.token}`, "Content-Type": "multipart/form-data" },
+        headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "multipart/form-data" },
       }).catch(() => {});
       router.push("/dashboard");
     } catch (err: any) {

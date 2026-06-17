@@ -17,6 +17,7 @@ const SIDEBAR_ITEMS: { id: string; icon: string; label: string; badge?: string |
   { id: "applications",   icon: "📋",  label: "Applications" },
   { id: "contacts",       icon: "📬",  label: "Inquiries" },
   { id: "analytics",      icon: "📊",  label: "Analytics" },
+  { id: "safety",         icon: "🚨",  label: "Trust & Safety" },
   { id: "moderation",     icon: "🛡️",  label: "Content Moderation" },
   { id: "notifications",  icon: "🔔",  label: "Notifications" },
   { id: "payments",       icon: "💰",  label: "Payments Escrow" },
@@ -42,6 +43,13 @@ export default function AdminDashboard() {
   const [notify, setNotify] = useState({ title: "", message: "", type: "announcement" });
   const [sentNotifs, setSentNotifs] = useState<any[]>([]);
   const [paySummary, setPaySummary] = useState<any>(null);
+
+  // Trust & Safety state
+  const [reports, setReports]         = useState<any[]>([]);
+  const [reportsTotal, setReportsTotal] = useState(0);
+  const [safetyFilter, setSafetyFilter] = useState<"PENDING"|"REVIEWED"|"DISMISSED"|"ACTION_TAKEN"|"ALL">("PENDING");
+  const [safetyUsers, setSafetyUsers] = useState<any[]>([]);
+  const [safetyTab, setSafetyTab]     = useState<"reports"|"users">("reports");
 
   useEffect(() => {
     const t = localStorage.getItem("zv_admin_token");
@@ -74,6 +82,12 @@ export default function AdminDashboard() {
     };
 
     fetchAll();
+
+    // Load safety data
+    axios.get(`${API_BASE}/api/safety/reports?status=PENDING&page=1`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => { setReports(r.data.data || []); setReportsTotal(r.data.total || 0); }).catch(() => {});
+    axios.get(`${API_BASE}/api/safety/admin/users?page=1`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => setSafetyUsers(r.data.data || [])).catch(() => {});
 
     // Socket listeners for real-time admin sync
     const handlePayUpdate = () => {
@@ -365,6 +379,175 @@ export default function AdminDashboard() {
                 ))}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* ── Trust & Safety Tab ── */}
+        {activeSection === "safety" && (
+          <div>
+            {/* Sub-tabs */}
+            <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem" }}>
+              {(["reports", "users"] as const).map(t => (
+                <button key={t} onClick={() => setSafetyTab(t)} style={{
+                  padding: "0.55rem 1.25rem", borderRadius: 8, border: "none", cursor: "pointer",
+                  background: safetyTab === t ? "rgba(239,68,68,0.15)" : "rgba(255,255,255,0.04)",
+                  color: safetyTab === t ? "#ef4444" : "#71717a",
+                  fontWeight: 700, fontSize: "0.82rem", fontFamily: "inherit", textTransform: "capitalize",
+                }}>{t === "reports" ? `📋 User Reports (${reportsTotal})` : "⚡ Fraud Dashboard"}</button>
+              ))}
+            </div>
+
+            {/* Reports sub-tab */}
+            {safetyTab === "reports" && (
+              <div>
+                {/* Status filters */}
+                <div style={{ display: "flex", gap: "0.4rem", marginBottom: "1rem", flexWrap: "wrap" }}>
+                  {(["PENDING","REVIEWED","DISMISSED","ACTION_TAKEN","ALL"] as const).map(s => (
+                    <button key={s} onClick={() => {
+                      setSafetyFilter(s);
+                      axios.get(`${API_BASE}/api/safety/reports?status=${s}&page=1`, { headers: { Authorization: `Bearer ${token}` } })
+                        .then(r => { setReports(r.data.data || []); setReportsTotal(r.data.total || 0); }).catch(() => {});
+                    }} style={{
+                      padding: "0.4rem 0.85rem", borderRadius: 999, border: "1px solid",
+                      cursor: "pointer", fontSize: "0.75rem", fontWeight: 700, fontFamily: "inherit",
+                      borderColor: safetyFilter === s ? "rgba(239,68,68,0.4)" : "rgba(255,255,255,0.08)",
+                      background: safetyFilter === s ? "rgba(239,68,68,0.12)" : "transparent",
+                      color: safetyFilter === s ? "#ef4444" : "#71717a",
+                    }}>{s}</button>
+                  ))}
+                </div>
+
+                {reports.length === 0 ? (
+                  <div style={{ padding: "3rem", textAlign: "center", color: "#52525b" }}>No reports found for this status.</div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                    {reports.map((r: any) => (
+                      <div key={r.id} style={{
+                        background: "rgba(255,255,255,0.02)",
+                        border: "1px solid rgba(255,255,255,0.06)",
+                        borderRadius: 14, padding: "1.25rem",
+                      }}>
+                        <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start", flexWrap: "wrap" }}>
+                          {/* Reporter */}
+                          <div style={{ flex: 1, minWidth: 220 }}>
+                            <div style={{ fontSize: "0.7rem", color: "#52525b", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>Reporter</div>
+                            <div style={{ fontWeight: 700, fontSize: "0.875rem", color: "#e4e4e7" }}>{r.reporter?.name || "Unknown"}</div>
+                            <div style={{ fontSize: "0.72rem", color: "#71717a" }}>{r.reporter?.email}</div>
+                          </div>
+                          {/* Arrow */}
+                          <div style={{ color: "#ef4444", fontSize: "1.2rem", paddingTop: 16 }}>→</div>
+                          {/* Reported */}
+                          <div style={{ flex: 1, minWidth: 220 }}>
+                            <div style={{ fontSize: "0.7rem", color: "#52525b", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>Reported User</div>
+                            <div style={{ fontWeight: 700, fontSize: "0.875rem", color: "#e4e4e7" }}>{r.reportedUser?.name || "Unknown"}</div>
+                            <div style={{ fontSize: "0.72rem", color: "#71717a" }}>{r.reportedUser?.email}</div>
+                            <div style={{ fontSize: "0.7rem", marginTop: 4 }}>
+                              <span style={{ color: r.reportedUser?.isBanned ? "#ef4444" : r.reportedUser?.isSuspended ? "#f59e0b" : "#22c55e", fontWeight: 700 }}>
+                                {r.reportedUser?.isBanned ? "🔴 Banned" : r.reportedUser?.isSuspended ? "🟡 Suspended" : "🟢 Active"}
+                              </span>
+                              <span style={{ color: "#52525b", marginLeft: 8 }}>Trust: {r.reportedUser?.trustScore ?? 100}</span>
+                            </div>
+                          </div>
+                          {/* Reason + details */}
+                          <div style={{ flex: 2, minWidth: 200 }}>
+                            <div style={{ fontSize: "0.7rem", color: "#52525b", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>Reason</div>
+                            <span style={{ padding: "0.3rem 0.75rem", borderRadius: 999, background: "rgba(239,68,68,0.12)", color: "#ef4444", fontSize: "0.75rem", fontWeight: 700 }}>{r.reason}</span>
+                            {r.details && <div style={{ fontSize: "0.75rem", color: "#a1a1aa", marginTop: 6 }}>{r.details}</div>}
+                            <div style={{ fontSize: "0.65rem", color: "#52525b", marginTop: 6 }}>{new Date(r.createdAt).toLocaleDateString()}</div>
+                          </div>
+                        </div>
+
+                        {/* Action buttons */}
+                        {r.status === "PENDING" && (
+                          <div style={{ display: "flex", gap: "0.5rem", marginTop: "1rem", flexWrap: "wrap" }}>
+                            <button onClick={() => {
+                              axios.post(`${API_BASE}/api/safety/admin/suspend/${r.reportedUserId}`, { reason: r.reason }, { headers: { Authorization: `Bearer ${token}` } })
+                                .then(() => { showToast(`${r.reportedUser?.name} suspended`); setReports(prev => prev.filter(x => x.id !== r.id)); }).catch(() => showToast("Failed"));
+                            }} style={{ padding: "0.45rem 1rem", borderRadius: 8, background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.3)", color: "#f59e0b", cursor: "pointer", fontSize: "0.78rem", fontWeight: 700, fontFamily: "inherit" }}>⚠️ Suspend</button>
+                            <button onClick={() => {
+                              axios.post(`${API_BASE}/api/safety/admin/ban/${r.reportedUserId}`, { reason: r.reason }, { headers: { Authorization: `Bearer ${token}` } })
+                                .then(() => { showToast(`${r.reportedUser?.name} banned`); setReports(prev => prev.filter(x => x.id !== r.id)); }).catch(() => showToast("Failed"));
+                            }} style={{ padding: "0.45rem 1rem", borderRadius: 8, background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.3)", color: "#ef4444", cursor: "pointer", fontSize: "0.78rem", fontWeight: 700, fontFamily: "inherit" }}>🔨 Ban</button>
+                            <button onClick={() => {
+                              axios.post(`${API_BASE}/api/safety/reports/${r.id}/review`, { status: "REVIEWED" }, { headers: { Authorization: `Bearer ${token}` } })
+                                .then(() => { showToast("Marked reviewed"); setReports(prev => prev.filter(x => x.id !== r.id)); }).catch(() => {});
+                            }} style={{ padding: "0.45rem 1rem", borderRadius: 8, background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)", color: "#22c55e", cursor: "pointer", fontSize: "0.78rem", fontWeight: 700, fontFamily: "inherit" }}>✓ Review Only</button>
+                            <button onClick={() => {
+                              axios.post(`${API_BASE}/api/safety/reports/${r.id}/review`, { status: "DISMISSED" }, { headers: { Authorization: `Bearer ${token}` } })
+                                .then(() => { showToast("Dismissed"); setReports(prev => prev.filter(x => x.id !== r.id)); }).catch(() => {});
+                            }} style={{ padding: "0.45rem 1rem", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#71717a", cursor: "pointer", fontSize: "0.78rem", fontFamily: "inherit" }}>Dismiss</button>
+                          </div>
+                        )}
+                        {r.status !== "PENDING" && (
+                          <div style={{ marginTop: 8, fontSize: "0.72rem", color: "#52525b" }}>Status: <span style={{ color: r.status === "ACTION_TAKEN" ? "#ef4444" : r.status === "REVIEWED" ? "#22c55e" : "#71717a", fontWeight: 700 }}>{r.status}</span></div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Fraud users sub-tab */}
+            {safetyTab === "users" && (
+              <div>
+                <div style={{ display: "flex", gap: "0.4rem", marginBottom: "1rem", flexWrap: "wrap" }}>
+                  {(["banned","suspended","low-trust",""] as const).map(f => (
+                    <button key={f} onClick={() => {
+                      axios.get(`${API_BASE}/api/safety/admin/users${f ? `?filter=${f}` : ""}`, { headers: { Authorization: `Bearer ${token}` } })
+                        .then(r => setSafetyUsers(r.data.data || [])).catch(() => {});
+                    }} style={{
+                      padding: "0.4rem 0.85rem", borderRadius: 999, border: "1px solid rgba(255,255,255,0.08)",
+                      cursor: "pointer", fontSize: "0.75rem", fontWeight: 700, fontFamily: "inherit",
+                      background: "transparent", color: f ? "#a1a1aa" : "#71717a",
+                    }}>{f === "banned" ? "🔴 Banned" : f === "suspended" ? "🟡 Suspended" : f === "low-trust" ? "⚠️ Low Trust" : "All Users"}</button>
+                  ))}
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                  {safetyUsers.map((u: any) => (
+                    <div key={u.id} style={{
+                      background: "rgba(255,255,255,0.02)",
+                      border: `1px solid ${u.isBanned ? "rgba(239,68,68,0.15)" : u.isSuspended ? "rgba(245,158,11,0.15)" : "rgba(255,255,255,0.06)"}`,
+                      borderRadius: 12, padding: "1rem 1.25rem",
+                      display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap",
+                    }}>
+                      <div style={{ flex: 1, minWidth: 200 }}>
+                        <div style={{ fontWeight: 700, fontSize: "0.875rem", color: "#e4e4e7" }}>{u.name}</div>
+                        <div style={{ fontSize: "0.72rem", color: "#71717a" }}>{u.email}</div>
+                        <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                          <span style={{ fontSize: "0.68rem", color: u.isBanned ? "#ef4444" : u.isSuspended ? "#f59e0b" : "#22c55e", fontWeight: 700 }}>
+                            {u.isBanned ? "Banned" : u.isSuspended ? "Suspended" : "Active"}
+                          </span>
+                          <span style={{ fontSize: "0.68rem", color: "#71717a" }}>Trust Score: {u.trustScore}</span>
+                        </div>
+                        {u.suspendedReason && <div style={{ fontSize: "0.68rem", color: "#f59e0b", marginTop: 2 }}>Reason: {u.suspendedReason}</div>}
+                      </div>
+                      <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+                        {!u.isBanned && !u.isSuspended && (
+                          <>
+                            <button onClick={() => {
+                              axios.post(`${API_BASE}/api/safety/admin/suspend/${u.id}`, { reason: "Admin action" }, { headers: { Authorization: `Bearer ${token}` } })
+                                .then(() => { showToast(`${u.name} suspended`); setSafetyUsers(prev => prev.map(x => x.id === u.id ? { ...x, isSuspended: true } : x)); }).catch(() => {});
+                            }} style={{ padding: "0.4rem 0.75rem", borderRadius: 7, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.25)", color: "#f59e0b", cursor: "pointer", fontSize: "0.72rem", fontWeight: 700, fontFamily: "inherit" }}>Suspend</button>
+                            <button onClick={() => {
+                              axios.post(`${API_BASE}/api/safety/admin/ban/${u.id}`, { reason: "Admin action" }, { headers: { Authorization: `Bearer ${token}` } })
+                                .then(() => { showToast(`${u.name} banned`); setSafetyUsers(prev => prev.map(x => x.id === u.id ? { ...x, isBanned: true } : x)); }).catch(() => {});
+                            }} style={{ padding: "0.4rem 0.75rem", borderRadius: 7, background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", color: "#ef4444", cursor: "pointer", fontSize: "0.72rem", fontWeight: 700, fontFamily: "inherit" }}>Ban</button>
+                          </>
+                        )}
+                        {(u.isBanned || u.isSuspended) && (
+                          <button onClick={() => {
+                            axios.post(`${API_BASE}/api/safety/admin/restore/${u.id}`, {}, { headers: { Authorization: `Bearer ${token}` } })
+                              .then(() => { showToast(`${u.name} restored`); setSafetyUsers(prev => prev.map(x => x.id === u.id ? { ...x, isBanned: false, isSuspended: false } : x)); }).catch(() => {});
+                          }} style={{ padding: "0.4rem 0.75rem", borderRadius: 7, background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)", color: "#22c55e", cursor: "pointer", fontSize: "0.72rem", fontWeight: 700, fontFamily: "inherit" }}>Restore</button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  {safetyUsers.length === 0 && <div style={{ textAlign: "center", color: "#52525b", padding: "2rem" }}>No users in this category.</div>}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

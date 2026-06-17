@@ -32,23 +32,20 @@ export default function LoginPage() {
   // Handle OAuth callback — token + user passed back in URL query params
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    const token   = params.get("token");
-    const userStr = params.get("user");
+    const params   = new URLSearchParams(window.location.search);
+    const token    = params.get("token");
+    const refresh  = params.get("refresh");
+    const userStr  = params.get("user");
     const errParam = params.get("error");
 
-    if (errParam) {
-      setError("OAuth authentication failed. Please try again.");
-      return;
-    }
+    if (errParam) { setError("OAuth authentication failed. Please try again."); return; }
 
     if (token && userStr) {
       try {
         const oauthUser = JSON.parse(decodeURIComponent(userStr));
-        login(oauthUser, token);
+        login(oauthUser, token, refresh || undefined);
         router.replace("/dashboard");
       } catch (e) {
-        console.error("Failed to parse OAuth user from URL", e);
         setError("Login failed — invalid session data.");
       }
     }
@@ -64,10 +61,26 @@ export default function LoginPage() {
     try {
       const res = await axios.post(`${API_BASE}/api/auth/login`, { email, password });
 
-      if (res.data?.token && res.data?.user) {
-        // login() writes to localStorage first, then updates React state
-        login(res.data.user, res.data.token);
-        // Small tick lets the context re-render before navigation
+      // 2FA required
+      if (res.status === 202 && res.data?.requires2FA) {
+        setError("");
+        setLoading(false);
+        // Show TOTP input — stored in localStorage for UX continuity
+        const code = prompt("Enter your 6-digit authenticator code:");
+        if (!code) return;
+        const res2 = await axios.post(`${API_BASE}/api/auth/login`, { email, password, totpCode: code });
+        if (res2.data?.accessToken && res2.data?.user) {
+          login(res2.data.user, res2.data.accessToken, res2.data.refreshToken);
+          setTimeout(() => router.replace("/dashboard"), 50);
+        } else {
+          setError("Invalid 2FA code");
+          setLoading(false);
+        }
+        return;
+      }
+
+      if (res.data?.accessToken && res.data?.user) {
+        login(res.data.user, res.data.accessToken, res.data.refreshToken);
         setTimeout(() => router.replace("/dashboard"), 50);
       } else {
         setError("Unexpected server response. Please try again.");

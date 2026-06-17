@@ -44,6 +44,8 @@ import statisticsRoutes from './routes/statistics';
 import homepageRoutes from './routes/homepage';
 import newsletterRoutes from './routes/newsletter';
 import dashboardRoutes from './routes/dashboard';
+import notificationRoutes from './routes/notifications';
+import safetyRoutes from './routes/safety';
 const app = express();
 const PORT = process.env.PORT || 5002;
 
@@ -105,6 +107,8 @@ app.use('/api/statistics', statisticsRoutes);
 app.use('/api/homepage', homepageRoutes);
 app.use('/api/newsletter', newsletterRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/safety', safetyRoutes);
 
 app.get('/', (req, res) => {
   res.send('ZilVerse API is running...');
@@ -143,16 +147,40 @@ io.use((socket, next) => {
 
 io.on('connection', (socket) => {
   const userId = socket.data.user?.id;
-  console.log(`Socket authenticated & connected: ${socket.id} (User: ${userId})`);
+  console.log(`Socket connected: ${socket.id} (User: ${userId})`);
   
   if (userId) {
-    // Automatically join the room of the authenticated user
     socket.join(userId);
-    console.log(`User ${userId} joined room ${userId} securely.`);
+    // Mark user as online
+    socket.broadcast.emit('user_online', { userId });
   }
+
+  // ── Typing indicators ──────────────────────────────────────────────────────
+  socket.on('typing', ({ toUserId }: { toUserId: string }) => {
+    socket.to(toUserId).emit('typing', { fromUserId: userId });
+  });
+
+  socket.on('stop_typing', ({ toUserId }: { toUserId: string }) => {
+    socket.to(toUserId).emit('stop_typing', { fromUserId: userId });
+  });
+
+  // ── Message read receipt ───────────────────────────────────────────────────
+  socket.on('mark_read', ({ toUserId }: { toUserId: string }) => {
+    socket.to(toUserId).emit('messages_read', { by: userId });
+  });
+
+  // ── Join a private room (for group chats etc.) ─────────────────────────────
+  socket.on('join_room', ({ roomId }: { roomId: string }) => {
+    socket.join(roomId);
+  });
+
+  socket.on('leave_room', ({ roomId }: { roomId: string }) => {
+    socket.leave(roomId);
+  });
 
   socket.on('disconnect', () => {
     console.log(`Socket disconnected: ${socket.id}`);
+    if (userId) socket.broadcast.emit('user_offline', { userId });
   });
 });
 

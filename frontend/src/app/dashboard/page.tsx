@@ -11,7 +11,7 @@ import dynamic from "next/dynamic";
 import {
   Wallet, Briefcase, Box, MessageSquare, Play,
   RefreshCw, MessageCircle, Star, TrendingUp, Clock,
-  ArrowUpRight, Zap
+  ArrowUpRight, Zap, ShieldCheck, ShieldOff, Bell, History
 } from "lucide-react";
 
 const DashboardAnalytics = dynamic(() => import("@/components/DashboardAnalytics"), { ssr: false });
@@ -257,6 +257,39 @@ export default function DashboardPage() {
                 <span className={styles.badgeDate}>Earned: {badge.earnedDate}</span>
               </div>
             </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Security Hub */}
+      <div className="glass-panel" style={{ marginTop: "1.5rem", padding: "1.5rem" }}>
+        <h2 style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1rem", fontSize: "1rem", color: "#e4e4e7" }}>
+          <ShieldCheck size={18} style={{ color: "var(--primary)" }} /> Account Security
+        </h2>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "0.75rem" }}>
+          {[
+            { href: "/dashboard/security", icon: <ShieldCheck size={18} />, label: "2FA & Sessions",   desc: "Manage two-factor auth and active devices", color: "#22c55e" },
+            { href: "/dashboard/security", icon: <History size={18} />,      label: "Login History",    desc: "See all your recent login events",          color: "#3b82f6" },
+            { href: "/dashboard/privacy",  icon: <ShieldOff size={18} />,    label: "Blocked Users",   desc: "Manage your blocked user list",             color: "#a855f7" },
+          ].map(item => (
+            <Link key={item.href + item.label} href={item.href} style={{ textDecoration: "none" }}>
+              <div style={{
+                padding: "1rem", borderRadius: 12,
+                background: "rgba(255,255,255,0.02)",
+                border: "1px solid rgba(255,255,255,0.06)",
+                display: "flex", alignItems: "flex-start", gap: "0.75rem",
+                transition: "border-color 0.2s, background 0.2s",
+                cursor: "pointer",
+              }}>
+                <div style={{ width: 36, height: 36, borderRadius: 8, background: `${item.color}18`, color: item.color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  {item.icon}
+                </div>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: "0.85rem", color: "#e4e4e7", marginBottom: 2 }}>{item.label}</div>
+                  <div style={{ fontSize: "0.72rem", color: "#71717a", lineHeight: 1.4 }}>{item.desc}</div>
+                </div>
+              </div>
+            </Link>
           ))}
         </div>
       </div>

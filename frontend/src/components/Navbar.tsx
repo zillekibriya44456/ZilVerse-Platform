@@ -17,6 +17,7 @@ import {
 import styles from "./Navbar.module.css";
 import { socket } from "@/utils/socket";
 import GlobalSearchModal from "@/components/GlobalSearchModal";
+import NotificationBell from "@/components/NotificationBell";
 
 const MEGA_COLUMNS: any[] = [
   {
@@ -279,6 +280,7 @@ export default function Navbar() {
           <button className={styles.langBtn}>
             <Globe size={16} /> EN <ChevronDown size={14} />
           </button>
+          <NotificationBell />
           <button
             className={styles.iconBtn}
             onClick={openStudio}

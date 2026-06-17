@@ -18,6 +18,14 @@ model User {
   verified  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // ── Security fields ──────────────────────────────────
+  twoFactorEnabled  Boolean  @default(false)
+  twoFactorSecret   String?  // TOTP secret (encrypted at rest)
+  trustScore        Int      @default(100)
+  isBanned          Boolean  @default(false)
+  isSuspended       Boolean  @default(false)
+  suspendedReason   String?
   
   // Relations
   projects           Project[]
@@ -57,6 +65,16 @@ model User {
   donationsReceived  ReelDonation[]    @relation("DonationsReceived")
   reelReports        ReelReport[]
   themePreferences   ThemePreference?
+
+  // ── New security / notification relations ─────────────
+  sessions           UserSession[]
+  loginHistory       LoginHistory[]
+  notifications      Notification[]
+  reportsMade        UserReport[]      @relation("Reporter")
+  reportsReceived    UserReport[]      @relation("Reported")
+  blockedUsers       Block[]           @relation("Blocker")
+  blockedBy          Block[]           @relation("Blocked")
+  backupCodes        TwoFactorBackupCode[]
 }
 
 model ThemePreference {
@@ -574,19 +592,26 @@ model ResearchPaper {
 }
 
 model Message {
-  id         String   @id @default(uuid())
-  senderId   String
-  receiverId String
-  content    String
-  createdAt  DateTime @default(now())
-  isRead     Boolean  @default(false)
-  
-  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
-  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  id          String   @id @default(uuid())
+  senderId    String
+  receiverId  String
+  content     String   @default("")
+  messageType String   @default("text") // text | file | audio | system
+  fileUrl     String?  // for file/audio messages
+  fileType    String?  // image | pdf | doc | audio | zip
+  fileName    String?  // original filename
+  reactions   String?  // JSON: {"👍":["userId1"], "❤️":["userId2"]}
+  isRead      Boolean  @default(false)
+  isDeleted   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  sender      User     @relation("SentMessages",    fields: [senderId],   references: [id])
+  receiver    User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
 
   @@index([senderId])
   @@index([receiverId])
   @@index([createdAt])
+  @@index([senderId, receiverId, createdAt])
 }
 
 model CreatorSpotlight {
@@ -654,4 +679,105 @@ model ReelReport {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([reelId, userId])
+}
+
+// ═══════════════════════════════════════════════════
+// SECURITY & TRUST MODELS
+// ═══════════════════════════════════════════════════
+
+model UserSession {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshToken String   @unique
+  deviceName   String   @default("Unknown Device")
+  browser      String   @default("Unknown")
+  os           String   @default("Unknown")
+  ipAddress    String   @default("0.0.0.0")
+  country      String   @default("Unknown")
+  isRevoked    Boolean  @default(false)
+  lastActive   DateTime @default(now())
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([refreshToken])
+  @@index([userId, isRevoked])
+}
+
+model LoginHistory {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ipAddress  String   @default("0.0.0.0")
+  country    String   @default("Unknown")
+  browser    String   @default("Unknown")
+  os         String   @default("Unknown")
+  deviceName String   @default("Unknown")
+  status     String   @default("SUCCESS") // SUCCESS | FAILED | BLOCKED
+  failReason String?  // reason for FAILED logins
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([userId, status])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   @default("system") // message | job | project | payment | follow | system | alert
+  isRead    Boolean  @default(false)
+  relatedId String?  // ID of related entity (job, message, etc.)
+  link      String?  // optional deep-link URL
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([userId, isRead])
+  @@index([createdAt])
+}
+
+model UserReport {
+  id             String   @id @default(uuid())
+  reporterId     String
+  reporter       User     @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reportedUserId String
+  reportedUser   User     @relation("Reported",  fields: [reportedUserId], references: [id], onDelete: Cascade)
+  reason         String   // spam | scam | fake | harassment | abuse | inappropriate
+  details        String?
+  status         String   @default("PENDING") // PENDING | REVIEWED | DISMISSED | ACTION_TAKEN
+  adminNote      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([reporterId])
+  @@index([reportedUserId])
+  @@index([status])
+}
+
+model Block {
+  id        String   @id @default(uuid())
+  blockerId String
+  blocker   User     @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blockedId String
+  blocked   User     @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
+  @@index([blockerId])
+  @@index([blockedId])
+}
+
+model TwoFactorBackupCode {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  code      String   // hashed backup code
+  used      Boolean  @default(false)
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }

@@ -616,3 +616,166 @@ textarea:focus-visible {
   animation: page-enter 0.4s ease forwards;
 }
 
+/* ════════════════════════════════════════════════
+   MOBILE-FIRST RESPONSIVE SYSTEM
+   ════════════════════════════════════════════════ */
+
+/* ── Global overflow prevention ── */
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+/* ── Touch-friendly tap targets ── */
+button, a, [role="button"] {
+  min-height: 36px;
+}
+
+/* ── Input mobile fixes ── */
+@media (max-width: 768px) {
+  input, textarea, select {
+    font-size: 16px !important; /* prevents iOS auto-zoom */
+  }
+}
+
+/* ── Grid responsive utilities ── */
+@media (max-width: 1024px) {
+  .grid-4 { grid-template-columns: repeat(2, 1fr) !important; }
+  .grid-3 { grid-template-columns: repeat(2, 1fr) !important; }
+}
+
+@media (max-width: 640px) {
+  .grid-4,
+  .grid-3,
+  .grid-2 { grid-template-columns: 1fr !important; }
+}
+
+/* ── Container mobile padding ── */
+@media (max-width: 640px) {
+  .container,
+  .container-wide {
+    padding: 0 1rem;
+  }
+}
+
+/* ── Section padding mobile ── */
+@media (max-width: 768px) {
+  section {
+    padding-top: 3rem !important;
+    padding-bottom: 3rem !important;
+  }
+}
+
+/* ── Card mobile ── */
+@media (max-width: 640px) {
+  .glass-panel {
+    padding: 1rem;
+    border-radius: 12px;
+  }
+}
+
+/* ── Button mobile full-width helper ── */
+@media (max-width: 480px) {
+  .btn-mobile-full {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+}
+
+/* ── Flex stacking on mobile ── */
+@media (max-width: 768px) {
+  .flex-mobile-col {
+    flex-direction: column !important;
+  }
+  .flex-mobile-wrap {
+    flex-wrap: wrap !important;
+  }
+}
+
+/* ── Modal mobile full-screen ── */
+@media (max-width: 640px) {
+  [data-modal-panel] {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 20px 20px 0 0 !important;
+    bottom: 0 !important;
+    top: auto !important;
+    right: 0 !important;
+    left: 0 !important;
+  }
+}
+
+/* ── ThemeStudio mobile ── */
+@media (max-width: 640px) {
+  /* Theme studio slides from bottom on mobile */
+  [style*="position: fixed"][style*="right: 0"][style*="bottom: 0"][style*="top: 0"] {
+    width: 100% !important;
+    top: auto !important;
+    height: 85vh !important;
+    border-radius: 20px 20px 0 0 !important;
+    border-left: none !important;
+    border-top: 1px solid rgba(255,255,255,0.08) !important;
+  }
+}
+
+/* ── Typography mobile ── */
+@media (max-width: 768px) {
+  h1 { font-size: clamp(1.75rem, 8vw, 3.5rem) !important; line-height: 1.15 !important; }
+  h2 { font-size: clamp(1.4rem,  6vw, 2.5rem) !important; }
+  h3 { font-size: clamp(1.1rem,  4vw, 1.75rem) !important; }
+}
+
+/* ── Hide desktop-only on mobile ── */
+@media (max-width: 768px) {
+  .desktop-only { display: none !important; }
+}
+@media (min-width: 769px) {
+  .mobile-only  { display: none !important; }
+}
+
+/* ── Notification panel mobile ── */
+@media (max-width: 480px) {
+  /* Notification dropdown full width */
+  [style*="width: 360"] {
+    width: calc(100vw - 2rem) !important;
+    right: -1rem !important;
+  }
+}
+
+/* ── Form groups mobile ── */
+@media (max-width: 640px) {
+  .form-row {
+    flex-direction: column !important;
+  }
+  .form-row > * {
+    width: 100% !important;
+  }
+}
+
+/* ── Dashboard sidebar mobile ── */
+@media (max-width: 1024px) {
+  .dashboard-sidebar {
+    display: none !important;
+  }
+  .dashboard-sidebar.mobile-open {
+    display: flex !important;
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 9000 !important;
+    width: 280px !important;
+    height: 100vh !important;
+  }
+  .dashboard-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+}
+
+/* ── Floating buttons mobile ── */
+@media (max-width: 768px) {
+  /* Stack floating buttons higher to avoid overlap with nav bars */
+  [style*="position: fixed"][style*="bottom: 1.5rem"][style*="right: 1.5rem"] {
+    bottom: 5rem !important;
+  }
+}
+
