@@ -41,7 +41,9 @@ export default function InternshipsPage() {
   const fetchInternships = async () => {
     try {
       const res = await axios.get(`${API_BASE}/api/jobs`);
-      setDbJobs(res.data);
+      const raw = res.data?.data ?? res.data;
+      setDbJobs(Array.isArray(raw) ? raw : []);
+
     } catch (err) {
       console.error("Failed to load internships", err);
     }

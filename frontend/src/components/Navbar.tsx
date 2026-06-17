@@ -10,10 +10,12 @@ import {
   FileText, Award, MessageSquare, Search, ChevronDown, Sparkles, 
   Layers, PhoneCall, Handshake, Users2, Building2, HelpCircle,
   Video, RefreshCw, Box, GraduationCap, Calendar, Coins, Moon,
-  Zap, BarChart2, MessageCircle, Send, HeadphonesIcon, FileOutput, Grip
+  Zap, BarChart2, MessageCircle, Send, HeadphonesIcon, FileOutput, Grip,
+  UserPlus, LogIn
 } from "lucide-react";
 import styles from "./Navbar.module.css";
 import { socket } from "@/utils/socket";
+import GlobalSearchModal from "@/components/GlobalSearchModal";
 
 const MEGA_COLUMNS: any[] = [
   {
@@ -83,13 +85,29 @@ export default function Navbar() {
   const pathname = usePathname();
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [isMegaOpen, setIsMegaOpen] = useState(false);
+  const [isJoinOpen, setIsJoinOpen] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const closeTimeout = useRef<NodeJS.Timeout | null>(null);
-  const megaRef = useRef<HTMLDivElement>(null);
+  const joinRef = useRef<HTMLDivElement>(null);
+
+  // Cmd+K / Ctrl+K global search shortcut
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setIsSearchOpen(true);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
   const handleMouseEnterNav = (title: string) => {
     if (closeTimeout.current) clearTimeout(closeTimeout.current);
     setActiveMenu(title);
     setIsMegaOpen(true);
+    setIsJoinOpen(false);
   };
 
   const handleMouseLeaveNav = () => {
@@ -99,10 +117,55 @@ export default function Navbar() {
     }, 300);
   };
 
+  // Close mobile drawer and desktop dropdowns on route change
   useEffect(() => { 
     setIsMegaOpen(false);
     setActiveMenu(null);
+    setIsMobileOpen(false);
   }, [pathname]);
+
+  // Prevent body scroll when drawer open
+  useEffect(() => {
+    document.body.style.overflow = isMobileOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [isMobileOpen]);
+
+  const MOBILE_SECTIONS = [
+    {
+      label: "Marketplace",
+      items: [
+        { label: "Freelancers", href: "/freelancers", icon: User, color: "#a855f7" },
+        { label: "Projects", href: "/projects", icon: Box, color: "#3b82f6" },
+        { label: "Digital Services", href: "/services", icon: Zap, color: "#22c55e" },
+      ]
+    },
+    {
+      label: "Opportunities",
+      items: [
+        { label: "Jobs", href: "/jobs", icon: Briefcase, color: "#3b82f6" },
+        { label: "Events", href: "/events", icon: Calendar, color: "#a855f7" },
+        { label: "Internships", href: "/internships", icon: GraduationCap, color: "#f59e0b" },
+        { label: "Grants & Funding", href: "/fund", icon: Coins, color: "#22c55e" },
+      ]
+    },
+    {
+      label: "Learn & Innovate",
+      items: [
+        { label: "Academy", href: "/academy", icon: BookOpen, color: "#a855f7" },
+        { label: "Certifications", href: "/certifications", icon: Award, color: "#f59e0b" },
+        { label: "Research", href: "/research", icon: BarChart2, color: "#3b82f6" },
+      ]
+    },
+    {
+      label: "Community",
+      items: [
+        { label: "InnoReels", href: "/reels", icon: Play, color: "#ec4899" },
+        { label: "Discussions", href: "/discussions", icon: MessageCircle, color: "#22c55e" },
+        { label: "Skills Exchange", href: "/exchange", icon: RefreshCw, color: "#22c55e" },
+        { label: "Global Community", href: "/community", icon: Globe, color: "#3b82f6" },
+      ]
+    },
+  ];
 
   return (
     <>
@@ -200,8 +263,16 @@ export default function Navbar() {
         </nav>
 
         <div className={styles.navRight}>
-          <button className={styles.iconBtn}>
-            <Search size={18} />
+          {/* Search Button — opens GlobalSearchModal */}
+          <button
+            className={styles.searchBtn}
+            onClick={() => setIsSearchOpen(true)}
+            aria-label="Search (Ctrl+K)"
+            title="Search (⌘K)"
+          >
+            <Search size={16} />
+            <span className={styles.searchBtnText}>Search</span>
+            <kbd className={styles.searchKbd}>⌘K</kbd>
           </button>
           <button className={styles.langBtn}>
             <Globe size={16} /> EN <ChevronDown size={14} />
@@ -211,15 +282,53 @@ export default function Navbar() {
           </button>
           
           {!user ? (
-            <div className={styles.authButtons}>
-              <Link href="/login" className={styles.signInBtn}>Sign In</Link>
-              <Link href="/register" className={styles.primaryBtn}>Get Started Free</Link>
+            <div 
+              className={styles.joinWrapper}
+              onMouseEnter={() => setIsJoinOpen(true)}
+              onMouseLeave={() => setIsJoinOpen(false)}
+              ref={joinRef}
+            >
+              <button className={styles.joinBtn}>
+                Join ZilVerse <ChevronDown size={14} />
+              </button>
+              {isJoinOpen && (
+                <div className={styles.joinDropdown}>
+                  <Link href="/login" className={styles.joinLink}>
+                    <div className={styles.joinIcon} style={{ background: 'rgba(139, 92, 246, 0.15)', color: '#8B5CF6' }}>
+                      <LogIn size={16} />
+                    </div>
+                    <div>
+                      <div className={styles.joinTitle}>Sign In</div>
+                      <div className={styles.joinDesc}>Access your account</div>
+                    </div>
+                  </Link>
+                  <Link href="/register" className={styles.joinLink}>
+                    <div className={styles.joinIcon} style={{ background: 'rgba(34, 197, 94, 0.15)', color: '#22C55E' }}>
+                      <UserPlus size={16} />
+                    </div>
+                    <div>
+                      <div className={styles.joinTitle}>Create Account</div>
+                      <div className={styles.joinDesc}>Join the ecosystem</div>
+                    </div>
+                  </Link>
+                  <div className={styles.joinDivider}></div>
+                  <button onClick={() => window.location.href = `${API_BASE}/api/auth/google`} className={styles.googleBtn}>
+                    <img src="/google-icon.png" alt="G" className={styles.googleIcon} onError={(e) => e.currentTarget.src = 'https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg'} />
+                    Continue with Google
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
-            <button onClick={async () => { await logout(); router.push("/"); }} className={styles.signInBtn}>Logout</button>
+            <div className={styles.userMenu}>
+              <Link href="/dashboard" className={styles.userAvatar}>
+                <img src={user.avatar || `https://ui-avatars.com/api/?name=${user.name}&background=8B5CF6&color=fff`} alt={user.name} />
+              </Link>
+              <button onClick={async () => { await logout(); router.push("/"); }} className={styles.signInBtn}>Logout</button>
+            </div>
           )}
 
-          <button className={styles.mobileMenuToggle}>
+          <button className={styles.mobileMenuToggle} onClick={() => setIsMobileOpen(true)} aria-label="Open menu">
             <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none">
               <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
             </svg>
@@ -227,6 +336,75 @@ export default function Navbar() {
         </div>
 
       </header>
+
+      {/* ─── Mobile Overlay ─────────────────────── */}
+      <div 
+        className={`${styles.mobileOverlay} ${isMobileOpen ? styles.open : ""}`} 
+        onClick={() => setIsMobileOpen(false)} 
+      />
+
+      {/* ─── Mobile Slide-out Drawer ─────────────── */}
+      <div className={`${styles.mobileDrawer} ${isMobileOpen ? styles.drawerOpen : ""}`}>
+        <div className={styles.drawerHeader}>
+          <Link href="/" className={styles.drawerLogo}>
+            <div className={styles.logoIcon}>Z</div>
+            ZilVerse
+          </Link>
+          <button className={styles.drawerClose} onClick={() => setIsMobileOpen(false)} aria-label="Close menu">✕</button>
+        </div>
+
+        {MOBILE_SECTIONS.map(section => (
+          <div key={section.label} className={styles.drawerSection}>
+            <div className={styles.drawerSectionTitle}>{section.label}</div>
+            {section.items.map(item => {
+              const Icon = item.icon;
+              const hexToRgb = (hex: string) => {
+                const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+                return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '139, 92, 246';
+              };
+              return (
+                <Link key={item.href} href={item.href} className={styles.drawerLink}>
+                  <div className={styles.drawerLinkIcon} style={{ background: `rgba(${hexToRgb(item.color)}, 0.15)`, color: item.color }}>
+                    <Icon size={15} />
+                  </div>
+                  {item.label}
+                </Link>
+              );
+            })}
+            <div className={styles.drawerDivider} />
+          </div>
+        ))}
+
+        {/* Auth Buttons */}
+        <div className={styles.drawerAuthButtons}>
+          {user ? (
+            <>
+              <Link href="/dashboard" className={`${styles.drawerAuthBtn} ${styles.drawerAuthBtnPrimary}`}>
+                Go to Dashboard
+              </Link>
+              <button 
+                onClick={async () => { await logout(); router.push("/"); setIsMobileOpen(false); }} 
+                className={`${styles.drawerAuthBtn} ${styles.drawerAuthBtnSecondary}`}
+                style={{ cursor: 'pointer', border: 'none' }}
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <Link href="/register" className={`${styles.drawerAuthBtn} ${styles.drawerAuthBtnPrimary}`}>
+                Join ZilVerse Free
+              </Link>
+              <Link href="/login" className={`${styles.drawerAuthBtn} ${styles.drawerAuthBtnSecondary}`}>
+                Sign In
+              </Link>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Global Search Modal */}
+      <GlobalSearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </>
   );
 }

@@ -59,7 +59,8 @@ export default function ResearchPage() {
   const fetchPapers = async () => {
     try {
       const res = await axios.get(`${API_BASE}/api/research`);
-      setDbPapers(res.data);
+      const raw = res.data?.data ?? res.data;
+      setDbPapers(Array.isArray(raw) ? raw : []);
     } catch (err) {
       console.error("Failed to load research papers", err);
     }

@@ -1,6 +1,7 @@
 "use client";
 
 import { Download, Mail, Image, Newspaper, ShieldCheck } from "lucide-react";
+import Link from "next/link";
 
 export default function PressKitPage() {
   return (
@@ -40,9 +41,9 @@ export default function PressKitPage() {
             <div>
               <h4 style={{ fontSize: '1.1rem', fontWeight: 700, margin: '0 0 0.4rem' }}>Official Platform Logo</h4>
               <p style={{ color: '#a1a1aa', fontSize: '0.85rem', lineHeight: '1.5', margin: '0 0 1rem' }}>Official high-resolution transparent PNG and vector SVG formats for light and dark environments.</p>
-              <a href="#" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#c084fc', textDecoration: 'none', fontWeight: 600, fontSize: '0.85rem' }}>
+              <Link href="/press/zilverse-raises-series-a" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#c084fc', textDecoration: 'none', fontWeight: 600, fontSize: '0.85rem' }}>
                 <Download size={14} /> Download Branding Bundle (6.2 MB)
-              </a>
+              </Link>
             </div>
           </div>
 
@@ -51,9 +52,9 @@ export default function PressKitPage() {
             <div>
               <h4 style={{ fontSize: '1.1rem', fontWeight: 700, margin: '0 0 0.4rem' }}>Platform One-Pager</h4>
               <p style={{ color: '#a1a1aa', fontSize: '0.85rem', lineHeight: '1.5', margin: '0 0 1rem' }}>Summarized specifications document detailing the ZilVerse platform technology, wallet, and marketplace system.</p>
-              <a href="#" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#60a5fa', textDecoration: 'none', fontWeight: 600, fontSize: '0.85rem' }}>
+              <Link href="/press/new-escrow-launch" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#60a5fa', textDecoration: 'none', fontWeight: 600, fontSize: '0.85rem' }}>
                 <Download size={14} /> Download PDF Overview (1.4 MB)
-              </a>
+              </Link>
             </div>
           </div>
 

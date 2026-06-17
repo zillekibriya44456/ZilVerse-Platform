@@ -16,38 +16,75 @@ let cachedTestimonials: any = null;
 let lastCacheTime = 0;
 const CACHE_TTL = 1000 * 60 * 5; // 5 minutes
 
-// GET testimonials
+// GET /api/testimonials?verified=true
 router.get('/', async (req: Request, res: Response): Promise<any> => {
   try {
     const now = Date.now();
-    if (cachedTestimonials && now - lastCacheTime < CACHE_TTL) {
+    const onlyVerified = req.query.verified === 'true';
+
+    if (!onlyVerified && cachedTestimonials && now - lastCacheTime < CACHE_TTL) {
       return res.json(cachedTestimonials);
     }
 
     let testimonials = await prisma.testimonial.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: 20 // Limit to avoid massive payload
+      where: onlyVerified ? { verified: true } : undefined,
+      orderBy: [{ stars: 'desc' }, { createdAt: 'desc' }],
+      take: 20
     });
 
     if (testimonials.length === 0) {
-      await prisma.testimonial.createMany({
-        data: INITIAL_TESTIMONIALS
-      });
+      await prisma.testimonial.createMany({ data: INITIAL_TESTIMONIALS });
       testimonials = await prisma.testimonial.findMany({
-        orderBy: { createdAt: 'desc' },
+        where: onlyVerified ? { verified: true } : undefined,
+        orderBy: [{ stars: 'desc' }, { createdAt: 'desc' }],
         take: 20
       });
     }
 
-    cachedTestimonials = testimonials;
-    lastCacheTime = now;
+    if (!onlyVerified) {
+      cachedTestimonials = testimonials;
+      lastCacheTime = now;
+    }
 
-    res.json(testimonials);
+    return res.json(testimonials);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Server error fetching testimonials' });
+    return res.status(500).json({ message: 'Server error fetching testimonials' });
   }
 });
+
+// GET /api/testimonials/featured — verified only, max 6, for homepage
+router.get('/featured', async (_req: Request, res: Response): Promise<any> => {
+  try {
+    const now = Date.now();
+    if (cachedTestimonials && now - lastCacheTime < CACHE_TTL) {
+      const featured = cachedTestimonials.filter((t: any) => t.verified).slice(0, 6);
+      return res.json(featured);
+    }
+
+    const testimonials = await prisma.testimonial.findMany({
+      where: { verified: true },
+      orderBy: [{ stars: 'desc' }, { createdAt: 'desc' }],
+      take: 6
+    });
+
+    if (testimonials.length === 0) {
+      // Seed and return initials (all verified)
+      await prisma.testimonial.createMany({ data: INITIAL_TESTIMONIALS });
+      const seeded = await prisma.testimonial.findMany({
+        orderBy: [{ stars: 'desc' }],
+        take: 6
+      });
+      return res.json(seeded);
+    }
+
+    return res.json(testimonials);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Server error fetching featured testimonials' });
+  }
+});
+
 
 // POST a new testimonial
 router.post('/', async (req: Request, res: Response): Promise<any> => {

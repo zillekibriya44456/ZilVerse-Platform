@@ -42,7 +42,8 @@ export default function RemoteWorkPage() {
   const fetchRemoteJobs = async () => {
     try {
       const res = await axios.get(`${API_BASE}/api/jobs`);
-      setDbJobs(res.data);
+      const raw = res.data?.data ?? res.data;
+      setDbJobs(Array.isArray(raw) ? raw : []);
     } catch (err) {
       console.error("Failed to fetch remote jobs", err);
     }

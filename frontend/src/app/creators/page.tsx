@@ -20,7 +20,10 @@ export default function CreatorsPage() {
 
   useEffect(() => {
     axios.get(`${API_BASE}/api/creators`)
-      .then(res => setDbCreators(res.data))
+      .then(res => {
+        const raw = res.data?.data ?? res.data;
+        setDbCreators(Array.isArray(raw) ? raw : []);
+      })
       .catch(err => console.error("Failed to fetch creators", err));
   }, []);
 
@@ -30,7 +33,9 @@ export default function CreatorsPage() {
       await axios.post(`${API_BASE}/api/creators/register`, newCreator);
       setIsModalOpen(false);
       const res = await axios.get(`${API_BASE}/api/creators`);
-      setDbCreators(res.data);
+      const raw = res.data?.data ?? res.data;
+      setDbCreators(Array.isArray(raw) ? raw : []);
+
     } catch (err) {
       console.error(err);
     } finally {

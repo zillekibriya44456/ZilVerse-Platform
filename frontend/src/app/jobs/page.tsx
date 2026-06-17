@@ -1,36 +1,74 @@
 "use client";
 import { API_BASE } from "@/utils/api";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import axios from "axios";
 import styles from "./jobs.module.css";
 import { useAuth } from "@/context/AuthContext";
+import { Search, Briefcase, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
 
-
-
-const TYPES = ["All", "Full-Time", "Freelance", "Internship"];
+const TYPES = ["All", "Full-Time", "Freelance", "Internship", "Contract"];
+const PAGE_SIZE = 12;
 
 export default function JobsPage() {
   const { user } = useAuth();
   const [filter, setFilter] = useState("All");
   const [search, setSearch] = useState("");
   const [dbJobs, setDbJobs] = useState<any[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [jobsLoading, setJobsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newJob, setNewJob] = useState({ title: '', company: '', location: 'Remote', salary: '', type: 'Full-Time', description: '', requirements: '' });
   const [isUploading, setIsUploading] = useState(false);
-
-  // Apply Modal State
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [applicationData, setApplicationData] = useState({ resumeUrl: '', coverLetter: '' });
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [isApplying, setIsApplying] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    axios.get(`${API_BASE}/api/jobs`)
-      .then(res => setDbJobs(res.data))
-      .catch(err => console.error("Failed to load DB jobs", err));
+  const fetchJobs = useCallback((q: string, type: string, pg: number) => {
+    setJobsLoading(true);
+    const params: any = { page: pg, limit: PAGE_SIZE };
+    if (q.trim()) params.q = q.trim();
+    if (type !== "All") params.type = type;
+    axios.get(`${API_BASE}/api/jobs`, { params })
+      .then(res => {
+        // Handle both paginated {data,total} and legacy flat array
+        if (res.data?.data) {
+          setDbJobs(res.data.data);
+          setTotal(res.data.total || 0);
+          setTotalPages(res.data.totalPages || 1);
+        } else {
+          setDbJobs(Array.isArray(res.data) ? res.data : []);
+          setTotal(Array.isArray(res.data) ? res.data.length : 0);
+          setTotalPages(1);
+        }
+      })
+      .catch(err => console.error("Failed to load jobs:", err))
+      .finally(() => setJobsLoading(false));
   }, []);
+
+  // Initial load
+  useEffect(() => { fetchJobs("", "All", 1); }, [fetchJobs]);
+
+  // Debounced search + filter
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setPage(1);
+      fetchJobs(search, filter, 1);
+    }, 400);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [search, filter, fetchJobs]);
+
+  const goToPage = (pg: number) => {
+    setPage(pg);
+    fetchJobs(search, filter, pg);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const handlePostJob = async () => {
     setIsUploading(true);
@@ -38,7 +76,8 @@ export default function JobsPage() {
       await axios.post(`${API_BASE}/api/jobs/create`, newJob);
       setIsModalOpen(false);
       const res = await axios.get(`${API_BASE}/api/jobs`);
-      setDbJobs(res.data);
+      const raw = res.data?.data ?? res.data;
+      setDbJobs(Array.isArray(raw) ? raw : []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -87,58 +126,58 @@ export default function JobsPage() {
   const formattedDbJobs = dbJobs.map(j => ({
     id: j.id,
     title: j.title,
-    company: j.company,
-    location: j.location,
-    salary: j.salary,
-    type: j.type,
-    tags: j.requirements.split(','),
-    posted: "Just now",
-    logo: j.company.substring(0, 2).toUpperCase()
+    company: j.company || "Company",
+    location: j.location || "Remote",
+    salary: j.salary || "Competitive",
+    type: j.type || "Full-Time",
+    description: j.description || "",
+    tags: (j.requirements || "").split(',').map((t: string) => t.trim()).filter(Boolean),
+    posted: new Date(j.createdAt || Date.now()).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+    logo: (j.company || "ZV").substring(0, 2).toUpperCase(),
+    employer: j.employer,
   }));
-
-  const JOBS = [...formattedDbJobs];
-
-  const filtered = JOBS.filter(j => {
-    const matchType = filter === "All" || j.type === filter;
-    const matchSearch = j.title.toLowerCase().includes(search.toLowerCase()) ||
-      j.company.toLowerCase().includes(search.toLowerCase()) ||
-      j.tags.some((t: string) => t.toLowerCase().includes(search.toLowerCase()));
-    return matchType && matchSearch;
-  });
 
   return (
     <div className={styles.page}>
+      {/* Toast */}
       {toastMessage && (
-        <div style={{ position: 'fixed', top: '20px', right: '20px', background: '#10b981', color: '#fff', padding: '1rem', borderRadius: '8px', zIndex: 9999999 }}>
+        <div className={`toast ${toastMessage.includes('Failed') ? 'toast-error' : 'toast-success'}`}
+          style={{ position: 'fixed', top: '88px', right: '20px', zIndex: 9999999 }}>
           {toastMessage}
         </div>
       )}
+
       <div className="container">
         <div className={styles.header}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
             <div>
               <h1 className={styles.title}>Job Board</h1>
-              <p className={styles.subtitle}>Find remote jobs, local tech positions, and internships.</p>
+              <p className={styles.subtitle}>
+                {jobsLoading ? 'Loading...' : `${total.toLocaleString()} opportunities found`}
+              </p>
             </div>
             <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>+ Post a Job</button>
           </div>
 
-          <div className={styles.searchRow}>
+          {/* Search */}
+          <div className={styles.searchRow} style={{ position: 'relative' }}>
+            <Search size={16} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#71717a', pointerEvents: 'none' }} />
             <input
               type="text"
-              placeholder="Search by title, company, or skill..."
+              placeholder="Search by title, company, skill, or location..."
               className={styles.searchInput}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              style={{ paddingLeft: '2.5rem' }}
             />
           </div>
 
+          {/* Type filters */}
           <div className={styles.filters}>
             {TYPES.map(t => (
-              <button
-                key={t}
+              <button key={t}
                 className={`btn ${filter === t ? "btn-primary" : "btn-secondary"} ${styles.filterBtn}`}
-                onClick={() => setFilter(t)}
+                onClick={() => { setFilter(t); setPage(1); }}
               >
                 {t}
               </button>
@@ -146,33 +185,77 @@ export default function JobsPage() {
           </div>
         </div>
 
+        {/* Job list */}
         <div className={styles.jobsList}>
-          {filtered.length === 0 ? (
-            <div className={styles.empty}>No jobs found matching your search.</div>
+          {jobsLoading ? (
+            Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14, padding: '1.25rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                <div className="skeleton" style={{ width: 48, height: 48, borderRadius: 10, flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <div className="skeleton skeleton-text" style={{ width: '50%', marginBottom: '0.5rem' }} />
+                  <div className="skeleton skeleton-text" style={{ width: '35%' }} />
+                </div>
+                <div className="skeleton" style={{ width: 90, height: 36, borderRadius: 10 }} />
+              </div>
+            ))
+          ) : formattedDbJobs.length === 0 ? (
+            <div className={styles.empty}>
+              <Briefcase size={48} color="#52525b" style={{ marginBottom: '1rem' }} />
+              <p>No jobs found{search ? ` for "${search}"` : ''}.</p>
+              {search && <button className="btn btn-secondary" onClick={() => setSearch('')}>Clear search</button>}
+            </div>
           ) : (
-            filtered.map(job => (
+            formattedDbJobs.map(job => (
               <div key={job.id} className={`glass-panel ${styles.jobCard}`}>
                 <div className={styles.jobLogo}>{job.logo}</div>
                 <div className={styles.jobInfo}>
                   <h3 className={styles.jobTitle}>{job.title}</h3>
-                  <p className={styles.jobMeta}>{job.company} • {job.location} • {job.posted}</p>
+                  <p className={styles.jobMeta}>
+                    <span>{job.company}</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}><MapPin size={12} /> {job.location}</span>
+                    <span>{job.posted}</span>
+                  </p>
                   <div className={styles.tags}>
-                    {job.tags.map((tag: string) => (
+                    {job.tags.slice(0, 4).map((tag: string) => (
                       <span key={tag} className={styles.tag}>{tag}</span>
                     ))}
                   </div>
                 </div>
                 <div className={styles.jobRight}>
-                  <span className={`${styles.typeBadge} ${styles[job.type.toLowerCase().replace("-","")]}`}>
+                  <span className={`${styles.typeBadge} ${styles[job.type?.toLowerCase().replace(/[^a-z]/g,'')]}`}>
                     {job.type}
                   </span>
                   <p className={styles.salary}>{job.salary}</p>
-                  <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => handleApplyClick(String(job.id))}>Apply Now</button>
+                  <button className="btn btn-primary" style={{ width: '100%' }} onClick={() => handleApplyClick(String(job.id))}>Apply Now</button>
                 </div>
               </div>
             ))
           )}
         </div>
+
+        {/* Pagination */}
+        {!jobsLoading && totalPages > 1 && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '2rem 0' }}>
+            <button
+              onClick={() => goToPage(page - 1)} disabled={page <= 1}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.5rem 1rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, color: page <= 1 ? '#52525b' : '#e4e4e7', cursor: page <= 1 ? 'not-allowed' : 'pointer' }}
+            >
+              <ChevronLeft size={16} /> Prev
+            </button>
+            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map(p => (
+              <button key={p} onClick={() => goToPage(p)}
+                style={{ width: 36, height: 36, borderRadius: 8, background: page === p ? 'rgba(168,85,247,0.2)' : 'rgba(255,255,255,0.04)', border: `1px solid ${page === p ? 'rgba(168,85,247,0.4)' : 'rgba(255,255,255,0.08)'}`, color: page === p ? '#c084fc' : '#a1a1aa', cursor: 'pointer', fontWeight: page === p ? 700 : 400 }}>
+                {p}
+              </button>
+            ))}
+            <button
+              onClick={() => goToPage(page + 1)} disabled={page >= totalPages}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.5rem 1rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, color: page >= totalPages ? '#52525b' : '#e4e4e7', cursor: page >= totalPages ? 'not-allowed' : 'pointer' }}
+            >
+              Next <ChevronRight size={16} />
+            </button>
+          </div>
+        )}
       </div>
 
       {isModalOpen && (

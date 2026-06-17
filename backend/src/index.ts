@@ -14,6 +14,8 @@ import cors from 'cors';
 import path from 'path';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 // @ts-ignore
 import jwt from 'jsonwebtoken';
 import authRoutes from './routes/auth';
@@ -40,10 +42,23 @@ import spotlightRoutes from './routes/spotlights';
 import testimonialRoutes from './routes/testimonials';
 import statisticsRoutes from './routes/statistics';
 import homepageRoutes from './routes/homepage';
+import newsletterRoutes from './routes/newsletter';
+import dashboardRoutes from './routes/dashboard';
 const app = express();
 const PORT = process.env.PORT || 5002;
 
+app.use(helmet());
 app.use(cors());
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1000, // Limit each IP to 1000 requests per `window` (here, per 15 minutes)
+  message: 'Too many requests from this IP, please try again after 15 minutes',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api/', apiLimiter);
+
 app.use(express.json({
   verify: (req: any, res, buf) => {
     if (req.originalUrl && req.originalUrl.startsWith('/api/payments/webhook')) {
@@ -88,6 +103,8 @@ app.use('/api/spotlights', spotlightRoutes);
 app.use('/api/testimonials', testimonialRoutes);
 app.use('/api/statistics', statisticsRoutes);
 app.use('/api/homepage', homepageRoutes);
+app.use('/api/newsletter', newsletterRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 app.get('/', (req, res) => {
   res.send('ZilVerse API is running...');

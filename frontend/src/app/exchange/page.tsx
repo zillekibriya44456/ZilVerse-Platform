@@ -25,7 +25,10 @@ export default function ExchangePage() {
 
   useEffect(() => {
     axios.get(`${API_BASE}/api/exchange`)
-      .then(res => setDbTrades(res.data))
+      .then(res => {
+        const raw = res.data?.data ?? res.data;
+        setDbTrades(Array.isArray(raw) ? raw : []);
+      })
       .catch(err => console.error("Failed to fetch exchange listings", err));
   }, []);
 
@@ -35,7 +38,9 @@ export default function ExchangePage() {
       await axios.post(`${API_BASE}/api/exchange/create`, newTrade);
       setIsModalOpen(false);
       const res = await axios.get(`${API_BASE}/api/exchange`);
-      setDbTrades(res.data);
+      const raw = res.data?.data ?? res.data;
+      setDbTrades(Array.isArray(raw) ? raw : []);
+
     } catch (err) {
       console.error(err);
     } finally {

@@ -5,29 +5,45 @@ import { uploadImage, getFileUrl } from '../config/cloudinary';
 
 const router = express.Router();
 
-// Get all jobs with pagination
-router.get('/', async (req, res) => {
+// Get all jobs with pagination + search + filters
+router.get('/', async (req, res): Promise<any> => {
   try {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 20;
-    const skip = (page - 1) * limit;
+    const page     = parseInt(req.query.page     as string) || 1;
+    const limit    = parseInt(req.query.limit    as string) || 20;
+    const skip     = (page - 1) * limit;
+    const { q, type, location } = req.query;
 
-    const jobs = await prisma.job.findMany({
-      skip,
-      take: limit,
-      include: {
-        employer: {
-          select: { name: true, avatar: true, email: true }
-        }
-      },
-      orderBy: { createdAt: 'desc' }
+    const where: any = {};
+    if (type)     where.type     = { contains: type     as string, mode: 'insensitive' };
+    if (location) where.location = { contains: location as string, mode: 'insensitive' };
+    if (q) {
+      where.OR = [
+        { title:       { contains: q as string, mode: 'insensitive' } },
+        { company:     { contains: q as string, mode: 'insensitive' } },
+        { description: { contains: q as string, mode: 'insensitive' } },
+        { location:    { contains: q as string, mode: 'insensitive' } },
+      ];
+    }
+
+    const [jobs, total] = await Promise.all([
+      prisma.job.findMany({
+        where,
+        skip,
+        take: limit,
+        include: {
+          employer: { select: { name: true, avatar: true, email: true } }
+        },
+        orderBy: { createdAt: 'desc' }
+      }),
+      prisma.job.count({ where })
+    ]);
+
+    res.json({
+      data: jobs,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
     });
-    
-    // Optional: Return total count for frontend pagination
-    // const total = await prisma.job.count();
-    // res.json({ data: jobs, total, page, totalPages: Math.ceil(total / limit) });
-    
-    res.json(jobs);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch jobs' });
   }

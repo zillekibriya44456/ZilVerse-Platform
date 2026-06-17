@@ -40,7 +40,7 @@ export default function WalletPage() {
   const [showEscrowModal, setShowEscrowModal] = useState(false);
 
   // Form states
-  const [depositData, setDepositData] = useState({ amount: "", gateway: "STRIPE", description: "Wallet Deposit" });
+  const [depositData, setDepositData] = useState({ amount: "", gateway: "RAZORPAY", description: "Wallet Deposit" });
   const [withdrawData, setWithdrawData] = useState({ amount: "", method: "BANK", details: "" });
   const [escrowData, setEscrowData] = useState({ amount: "", freelancerId: "", projectTitle: "", milestoneName: "Milestone 1" });
 
@@ -190,7 +190,7 @@ export default function WalletPage() {
               if (verifyRes.data.success) {
                 showToast(`Payment successful! Deposited ${CURRENCY_SYMBOLS[selectedCurrency]}${depositData.amount} successfully.`);
                 setShowDepositModal(false);
-                setDepositData({ amount: "", gateway: "STRIPE", description: "Wallet Deposit" });
+                setDepositData({ amount: "", gateway: "RAZORPAY", description: "Wallet Deposit" });
                 loadData();
               } else {
                 showToast("Payment verification failed.");
@@ -248,7 +248,7 @@ export default function WalletPage() {
 
       showToast(`Successfully deposited ${CURRENCY_SYMBOLS[selectedCurrency]}${depositData.amount} via ${depositData.gateway}!`);
       setShowDepositModal(false);
-      setDepositData({ amount: "", gateway: "STRIPE", description: "Wallet Deposit" });
+      setDepositData({ amount: "", gateway: "RAZORPAY", description: "Wallet Deposit" });
       loadData();
     } catch {
       showToast("Deposit failed. Please try again.");
@@ -702,9 +702,7 @@ export default function WalletPage() {
                   onChange={(e) => setDepositData({ ...depositData, gateway: e.target.value })}
                   style={{ width: "100%", padding: ".8rem", borderRadius: "10px", background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", color: "#fff", outline: "none" }}
                 >
-                  <option value="STRIPE" style={{ color: "#000" }}>Stripe (Visa/Mastercard)</option>
-                  <option value="PAYPAL" style={{ color: "#000" }}>PayPal Balance</option>
-                  <option value="RAZORPAY" style={{ color: "#000" }}>Razorpay (India UPI/Card)</option>
+                  <option value="RAZORPAY" style={{ color: "#000" }}>Razorpay (India UPI/Card/Global)</option>
                   <option value="UPI" style={{ color: "#000" }}>UPI Direct QR</option>
                   <option value="WISE" style={{ color: "#000" }}>Wise Global Transfer</option>
                   <option value="PAYONEER" style={{ color: "#000" }}>Payoneer Global Wallet</option>

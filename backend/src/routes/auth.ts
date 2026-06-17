@@ -161,4 +161,43 @@ router.get('/:provider', (req: Request, res: Response) => {
   res.redirect('http://localhost:3000/login?error=provider_not_configured_yet');
 });
 
+// Theme Preferences
+const requireAuth = (req: Request, res: Response, next: any) => {
+  const token = req.headers.authorization?.split(' ')[1] || req.cookies?.token;
+  if (!token) return res.status(401).json({ message: 'Unauthorized' });
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    (req as any).user = decoded;
+    next();
+  } catch (err) {
+    res.status(401).json({ message: 'Invalid token' });
+  }
+};
+
+router.get('/theme', requireAuth, async (req: Request, res: Response): Promise<any> => {
+  try {
+    const userId = (req as any).user.id;
+    const theme = await prisma.themePreference.findUnique({ where: { userId } });
+    res.json({ theme });
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching theme' });
+  }
+});
+
+router.post('/theme', requireAuth, async (req: Request, res: Response): Promise<any> => {
+  try {
+    const userId = (req as any).user.id;
+    const { name, mode, primary, secondary, accent, background, cardStyle, borderStyle } = req.body;
+    
+    const theme = await prisma.themePreference.upsert({
+      where: { userId },
+      update: { themeName: name, mode, primary, secondary, accent, background, cardStyle, borderStyle },
+      create: { userId, themeName: name, mode, primary, secondary, accent, background, cardStyle, borderStyle },
+    });
+    res.json({ theme });
+  } catch (err) {
+    res.status(500).json({ message: 'Error saving theme' });
+  }
+});
+
 export default router;

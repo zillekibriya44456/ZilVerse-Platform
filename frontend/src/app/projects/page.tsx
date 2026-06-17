@@ -157,7 +157,8 @@ export default function ProjectsPage() {
       setVideoFile(null);
       setIsUploadModalOpen(false);
       const res = await axios.get(`${API_BASE}/api/projects`);
-      setDbProjects(res.data);
+      const raw = res.data?.data ?? res.data;
+      setDbProjects(Array.isArray(raw) ? raw : []);
     } catch (err: any) {
       alert("Error posting project: " + (err.response?.data?.error || err.message));
     } finally {
@@ -183,7 +184,8 @@ export default function ProjectsPage() {
       setSpotlightFile(null);
       setIsSpotlightModalOpen(false);
       const res = await axios.get(`${API_BASE}/api/spotlights`);
-      setDbSpotlights(res.data);
+      const raw = res.data?.data ?? res.data;
+      setDbSpotlights(Array.isArray(raw) ? raw : []);
     } catch (err: any) {
       alert("Error submitting spotlight: " + (err.response?.data?.error || err.message));
     }
@@ -191,33 +193,40 @@ export default function ProjectsPage() {
 
   useEffect(() => {
     axios.get(`${API_BASE}/api/projects`)
-      .then(res => setDbProjects(res.data))
+      .then(res => {
+        const raw = res.data?.data ?? res.data;
+        setDbProjects(Array.isArray(raw) ? raw : []);
+      })
       .catch(err => console.error("Failed to load DB projects", err));
 
     axios.get(`${API_BASE}/api/spotlights`)
-      .then(res => setDbSpotlights(res.data))
+      .then(res => {
+        const raw = res.data?.data ?? res.data;
+        setDbSpotlights(Array.isArray(raw) ? raw : []);
+      })
       .catch(err => console.error("Failed to load DB spotlights", err));
   }, []);
 
   const formattedDbProjects = dbProjects.map(p => ({
-      id: p.id,
-      title: p.title,
-      category: "Software", 
-      desc: p.description,
-      tech: ["Custom DB"],
-      price: p.price,
-      originalPrice: p.price * 1.5,
-      inrPrice: true,
-      license: "Commercial",
-      seller: p.seller?.name || "Global Creator",
-      rating: 5.0,
-      sales: Math.floor(Math.random() * 50),
-      color: "linear-gradient(135deg, #10b981, #3b82f6)",
-      badge: "New Database",
-      icon: "💻",
-      image: "/projects/saas.png",
-      videoUrl: p.videoUrl || null,
+    id: p.id,
+    title: p.title,
+    category: p.category || "Software",
+    desc: p.description,
+    tech: p.tech ? (Array.isArray(p.tech) ? p.tech : p.tech.split(',').map((t: string) => t.trim())) : ["Custom Build"],
+    price: p.price,
+    originalPrice: Math.round(p.price * 1.5),
+    inrPrice: true,
+    license: "Commercial",
+    seller: p.seller?.name || "Global Creator",
+    rating: p.rating || 5.0,
+    sales: ((p.id?.charCodeAt(0) || 65) % 50) + 1, // deterministic
+    color: "linear-gradient(135deg, #10b981, #3b82f6)",
+    badge: "Live on DB",
+    icon: "💻",
+    image: p.images?.[0] || "/projects/saas.png",
+    videoUrl: p.videoUrl || null,
   }));
+
 
   const ALL_PROJECTS = [...formattedDbProjects];
 
@@ -226,7 +235,7 @@ export default function ProjectsPage() {
     const matchSearch =
       p.title.toLowerCase().includes(search.toLowerCase()) ||
       p.desc.toLowerCase().includes(search.toLowerCase()) ||
-      p.tech.some(t => t.toLowerCase().includes(search.toLowerCase()));
+      p.tech.some((t: string) => t.toLowerCase().includes(search.toLowerCase()));
     const matchPrice = p.price <= maxPrice;
     return matchCat && matchSearch && matchPrice;
   });
@@ -412,7 +421,7 @@ export default function ProjectsPage() {
 
                   {/* Tech stack */}
                   <div className={styles.techRow}>
-                    {p.tech.map(t => <span key={t} className={styles.techTag}>{t}</span>)}
+                    {p.tech.map((t: string) => <span key={t} className={styles.techTag}>{t}</span>)}
                   </div>
 
                   {/* Price row */}

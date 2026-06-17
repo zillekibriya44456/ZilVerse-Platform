@@ -5,8 +5,12 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "ts-node -O '{\"module\":\"CommonJS\",\"verbatimModuleSyntax\":false}' src/index.ts",
+    "seed": "ts-node -O '{\"module\":\"CommonJS\",\"verbatimModuleSyntax\":false}' prisma/seed.ts",
     "build": "tsc || exit 0",
     "start": "node dist/index.js"
+  },
+  "prisma": {
+    "seed": "ts-node -O '{\"module\":\"CommonJS\",\"verbatimModuleSyntax\":false}' prisma/seed.ts"
   },
   "keywords": [],
   "author": "",
@@ -21,7 +25,9 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.5.2",
     "express-session": "^1.19.0",
+    "helmet": "^8.2.0",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.1.1",
     "multer-storage-cloudinary": "^4.0.0",
@@ -34,7 +40,7 @@
     "pg": "^8.20.0",
     "razorpay": "^2.9.6",
     "socket.io": "^4.8.3",
-    "stripe": "^22.2.0"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",

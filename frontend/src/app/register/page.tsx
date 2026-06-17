@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
-import { signUp } from "@/lib/auth-client";
 import { GraduationCap, Building2, Briefcase, UserCircle, CheckCircle2, Volume2, VolumeX, ArrowRight, Eye, EyeOff, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -331,7 +330,7 @@ export default function RegisterPage() {
 
     setLoading(true);
     try {
-      const { data, error } = await (signUp.email as any)({
+      const res = await axios.post(`${API_BASE}/api/auth/register`, {
         email: formData.email,
         password: formData.password,
         name: formData.name,
@@ -342,12 +341,6 @@ export default function RegisterPage() {
         phoneDial: formData.phoneDial,
         phoneNum: formData.phoneNum,
       });
-
-      if (error) {
-        setError(error.message || "Registration failed. Please try again.");
-        setLoading(false);
-        return;
-      }
 
       setShowWelcome(true);
     } catch (err: any) {

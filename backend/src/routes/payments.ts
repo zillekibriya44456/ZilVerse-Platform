@@ -3,20 +3,10 @@ import express from 'express';
 
 import { authenticateToken, requireAdmin, AuthenticatedRequest } from '../middleware/auth';
 // @ts-ignore
-import Stripe from 'stripe';
-// @ts-ignore
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
 
 const router = express.Router();
-
-
-// Initialize Stripe (uses secure env variable)
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'dummy_stripe_secret_key', {
-  apiVersion: '2023-10-16' as any,
-});
-
-const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || 'dummy_webhook_secret';
 
 // Initialize Razorpay (uses secure env variable)
 const razorpay = new Razorpay({
@@ -70,50 +60,6 @@ router.get('/wallet', authenticateToken, async (req: AuthenticatedRequest, res: 
   }
 });
 
-// 2. Stripe Checkout Session Creation for Secure Deposits
-router.post('/create-checkout-session', authenticateToken, async (req: AuthenticatedRequest, res: any) => {
-  try {
-    const userId = (req as any).user?.id;
-    if (!userId) return res.status(401).json({ error: 'Unauthorized user context.' });
-
-    const { amount, currency } = req.body;
-    const depAmount = parseFloat(amount);
-
-    if (isNaN(depAmount) || depAmount < 5.00) {
-      return res.status(400).json({ error: 'Minimum deposit is $5.00' });
-    }
-
-    // Create a Checkout Session with metadata containing user ID
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price_data: {
-            currency: currency || 'usd',
-            product_data: {
-              name: 'ZilVerse Wallet Deposit',
-              description: 'Funds to be deposited into your escrow wallet.',
-            },
-            unit_amount: Math.round(depAmount * 100), // in cents
-          },
-          quantity: 1,
-        },
-      ],
-      mode: 'payment',
-      metadata: {
-        userId,
-        amount: depAmount.toString(),
-      },
-      success_url: 'http://localhost:3000/dashboard?deposit=success',
-      cancel_url: 'http://localhost:3000/dashboard?deposit=cancelled',
-    });
-
-    res.json({ id: session.id, url: session.url });
-  } catch (error: any) {
-    console.error('[STRIPE CHECKOUT ERROR]', error);
-    res.status(500).json({ error: 'Failed to initiate Stripe session: ' + error.message });
-  }
-});
 
 // 3. Create Withdrawal Request
 router.post('/withdraw', authenticateToken, async (req: AuthenticatedRequest, res: any) => {
@@ -403,76 +349,6 @@ router.get('/invoices', authenticateToken, async (req: AuthenticatedRequest, res
   }
 });
 
-// ==========================================
-// STRIPE WEBHOOK LISTENER (PUBLIC SECURED ENDPOINT)
-// ==========================================
-router.post('/webhook', async (req: any, res: any) => {
-  const sig = req.headers['stripe-signature'];
-  let event: any;
-
-  try {
-    // rawBody is attached by Express middleware
-    const payload = req.rawBody || req.body;
-    event = stripe.webhooks.constructEvent(payload, sig, STRIPE_WEBHOOK_SECRET);
-  } catch (err: any) {
-    console.error(`[WEBHOOK SIGNATURE VERIFICATION FAILED]`, err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
-
-  // Handle the checkout.session.completed event
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object;
-    const userId = session.metadata?.userId;
-    const amount = parseFloat(session.metadata?.amount || '0');
-
-    if (userId && amount > 0) {
-      try {
-        console.log(`[STRIPE WEBHOOK] Depositing $${amount} for User ID ${userId}`);
-
-        // Update Wallet Balance
-        const wallet = await getOrCreateWallet(userId);
-        const updatedWallet = await prisma.wallet.update({
-          where: { userId },
-          data: { availableBalance: wallet.availableBalance + amount }
-        });
-
-        // Create transaction log
-        const transaction = await prisma.transaction.create({
-          data: {
-            userId,
-            amount,
-            currency: 'USD',
-            type: 'DEPOSIT',
-            status: 'COMPLETED',
-            gateway: 'STRIPE',
-            description: 'Stripe Card Deposit'
-          }
-        });
-
-        // Create Invoice
-        const invoiceNum = 'INV-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
-        const userObj = await prisma.user.findUnique({ where: { id: userId as string } });
-        await prisma.invoice.create({
-          data: {
-            transactionId: transaction.id,
-            invoiceNumber: invoiceNum,
-            senderName: 'Stripe Payments Inc.',
-            receiverName: userObj?.name || 'ZilVerse Partner',
-            amount,
-            currency: 'USD'
-          }
-        });
-
-        emitWalletUpdate(req, userId);
-      } catch (err) {
-        console.error('[STRIPE WEBHOOK DB COMMIT ERROR]', err);
-        return res.status(500).json({ error: 'DB update failure during webhook processing.' });
-      }
-    }
-  }
-
-  res.json({ received: true });
-});
 
 // ==========================================
 // ADMIN WORKFLOWS (AUTHENTICATED + ADMIN CHECK)

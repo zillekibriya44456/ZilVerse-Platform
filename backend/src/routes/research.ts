@@ -49,7 +49,7 @@ router.post('/create', authenticateToken, async (req: any, res: any) => {
 // Upvote a research paper
 router.post('/:id/upvote', authenticateToken, async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const paper = await prisma.researchPaper.findUnique({ where: { id } });
     if (!paper) return res.status(404).json({ error: 'Research paper not found' });
 

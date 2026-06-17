@@ -65,22 +65,27 @@ const RATES: Record<string, { rate: number; symbol: string }> = {
 export default function ServicesPage() {
   const { user, token } = useAuth();
   const [dbServices, setDbServices] = useState<any[]>([]);
+  const [servicesLoading, setServicesLoading] = useState(true);
   const [quoteModal, setQuoteModal] = useState<string | null>(null);
   const [quoteForm, setQuoteForm] = useState({ name: "", email: "", phone: "", company: "", budget: "", message: "" });
-  
+
   // Checkout Modal State
   const [selectedService, setSelectedService] = useState<any | null>(null);
   const [purchaseForm, setPurchaseForm] = useState({ name: "", email: "", phone: "", company: "", requirements: "" });
   const [currency, setCurrency] = useState<"USD" | "INR" | "EUR" | "GBP">("INR");
-
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
-    // Fetch DB services
+    setServicesLoading(true);
+    // API now returns {data, total, ...} or flat array (legacy)
     axios.get(API)
-      .then(res => setDbServices(res.data))
-      .catch(err => console.error("Failed to load DB services", err));
+      .then(res => {
+        const raw = res.data?.data ?? res.data;
+        setDbServices(Array.isArray(raw) ? raw : []);
+      })
+      .catch(err => console.error("Failed to load DB services", err))
+      .finally(() => setServicesLoading(false));
   }, []);
 
   // Pre-fill name/email from auth
@@ -322,7 +327,20 @@ export default function ServicesPage() {
         </div>
 
         <div className={styles.grid}>
-          {services.map((s, i) => (
+          {servicesLoading ? (
+            Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '1.5rem' }}>
+                <div className="skeleton" style={{ width: 52, height: 52, borderRadius: 12, marginBottom: '1rem' }} />
+                <div className="skeleton skeleton-text" style={{ width: '70%', marginBottom: '0.5rem' }} />
+                <div className="skeleton skeleton-text" style={{ width: '90%' }} />
+                <div className="skeleton skeleton-text" style={{ width: '80%' }} />
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.25rem' }}>
+                  <div className="skeleton" style={{ flex: 1, height: 38, borderRadius: 10 }} />
+                  <div className="skeleton" style={{ flex: 1, height: 38, borderRadius: 10 }} />
+                </div>
+              </div>
+            ))
+          ) : services.map((s, i) => (
             <div key={i} className={`glass-panel ${styles.card}`}>
               <div className={styles.iconWrap} style={{ background: `${s.color}18`, color: s.color }}>
                 <span>{s.icon}</span>

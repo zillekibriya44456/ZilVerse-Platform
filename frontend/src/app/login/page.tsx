@@ -2,9 +2,9 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signIn } from "@/lib/auth-client";
 import styles from "./auth.module.css";
 import { useAuth } from "@/context/AuthContext";
+import axios from "axios";
 import { API_BASE } from "@/utils/api";
 import { Loader2 } from "lucide-react";
 
@@ -57,21 +57,17 @@ export default function LoginPage() {
     setError("");
     
     try {
-      const { data, error } = await signIn.email({
+      const res = await axios.post(`${API_BASE}/api/auth/login`, {
         email,
         password,
       });
       
-      if (error) {
-        setError(error.message || "Invalid credentials.");
-        setLoading(false);
-        return;
+      if (res.data.token && res.data.user) {
+        login(res.data.user, res.data.token);
+        router.push("/dashboard");
       }
-      
-      // Better auth securely sets httpOnly cookies.
-      router.push("/dashboard");
     } catch (err: any) {
-      setError("An unexpected error occurred. Please try again.");
+      setError(err.response?.data?.message || "Invalid credentials.");
       setLoading(false);
     }
   };
@@ -126,7 +122,7 @@ export default function LoginPage() {
             <input type="password" placeholder="Enter your password" value={password} onChange={e => setPassword(e.target.value)} required />
           </div>
           <div className={styles.forgotRow}>
-            <a href="#" className={styles.forgot}>Forgot password?</a>
+            <Link href="/forgot-password" className={styles.forgot}>Forgot password?</Link>
           </div>
           <button type="submit" className={`btn btn-primary ${styles.submitBtn}`} disabled={loading} style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "8px" }}>
             {loading ? <><Loader2 className="animate-spin" size={18} /> Signing in...</> : "Sign In →"}

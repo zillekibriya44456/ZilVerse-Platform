@@ -1,7 +1,8 @@
 "use client";
 import { API_BASE } from "@/utils/api";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+
 import axios from "axios";
 import styles from "./freelancers.module.css";
 import { useAuth } from "@/context/AuthContext";
@@ -53,12 +54,51 @@ export default function FreelancersPage() {
     };
   }, []);
 
-  useEffect(() => {
-    // Load freelancers from backend
-    axios.get(`${API_BASE}/api/freelancers`)
-      .then(res => setDbFreelancers(res.data))
-      .catch(err => console.error("Failed to load DB freelancers", err));
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [freelancersLoading, setFreelancersLoading] = useState(true);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  const fetchFreelancers = useCallback((q: string, pg: number) => {
+    setFreelancersLoading(true);
+    const params: any = { page: pg, limit: 24 };
+    if (q.trim()) params.q = q.trim();
+    axios.get(`${API_BASE}/api/freelancers`, { params })
+      .then(res => {
+        // Handle both new paginated {data,...} and legacy flat array
+        if (res.data?.data) {
+          setDbFreelancers(res.data.data);
+          setTotal(res.data.total || 0);
+          setTotalPages(res.data.totalPages || 1);
+        } else {
+          const arr = Array.isArray(res.data) ? res.data : [];
+          setDbFreelancers(arr);
+          setTotal(arr.length);
+          setTotalPages(1);
+        }
+      })
+      .catch(err => console.error("Failed to load freelancers", err))
+      .finally(() => setFreelancersLoading(false));
   }, []);
+
+  useEffect(() => { fetchFreelancers("", 1); }, [fetchFreelancers]);
+
+  // Debounced search
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setPage(1);
+      fetchFreelancers(searchTerm, 1);
+    }, 450);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [searchTerm, fetchFreelancers]);
+
+  const goToPage = (pg: number) => {
+    setPage(pg);
+    fetchFreelancers(searchTerm, pg);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   useEffect(() => {
     // Load client wallet details if logged in
@@ -74,29 +114,33 @@ export default function FreelancersPage() {
       .catch(err => console.error("Failed to load wallet data", err));
   }, [user, token]);
 
-  const formattedDbFreelancers: FreelancerItem[] = dbFreelancers.map(f => ({
+  // Safe skills parser: handles both string[] (Postgres array) and comma-string
+  const parseSkills = (skills: any): string[] => {
+    if (!skills) return [];
+    if (Array.isArray(skills)) return skills.map(String).filter(Boolean);
+    if (typeof skills === 'string') return skills.split(',').map((s: string) => s.trim()).filter(Boolean);
+    return [];
+  };
+
+  const formattedDbFreelancers: FreelancerItem[] = dbFreelancers.map((f, idx) => ({
     id: f.id,
     userId: f.userId,
-    initials: f.user?.name ? f.user.name.substring(0, 2).toUpperCase() : "DB",
+    initials: f.user?.name ? f.user.name.substring(0, 2).toUpperCase() : "ZV",
     name: f.user?.name || "Global Freelancer",
-    role: f.title,
+    role: f.title || "Freelancer",
     rating: 5.0,
-    reviews: Math.floor(Math.random() * 40) + 10,
+    reviews: ((f.id?.charCodeAt(0) || 65) % 40) + 10, // deterministic based on ID
     rate: formatPrice(f.hourlyRate || 30) + "/hr",
     hourlyRateNum: f.hourlyRate || 30,
-    skills: f.skills ? f.skills.split(',').map((s: string) => s.trim()) : [],
+    skills: parseSkills(f.skills),
     color: "linear-gradient(135deg, #a855f7 0%, #3b82f6 100%)",
-    verified: true
+    verified: f.user?.verified ?? true,
   }));
 
-  const freelancers = [...formattedDbFreelancers];
 
-  const filteredFreelancers = useMemo(() => {
-    return freelancers.filter(f => {
-      const term = searchTerm.toLowerCase();
-      return f.name.toLowerCase().includes(term) || f.role.toLowerCase().includes(term) || f.skills.some((s: string) => s.toLowerCase().includes(term));
-    });
-  }, [freelancers, searchTerm]);
+  // Server-side search is active — formattedDbFreelancers IS the filtered result
+  const filteredFreelancers = formattedDbFreelancers;
+
 
   const handleHireClick = (freelancer: FreelancerItem) => {
     const activeToken = token || localStorage.getItem("zilverse_token") || "";
@@ -262,7 +306,9 @@ export default function FreelancersPage() {
         {/* Header Hero */}
         <div className={styles.header}>
           <h1 className={styles.title}>Freelancer Marketplace</h1>
-          <p className={styles.subtitle}>Discover top talent perfectly matched for your next big project.</p>
+          <p className={styles.subtitle}>
+            {freelancersLoading ? 'Loading talent...' : `${total.toLocaleString()} verified professionals worldwide`}
+          </p>
           <div className={styles.searchBar}>
             <input
               type="text"
@@ -277,35 +323,72 @@ export default function FreelancersPage() {
 
         {/* Grid Listings */}
         <div className={styles.grid}>
-          {filteredFreelancers.map((f, i) => (
-            <div key={i} className={`glass-panel ${styles.card}`}>
-              <div className={styles.profileRow}>
-                <div className={styles.avatar} style={{ background: f.color }}>{f.initials}</div>
-                <div>
-                  <div className={styles.nameRow}>
-                    <h3 className={styles.name}>{f.name}</h3>
-                    {f.verified && <span className={styles.verified}>✓ Verified</span>}
+          {freelancersLoading ? (
+            Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14, padding: '1.25rem' }}>
+                <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                  <div className="skeleton" style={{ width: 52, height: 52, borderRadius: '50%', flexShrink: 0 }} />
+                  <div style={{ flex: 1 }}>
+                    <div className="skeleton skeleton-text" style={{ width: '60%', marginBottom: '0.4rem' }} />
+                    <div className="skeleton skeleton-text" style={{ width: '40%' }} />
                   </div>
-                  <p className={styles.role}>{f.role}</p>
+                </div>
+                <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1rem' }}>
+                  {[1,2,3].map(j => <div key={j} className="skeleton" style={{ width: 56, height: 20, borderRadius: 99 }} />)}
+                </div>
+                <div className="skeleton" style={{ width: '100%', height: 38, borderRadius: 10 }} />
+              </div>
+            ))
+          ) : filteredFreelancers.length === 0 ? (
+            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '4rem 0', color: '#71717a' }}>
+              <p style={{ marginBottom: '1rem' }}>No freelancers found{searchTerm ? ` for "${searchTerm}"` : ''}.</p>
+              {searchTerm && <button className="btn btn-secondary" onClick={() => setSearchTerm('')}>Clear Search</button>}
+            </div>
+          ) : (
+            filteredFreelancers.map((f, i) => (
+              <div key={f.id || i} className={`glass-panel ${styles.card}`}>
+                <div className={styles.profileRow}>
+                  <div className={styles.avatar} style={{ background: f.color }}>{f.initials}</div>
+                  <div>
+                    <div className={styles.nameRow}>
+                      <h3 className={styles.name}>{f.name}</h3>
+                      {f.verified && <span className={styles.verified}>✓ Verified</span>}
+                    </div>
+                    <p className={styles.role}>{f.role}</p>
+                  </div>
+                </div>
+                <p className={styles.rating}>⭐ {f.rating} ({f.reviews} reviews) • <strong>{f.rate}</strong></p>
+                <div className={styles.skills}>
+                  {f.skills.slice(0, 4).map(s => <span key={s} className={styles.skill}>{s}</span>)}
+                </div>
+                <div className={styles.actions}>
+                  <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => handleHireClick(f)}>Hire Now</button>
+                  <button className="btn btn-secondary">Profile</button>
                 </div>
               </div>
-              <p className={styles.rating}>⭐ {f.rating} ({f.reviews} reviews) • <strong>{f.rate}</strong></p>
-              <div className={styles.skills}>
-                {f.skills.map(s => <span key={s} className={styles.skill}>{s}</span>)}
-              </div>
-              <div className={styles.actions}>
-                <button
-                  className="btn btn-primary"
-                  style={{ flex: 1 }}
-                  onClick={() => handleHireClick(f)}
-                >
-                  Hire Now
-                </button>
-                <button className="btn btn-secondary">Profile</button>
-              </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
+
+        {/* Pagination */}
+        {!freelancersLoading && totalPages > 1 && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '2rem 0' }}>
+            <button onClick={() => goToPage(page - 1)} disabled={page <= 1}
+              style={{ padding: '0.5rem 1rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, color: page <= 1 ? '#52525b' : '#e4e4e7', cursor: page <= 1 ? 'not-allowed' : 'pointer' }}>
+              ← Prev
+            </button>
+            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map(p => (
+              <button key={p} onClick={() => goToPage(p)}
+                style={{ width: 36, height: 36, borderRadius: 8, background: page === p ? 'rgba(168,85,247,0.2)' : 'rgba(255,255,255,0.04)', border: `1px solid ${page === p ? 'rgba(168,85,247,0.4)' : 'rgba(255,255,255,0.08)'}`, color: page === p ? '#c084fc' : '#a1a1aa', cursor: 'pointer', fontWeight: page === p ? 700 : 400 }}>
+                {p}
+              </button>
+            ))}
+            <button onClick={() => goToPage(page + 1)} disabled={page >= totalPages}
+              style={{ padding: '0.5rem 1rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, color: page >= totalPages ? '#52525b' : '#e4e4e7', cursor: page >= totalPages ? 'not-allowed' : 'pointer' }}>
+              Next →
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Hire Modal Overlay */}

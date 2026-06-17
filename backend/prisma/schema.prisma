@@ -56,6 +56,33 @@ model User {
   donationsSent      ReelDonation[]    @relation("DonationsSent")
   donationsReceived  ReelDonation[]    @relation("DonationsReceived")
   reelReports        ReelReport[]
+  themePreferences   ThemePreference?
+}
+
+model ThemePreference {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  mode      String   @default("dark") // dark | light | auto
+  themeName String   @default("Cyber Green")
+  primary   String?
+  secondary String?
+  accent    String?
+  background String?
+  cardStyle String?
+  borderStyle String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model NewsletterSubscriber {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  country   String?
+  source    String   @default("Footer")
+  createdAt DateTime @default(now())
 }
 
 model DiscussionPost {
@@ -151,8 +178,13 @@ model Event {
   date        String
   location    String   @default("Online")
   description String?
+  category    String   @default("Full Stack")
+  isFree      Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([isFree])
 }
 
 model ContactMessage {
@@ -263,6 +295,11 @@ model Project {
   title       String
   description String
   price       Float
+  category    String   @default("Software")
+  tech        String?  // Comma-separated tech stack
+  images      String?  // Comma-separated image URLs
+  rating      Float    @default(5.0)
+  sales       Int      @default(0)
   sellerId    String
   seller      User     @relation(fields: [sellerId], references: [id])
   videoUrl    String?
@@ -270,6 +307,8 @@ model Project {
   updatedAt   DateTime @updatedAt
 
   @@index([sellerId])
+  @@index([category, createdAt])
+  @@index([rating, sales])
 }
 
 model Reel {

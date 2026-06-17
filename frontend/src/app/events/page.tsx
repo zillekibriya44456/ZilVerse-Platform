@@ -13,6 +13,7 @@ import { useAuth } from "@/context/AuthContext";
 export default function EventsPage() {
   const { user, token } = useAuth();
   const [dbEvents, setDbEvents] = useState<any[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(true);
   const [selectedCountry, setSelectedCountry] = useState<string>("ALL");
   const [selectedType, setSelectedType] = useState<EventType | "ALL">("ALL");
   const [selectedCategory, setSelectedCategory] = useState<EventCategory | "ALL">("ALL");
@@ -31,13 +32,17 @@ export default function EventsPage() {
   });
   const [isUploading, setIsUploading] = useState(false);
 
-  // Load events
+  // Load events — handles both flat array and paginated {data,...}
   const fetchEvents = async () => {
+    setEventsLoading(true);
     try {
       const res = await axios.get(`${API_BASE}/api/events`);
-      setDbEvents(res.data);
+      const raw = res.data?.data ?? res.data;
+      setDbEvents(Array.isArray(raw) ? raw : []);
     } catch (err) {
       console.error("Failed to load events from DB", err);
+    } finally {
+      setEventsLoading(false);
     }
   };
 
@@ -145,7 +150,7 @@ export default function EventsPage() {
     organizer: "ZilVerse Partner",
     date: e.date || "TBD",
     location: e.location || "Online",
-    countryCode: e.location.toLowerCase().includes("online") ? "WW" : "US",
+    countryCode: (e.location || "").toLowerCase().includes("online") ? "WW" : "US",
     type: (e.type || "Workshop") as EventType,
     category: (e.category || "Full Stack") as EventCategory,
     participantsCount: 150,
@@ -153,6 +158,7 @@ export default function EventsPage() {
     description: e.description || "No description provided.",
     isFree: e.isFree !== undefined ? e.isFree : true
   }));
+
 
   const ALL_EVENTS = [...formattedDbEvents, ...MOCK_EVENTS];
 

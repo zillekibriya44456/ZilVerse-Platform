@@ -9,18 +9,18 @@ const API = `${API_BASE}/api/admin`;
 
 
 
-const SIDEBAR_ITEMS = [
-  { id: "overview", icon: "⚡", label: "Overview" },
-  { id: "users", icon: "👥", label: "Users" },
-  { id: "projects", icon: "🚀", label: "Projects" },
-  { id: "jobs", icon: "💼", label: "Jobs" },
-  { id: "applications", icon: "📋", label: "Applications" },
-  { id: "contacts", icon: "📬", label: "Inquiries" },
-  { id: "analytics", icon: "📊", label: "Analytics" },
-  { id: "moderation", icon: "🛡️", label: "Content Moderation" },
-  { id: "notifications", icon: "🔔", label: "Notifications" },
-  { id: "payments", icon: "💰", label: "Payments Escrow" },
-  { id: "server", icon: "🖥️", label: "Server Status" },
+const SIDEBAR_ITEMS: { id: string; icon: string; label: string; badge?: string | number }[] = [
+  { id: "overview",       icon: "⚡",  label: "Overview" },
+  { id: "users",          icon: "👥",  label: "Users" },
+  { id: "projects",       icon: "🚀",  label: "Projects" },
+  { id: "jobs",           icon: "💼",  label: "Jobs" },
+  { id: "applications",   icon: "📋",  label: "Applications" },
+  { id: "contacts",       icon: "📬",  label: "Inquiries" },
+  { id: "analytics",      icon: "📊",  label: "Analytics" },
+  { id: "moderation",     icon: "🛡️",  label: "Content Moderation" },
+  { id: "notifications",  icon: "🔔",  label: "Notifications" },
+  { id: "payments",       icon: "💰",  label: "Payments Escrow" },
+  { id: "server",         icon: "🖥️",  label: "Server Status" },
 ];
 
 export default function AdminDashboard() {
@@ -249,7 +249,7 @@ export default function AdminDashboard() {
               <div className={styles.analyticsCard}>
                 <h3>📊 Monthly Revenue (2026)</h3>
                 <div className={styles.barChart}>
-                  {BARS.map((h, i) => <div key={i} className={styles.bar} style={{ height: `${h}%` }} />)}
+                  {BARS.map((h: number, i: number) => <div key={i} className={styles.bar} style={{ height: `${h}%` }} />)}
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", marginTop: ".5rem" }}>
                   {financials?.monthlyBreakdown?.map((m: any) => (

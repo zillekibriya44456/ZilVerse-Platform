@@ -29,7 +29,10 @@ export default function FundHubPage() {
 
   useEffect(() => {
     axios.get(`${API_BASE}/api/funds`)
-      .then(res => setDbGrants(res.data))
+      .then(res => {
+        const raw = res.data?.data ?? res.data;
+        setDbGrants(Array.isArray(raw) ? raw : []);
+      })
       .catch(err => console.error("Failed to load DB grants", err));
   }, []);
 
@@ -47,7 +50,9 @@ export default function FundHubPage() {
       setIsUploadModalOpen(false);
       // Refresh DB Grants
       const res = await axios.get(`${API_BASE}/api/funds`);
-      setDbGrants(res.data);
+      const raw = res.data?.data ?? res.data;
+      setDbGrants(Array.isArray(raw) ? raw : []);
+
     } catch (err: any) {
       setToastMessage("Error posting grant: " + (err.response?.data?.error || err.message));
     } finally {

@@ -1,7 +1,10 @@
 "use client";
+import { useState } from "react";
 import Link from "next/link";
 import styles from "./Footer.module.css";
-import { Facebook, Twitter, Linkedin, Instagram, Youtube, Send, Globe } from "lucide-react";
+import { Facebook, Twitter, Linkedin, Instagram, Youtube, Send, Globe, Loader2, CheckCircle2 } from "lucide-react";
+import axios from "axios";
+import { API_BASE } from "@/utils/api";
 
 const socialLinks = [
   { icon: Facebook, href: "https://m.facebook.com/zille.kibriya.3" },
@@ -36,6 +39,28 @@ const navLinks = [
 ];
 
 export default function Footer() {
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState({ text: "", type: "" });
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+    
+    setLoading(true);
+    setMessage({ text: "", type: "" });
+    try {
+      const res = await axios.post(`${API_BASE}/api/newsletter/subscribe`, { email });
+      setMessage({ text: res.data.message, type: "success" });
+      setEmail("");
+    } catch (err: any) {
+      setMessage({ text: err.response?.data?.message || "Subscription failed.", type: "error" });
+    } finally {
+      setLoading(false);
+      setTimeout(() => setMessage({ text: "", type: "" }), 5000);
+    }
+  };
+
   return (
     <footer className={styles.footer}>
       <div className="container">
@@ -79,18 +104,31 @@ export default function Footer() {
           <div className={styles.newsletterCol}>
             <h4 className={styles.groupTitle}>Stay Updated</h4>
             <p className={styles.newsletterDesc}>Subscribe to our newsletter</p>
-            <form className={styles.newsletterForm} onSubmit={(e) => e.preventDefault()}>
-              <input type="email" placeholder="Enter your email" className={styles.newsletterInput} />
-              <button type="submit" className={styles.newsletterBtn}>
-                <Send size={16} />
+            <form className={styles.newsletterForm} onSubmit={handleSubscribe}>
+              <input 
+                type="email" 
+                placeholder="Enter your email" 
+                className={styles.newsletterInput} 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+              <button type="submit" className={styles.newsletterBtn} disabled={loading}>
+                {loading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
               </button>
             </form>
+            {message.text && (
+              <div style={{ marginTop: "10px", fontSize: "0.85rem", color: message.type === "error" ? "#fca5a5" : "#86efac", display: "flex", alignItems: "center", gap: "5px" }}>
+                {message.type === "success" && <CheckCircle2 size={14} />}
+                {message.text}
+              </div>
+            )}
           </div>
 
         </div>
 
         <div className={styles.bottom}>
-          <p>© 2024 ZilVerse. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} ZilVerse. All rights reserved.</p>
           <div className={styles.langSelector}>
             <Globe size={16} /> English <span>v</span>
           </div>

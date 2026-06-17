@@ -7,32 +7,75 @@ let cachedFreelancers: any = null;
 let lastCacheTime = 0;
 const CACHE_TTL = 1000 * 60 * 5; // 5 minutes
 
-// Get all freelancers
-router.get('/', async (req, res) => {
+// GET /api/freelancers?q=&skills=&minRate=&maxRate=&page=&limit=
+router.get('/', async (req: any, res: any) => {
   try {
     const now = Date.now();
-    if (cachedFreelancers && now - lastCacheTime < CACHE_TTL) {
+    const { q, skills, minRate, maxRate, page, limit } = req.query;
+    const pg    = parseInt(page  as string) || 1;
+    const take  = parseInt(limit as string) || 30;
+    const skip  = (pg - 1) * take;
+    const isFiltered = !!(q || skills || minRate || maxRate);
+
+    // Serve cache for unfiltered requests only
+    if (!isFiltered && cachedFreelancers && now - lastCacheTime < CACHE_TTL) {
       return res.json(cachedFreelancers);
     }
 
-    const freelancers = await prisma.freelancerProfile.findMany({
-      include: {
-        user: {
-          select: { name: true, email: true, avatar: true }
-        }
-      },
-      take: 50, // Limit payload
-      orderBy: { createdAt: 'desc' }
-    });
+    const where: any = {};
 
-    cachedFreelancers = freelancers;
-    lastCacheTime = now;
+    // Rate range
+    if (minRate || maxRate) {
+      where.hourlyRate = {};
+      if (minRate) where.hourlyRate.gte = parseFloat(minRate as string);
+      if (maxRate) where.hourlyRate.lte = parseFloat(maxRate as string);
+    }
 
-    res.json(freelancers);
+    // Skills filter (comma-separated, match any)
+    if (skills) {
+      const skillList = (skills as string).split(',').map(s => s.trim()).filter(Boolean);
+      where.skills = { hasSome: skillList };
+    }
+
+    // Full-text search on title/bio via user name
+    if (q) {
+      where.OR = [
+        { title: { contains: q as string, mode: 'insensitive' } },
+        { bio:   { contains: q as string, mode: 'insensitive' } },
+        { user:  { name: { contains: q as string, mode: 'insensitive' } } },
+      ];
+    }
+
+    const [freelancers, total] = await Promise.all([
+      prisma.freelancerProfile.findMany({
+        where,
+        include: { user: { select: { name: true, email: true, avatar: true, verified: true } } },
+        skip,
+        take,
+        orderBy: { createdAt: 'desc' }
+      }),
+      prisma.freelancerProfile.count({ where })
+    ]);
+
+    const result = {
+      data: freelancers,
+      total,
+      page: pg,
+      totalPages: Math.ceil(total / take),
+    };
+
+    if (!isFiltered) {
+      cachedFreelancers = result;
+      lastCacheTime = now;
+    }
+
+    return res.json(result);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch freelancers' });
+    console.error('Freelancers fetch error:', error);
+    return res.status(500).json({ error: 'Failed to fetch freelancers' });
   }
 });
+
 
 // Create/Update freelancer profile
 router.post('/register', async (req, res) => {

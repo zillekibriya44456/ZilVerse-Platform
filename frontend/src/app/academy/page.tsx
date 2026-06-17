@@ -34,11 +34,18 @@ export default function AcademyPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Load backend courses
+  const [coursesLoading, setCoursesLoading] = useState(true);
+
+  // Load backend courses — handles both flat array and paginated {data,...} response
   useEffect(() => {
+    setCoursesLoading(true);
     axios.get(`${API_BASE}/api/academy`)
-      .then(res => setDbCourses(res.data))
-      .catch(err => console.error("Failed to load courses from DB", err));
+      .then(res => {
+        const raw = res.data?.data ?? res.data;
+        setDbCourses(Array.isArray(raw) ? raw : []);
+      })
+      .catch(err => console.error("Failed to load courses from DB", err))
+      .finally(() => setCoursesLoading(false));
   }, []);
 
   // Sync state with selected country
@@ -83,32 +90,30 @@ export default function AcademyPage() {
     try {
       const payload = {
         ...newCourse,
-        students: Math.floor(Math.random() * 200) + 10,
-        rating: (Math.random() * 0.8 + 4.2).toFixed(1),
-        image: `/avatars/avatar_${Math.floor(Math.random() * 2) + 1}.png`
+        price: parseFloat(newCourse.price) || 0,
+        students: 0,
+        rating: 5.0,
+        image: `/avatars/avatar_1.png`
       };
       await axios.post(`${API_BASE}/api/academy/create`, payload);
       setIsCreateModalOpen(false);
       setNewCourse({
-        title: "",
-        instructor: "",
-        price: "",
-        category: "Development",
-        language: "English",
-        level: "Beginner",
-        duration: "2 Hours",
-        description: "",
+        title: "", instructor: "", price: "",
+        category: "Development", language: "English", level: "Beginner",
+        duration: "2 Hours", description: "",
         countryCode: selectedCountry.code || "US"
       });
-      // reload
+      // Reload courses
       const res = await axios.get(`${API_BASE}/api/academy`);
-      setDbCourses(res.data);
+      const raw = res.data?.data ?? res.data;
+      setDbCourses(Array.isArray(raw) ? raw : []);
     } catch (err) {
       console.error(err);
     } finally {
       setIsSubmitting(false);
     }
   };
+
 
   return (
     <div className={styles.page}>
@@ -152,7 +157,21 @@ export default function AcademyPage() {
             </div>
 
             <div className={styles.coursesGrid}>
-              {displayedCourses.map((course) => (
+              {coursesLoading ? (
+                Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14, overflow: 'hidden' }}>
+                    <div className="skeleton" style={{ height: 160 }} />
+                    <div style={{ padding: '1rem' }}>
+                      <div className="skeleton skeleton-text" style={{ width: '80%', marginBottom: '0.5rem' }} />
+                      <div className="skeleton skeleton-text" style={{ width: '50%' }} />
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
+                        <div className="skeleton" style={{ width: 60, height: 24, borderRadius: 6 }} />
+                        <div className="skeleton" style={{ width: 100, height: 36, borderRadius: 10 }} />
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : displayedCourses.map((course) => (
                 <div key={course.id} className={`glass-panel ${styles.courseCard}`}>
                   <div className={styles.courseImageWrapper}>
                     <div className={styles.courseCategory}>{course.category}</div>
@@ -168,12 +187,7 @@ export default function AcademyPage() {
                     </div>
                     <div className={styles.courseFooter}>
                       <span className={styles.price}>₹{course.price.toLocaleString()}</span>
-                      <button 
-                        className="btn btn-primary"
-                        onClick={() => setBuyingCourse(course)}
-                      >
-                        Enroll Now
-                      </button>
+                      <button className="btn btn-primary" onClick={() => setBuyingCourse(course)}>Enroll Now</button>
                     </div>
                   </div>
                 </div>

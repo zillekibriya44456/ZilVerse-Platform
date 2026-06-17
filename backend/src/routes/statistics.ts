@@ -87,10 +87,17 @@ router.get('/stream', (req: Request, res: Response) => {
     }
   };
 
+  // Heartbeat every 25s to keep proxy/browser alive
+  const heartbeat = setInterval(() => {
+    res.write(': heartbeat\n\n');
+  }, 25_000);
+
   eventBus.on('stats_updated', onUpdate);
 
   req.on('close', () => {
+    clearInterval(heartbeat);
     eventBus.off('stats_updated', onUpdate);
+    res.end();
   });
 });
 
