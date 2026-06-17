@@ -5,10 +5,16 @@ import { uploadImage, getFileUrl } from '../config/cloudinary';
 
 const router = express.Router();
 
-// Get all jobs
+// Get all jobs with pagination
 router.get('/', async (req, res) => {
   try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const skip = (page - 1) * limit;
+
     const jobs = await prisma.job.findMany({
+      skip,
+      take: limit,
       include: {
         employer: {
           select: { name: true, avatar: true, email: true }
@@ -16,6 +22,11 @@ router.get('/', async (req, res) => {
       },
       orderBy: { createdAt: 'desc' }
     });
+    
+    // Optional: Return total count for frontend pagination
+    // const total = await prisma.job.count();
+    // res.json({ data: jobs, total, page, totalPages: Math.ceil(total / limit) });
+    
     res.json(jobs);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch jobs' });
@@ -41,6 +52,13 @@ router.post('/create', authenticateToken, async (req, res) => {
         employerId: uid
       }
     });
+
+    // Emit real-time WebSocket event
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('new_job', job);
+    }
+
     res.status(201).json(job);
   } catch (error) {
     console.error(error);
@@ -76,6 +94,14 @@ router.post('/apply', authenticateToken, uploadImage.single('resume'), async (re
           coverLetter: coverLetter || ''
         }
       });
+
+      // Emit real-time WebSocket event for application
+      const io = req.app.get('io');
+      if (io) {
+        // Notify the employer specifically
+        io.to(existingJob.employerId).emit('new_application', application);
+      }
+
       return res.status(201).json(application);
     }
 

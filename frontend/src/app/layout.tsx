@@ -10,10 +10,7 @@ import { CurrencyProvider } from "@/context/CurrencyContext";
 import { TimezoneProvider } from "@/context/TimezoneContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import WhatsAppButton from "@/components/WhatsAppButton";
 import CustomCursor from "@/components/CustomCursor";
-import AIAssistant from "@/components/AIAssistant";
-import GlobalNotificationBar from "@/components/GlobalNotificationBar";
 import CookieConsent from "@/components/CookieConsent";
 import ThemeCustomizerModal from "@/components/ThemeCustomizerModal";
 
@@ -98,10 +95,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                       {children}
                     </main>
                     <Footer />
-                    <WhatsAppButton />
-                    <AIAssistant />
                     <CustomCursor />
-                    <GlobalNotificationBar />
                     <CookieConsent />
                     <ThemeCustomizerModal />
                   </AuthProvider>

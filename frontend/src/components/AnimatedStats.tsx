@@ -1,9 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, memo } from "react";
 import styles from "../app/home.module.css";
 import { API_BASE } from "@/utils/api";
 
-export default function AnimatedStats() {
+const AnimatedStats = memo(function AnimatedStats() {
   const [stats, setStats] = useState({
     countries: null,
     freelancers: null,
@@ -73,7 +73,9 @@ export default function AnimatedStats() {
       ))}
     </div>
   );
-}
+});
+
+export default AnimatedStats;
 
 function CountUp({ end, format }: { end: number; format: (val: number) => string }) {
   const [count, setCount] = useState(0);

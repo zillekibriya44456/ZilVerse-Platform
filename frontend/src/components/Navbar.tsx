@@ -21,7 +21,6 @@ const TYPE_ICONS: Record<string, string> = {
 };
 
 const NAV_ITEMS = [
-  { label: "Home", href: "/", isMega: false },
   {
     label: "Services",
     href: "/services",
@@ -59,7 +58,7 @@ const NAV_ITEMS = [
     ]
   },
   {
-    label: "Opportunities",
+    label: "Jobs & Opps",
     href: "/opportunities",
     isMega: true,
     sections: [
@@ -96,7 +95,7 @@ const NAV_ITEMS = [
     }
   },
   {
-    label: "Learn & Grow",
+    label: "Academy",
     href: "/academy",
     isMega: false,
     items: [

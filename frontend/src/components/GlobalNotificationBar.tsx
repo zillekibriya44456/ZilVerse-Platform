@@ -33,10 +33,32 @@ export default function GlobalNotificationBar() {
       setNotifications(prev => [notif, ...prev]);
     };
 
+    const handleNewJob = (job: any) => {
+      setNotifications(prev => [{
+        id: `job-${job.id}`,
+        title: "New Job Posted",
+        message: `${job.title} at ${job.company}`,
+        type: "update"
+      }, ...prev]);
+    };
+
+    const handleNewApp = (app: any) => {
+      setNotifications(prev => [{
+        id: `app-${app.id}`,
+        title: "New Application Received",
+        message: `Someone applied to your job!`,
+        type: "update"
+      }, ...prev]);
+    };
+
     socket.on('new_notification', handleNewNotif);
+    socket.on('new_job', handleNewJob);
+    socket.on('new_application', handleNewApp);
 
     return () => {
       socket.off('new_notification', handleNewNotif);
+      socket.off('new_job', handleNewJob);
+      socket.off('new_application', handleNewApp);
     };
   }, []);
 
