@@ -85,6 +85,20 @@ const ecosystemCards = [
   },
 ];
 
+const dummyFreelancers = [
+  { id: 'f1', name: 'Alex Johnson', avatar: '/avatars/default.png', freelancerProfile: { title: 'Senior React Developer', hourlyRate: 65 } },
+  { id: 'f2', name: 'Maria Garcia', avatar: '/avatars/default.png', freelancerProfile: { title: 'UI/UX Designer', hourlyRate: 45 } },
+  { id: 'f3', name: 'David Smith', avatar: '/avatars/default.png', freelancerProfile: { title: 'Full Stack Engineer', hourlyRate: 80 } },
+  { id: 'f4', name: 'Sarah Chen', avatar: '/avatars/default.png', freelancerProfile: { title: 'Data Scientist', hourlyRate: 90 } },
+];
+
+const dummyProjects = [
+  { id: 'p1', title: 'E-commerce React Template', category: { name: 'Web Dev' }, price: 49, images: [] },
+  { id: 'p2', title: 'SaaS Dashboard UI Kit', category: { name: 'Design' }, price: 29, images: [] },
+  { id: 'p3', title: 'AI Chatbot Integration', category: { name: 'AI & ML' }, price: 199, images: [] },
+  { id: 'p4', title: 'Mobile App Wireframes', category: { name: 'UI/UX' }, price: 39, images: [] },
+];
+
 export default function Home() {
   const { selectedCountry } = useCountry();
   const [dbTestimonials, setDbTestimonials] = useState<any[]>([]);
@@ -126,6 +140,9 @@ export default function Home() {
       alert("Error submitting feedback: " + (err.response?.data?.error || err.message));
     }
   };
+
+  const renderFreelancers = featured?.freelancers?.length > 0 ? featured.freelancers : dummyFreelancers;
+  const renderProjects = featured?.projects?.length > 0 ? featured.projects : dummyProjects;
 
   return (
     <div className={styles.page}>
@@ -273,7 +290,7 @@ export default function Home() {
                 <Link href="/freelancers" className={styles.columnLink}>View All →</Link>
               </div>
               <div className={styles.columnList}>
-                {featured?.freelancers?.slice(0, 4).map((user: any, idx: number) => (
+                {renderFreelancers.slice(0, 4).map((user: any, idx: number) => (
                   <div key={user.id} className={styles.talentListItem}>
                     <img src={user.avatar || "/avatars/default.png"} alt={user.name} className={styles.listAvatar} />
                     <div className={styles.listInfo}>
@@ -296,7 +313,7 @@ export default function Home() {
                 <Link href="/projects" className={styles.columnLink}>View All →</Link>
               </div>
               <div className={styles.columnList}>
-                {featured?.projects?.slice(0, 4).map((project: any, idx: number) => (
+                {renderProjects.slice(0, 4).map((project: any, idx: number) => (
                   <div key={project.id} className={styles.projectListItem}>
                     <img src={project.images?.[0] || '/images/default_project.jpg'} alt={project.title} className={styles.listProjectImg} />
                     <div className={styles.listInfo}>
