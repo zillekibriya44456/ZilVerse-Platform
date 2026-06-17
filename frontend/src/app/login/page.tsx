@@ -24,7 +24,7 @@ export default function LoginPage() {
   // Redirect to dashboard if already logged in
   useEffect(() => {
     if (user) {
-      window.location.href = "/dashboard";
+      router.push("/dashboard");
     }
   }, [user]);
 
@@ -43,12 +43,13 @@ export default function LoginPage() {
       try {
         const user = JSON.parse(decodeURIComponent(userStr));
         login(user, token);
-        window.location.href = "/dashboard";
+        router.push("/dashboard");
       } catch (err) {
         console.error("Failed to parse user from URL", err);
       }
     }
-  }, [login]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,7 +69,7 @@ export default function LoginPage() {
       }
       
       // Better auth securely sets httpOnly cookies.
-      window.location.href = "/dashboard";
+      router.push("/dashboard");
     } catch (err: any) {
       setError("An unexpected error occurred. Please try again.");
       setLoading(false);

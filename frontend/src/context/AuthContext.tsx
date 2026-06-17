@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { socket } from '../utils/socket';
 
 import { signOut, useSession } from "@/lib/auth-client";
@@ -26,10 +26,11 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
   const { data: session, isPending } = useSession();
 
+  // 1. Initial Local Storage Hydration (runs once)
   useEffect(() => {
-    // Check local storage for token and user on initial load
     const storedToken = localStorage.getItem('zilverse_token');
     const storedUser = localStorage.getItem('zilverse_user');
 
@@ -39,22 +40,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setToken(storedToken);
         setUser(parsedUser);
         
-        // Pass JWT token securely in handshake auth payload
         socket.auth = { token: storedToken };
         socket.connect();
       } catch (e) {
         console.error("Failed to parse user from local storage");
       }
     }
+    setIsHydrated(true);
   }, []);
 
+  // 2. Sync Session from `better-auth` if needed
   useEffect(() => {
-    if (isPending) return;
+    if (!isHydrated || isPending) return;
 
     if (session?.user) {
       const storedToken = localStorage.getItem('zilverse_token');
+      // If we don't have a token but have a session, we need to sync with Express
       if (!storedToken) {
-        // Sync session with Express backend to get JWT token
         axios.post(`${API_BASE}/api/auth/social`, {
           email: session.user.email,
           name: session.user.name,
@@ -75,20 +77,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
       }
     }
-  }, [session, isPending]);
+  }, [session, isPending, isHydrated]);
 
-  const login = (userData: User, newToken: string) => {
+  // Stable Login Reference
+  const login = useCallback((userData: User, newToken: string) => {
     setUser(userData);
     setToken(newToken);
     localStorage.setItem('zilverse_token', newToken);
     localStorage.setItem('zilverse_user', JSON.stringify(userData));
     
-    // Pass JWT token securely in handshake auth payload
     socket.auth = { token: newToken };
     socket.connect();
-  };
+  }, []);
 
-  const logout = () => {
+  // Stable Logout Reference
+  const logout = useCallback(() => {
     setUser(null);
     setToken(null);
     localStorage.removeItem('zilverse_token');
@@ -96,10 +99,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     signOut().catch(console.error);
     socket.disconnect();
-  };
+  }, []);
+
+  // Memoize Provider Value
+  const value = useMemo(() => ({
+    user,
+    token,
+    login,
+    logout
+  }), [user, token, login, logout]);
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
