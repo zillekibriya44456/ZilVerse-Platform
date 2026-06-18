@@ -34,6 +34,11 @@ router.post('/report', requireAuth, async (req: Request, res: Response): Promise
       data: { reporterId, reportedUserId, reason, details: details || '' },
     });
 
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('new_report', report);
+    }
+
     // Reduce trust score of reported user (soft signal)
     await prisma.user.update({
       where: { id: reportedUserId },

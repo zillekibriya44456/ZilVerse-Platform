@@ -141,4 +141,58 @@ router.get('/quotes', async (_req: Request, res: Response): Promise<any> => {
   }
 });
 
+// GET /api/services/:id
+router.get('/:id', async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { id } = req.params as Record<string, string>;
+    const service = await prisma.digitalService.findUnique({
+      where: { id },
+      include: { seller: { select: { name: true, email: true, avatar: true, verified: true } } },
+    });
+    if (!service) return res.status(404).json({ error: 'Service not found' });
+    return res.json(service);
+  } catch (error) {
+    console.error('Service detail fetch error:', error);
+    return res.status(500).json({ error: 'Failed to fetch service details' });
+  }
+});
+
+// PATCH /api/services/:id/payment-info (authenticated, owner-only)
+router.patch('/:id/payment-info', authenticateToken, async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { id } = req.params as Record<string, string>;
+    const { paymentMethods, upiId, bankName, bankAccount, ifscCode, razorpayEnabled } = req.body;
+    const sellerId = (req as any).user?.id;
+
+    if (!sellerId) return res.status(401).json({ error: 'Unauthorized user context.' });
+
+    const service = await prisma.digitalService.findUnique({
+      where: { id },
+    });
+
+    if (!service) return res.status(404).json({ error: 'Service not found' });
+    if (service.sellerId !== sellerId) return res.status(403).json({ error: 'Forbidden: You do not own this service' });
+
+    const updatedService = await prisma.digitalService.update({
+      where: { id },
+      data: {
+        paymentMethods: paymentMethods ? JSON.stringify(paymentMethods) : null,
+        upiId: upiId || null,
+        bankName: bankName || null,
+        bankAccount: bankAccount || null,
+        ifscCode: ifscCode || null,
+        razorpayEnabled: typeof razorpayEnabled === 'boolean' ? razorpayEnabled : false,
+      },
+    });
+
+    // Invalidate cache
+    cachedServices = null;
+
+    return res.json(updatedService);
+  } catch (error) {
+    console.error('[SERVICE PAYMENT INFO UPDATE ERROR]', error);
+    return res.status(500).json({ error: 'Failed to update payment info' });
+  }
+});
+
 export default router;

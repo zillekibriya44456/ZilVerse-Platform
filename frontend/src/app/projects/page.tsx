@@ -68,6 +68,63 @@ export default function ProjectsPage() {
   const [spotlightProgress, setSpotlightProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [activeSpotlightVideo, setActiveSpotlightVideo] = useState<string | null>(null);
+  const [isEditingPayment, setIsEditingPayment] = useState(false);
+  const [editPaymentForm, setEditPaymentForm] = useState({
+    paymentMethods: [] as string[],
+    upiId: "",
+    bankName: "",
+    bankAccount: "",
+    ifscCode: "",
+    razorpayEnabled: false
+  });
+
+  const handleViewDetails = (project: any) => {
+    setDetailsProject(project);
+    setIsEditingPayment(false);
+    let parsedMethods: string[] = [];
+    try {
+      if (project.paymentMethods) {
+        parsedMethods = typeof project.paymentMethods === 'string' ? JSON.parse(project.paymentMethods) : project.paymentMethods;
+      }
+    } catch (e) {
+      parsedMethods = [];
+    }
+    setEditPaymentForm({
+      paymentMethods: Array.isArray(parsedMethods) ? parsedMethods : [],
+      upiId: project.upiId || "",
+      bankName: project.bankName || "",
+      bankAccount: project.bankAccount || "",
+      ifscCode: project.ifscCode || "",
+      razorpayEnabled: !!project.razorpayEnabled
+    });
+  };
+
+  const handleSavePaymentInfo = async (projectId: string) => {
+    try {
+      const token = localStorage.getItem('zilverse_token');
+      await axios.patch(`${API_BASE}/api/projects/${projectId}/payment-info`, editPaymentForm, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert("Payment details updated successfully!");
+      setIsEditingPayment(false);
+      
+      setDetailsProject((prev: any) => ({
+        ...prev,
+        paymentMethods: JSON.stringify(editPaymentForm.paymentMethods),
+        upiId: editPaymentForm.upiId,
+        bankName: editPaymentForm.bankName,
+        bankAccount: editPaymentForm.bankAccount,
+        ifscCode: editPaymentForm.ifscCode,
+        razorpayEnabled: editPaymentForm.razorpayEnabled
+      }));
+
+      const res = await axios.get(`${API_BASE}/api/projects`);
+      const raw = res.data?.data ?? res.data;
+      setDbProjects(Array.isArray(raw) ? raw : []);
+    } catch (err: any) {
+      alert("Failed to update payment info: " + (err.response?.data?.error || err.message));
+    }
+  };
 
   const handleVideoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
@@ -218,6 +275,7 @@ export default function ProjectsPage() {
     inrPrice: true,
     license: "Commercial",
     seller: p.seller?.name || "Global Creator",
+    sellerId: p.sellerId,
     rating: p.rating || 5.0,
     sales: ((p.id?.charCodeAt(0) || 65) % 50) + 1, // deterministic
     color: "linear-gradient(135deg, #10b981, #3b82f6)",
@@ -225,6 +283,12 @@ export default function ProjectsPage() {
     icon: "💻",
     image: p.images?.[0] || "/projects/saas.png",
     videoUrl: p.videoUrl || null,
+    paymentMethods: p.paymentMethods,
+    upiId: p.upiId,
+    bankName: p.bankName,
+    bankAccount: p.bankAccount,
+    ifscCode: p.ifscCode,
+    razorpayEnabled: p.razorpayEnabled,
   }));
 
 
@@ -441,7 +505,7 @@ export default function ProjectsPage() {
                   {/* Actions */}
                   <div className={styles.actions}>
                     <button
-                      onClick={() => setDetailsProject(p)}
+                      onClick={() => handleViewDetails(p)}
                       className="btn btn-secondary"
                     >
                       📺 Details & Demo
@@ -644,6 +708,165 @@ export default function ProjectsPage() {
                 ℹ️ No demo video uploaded for this project.
               </div>
             )}
+
+            {/* Payment Info Section */}
+            <div style={{ marginBottom: '1.5rem', background: '#18181b', border: '1px solid #27272a', borderRadius: '12px', padding: '1.25rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                <h4 style={{ color: '#fff', margin: 0, fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  💳 Seller Payment Information
+                </h4>
+                {detailsProject.sellerId === user?.id && (
+                  <button 
+                    onClick={() => setIsEditingPayment(!isEditingPayment)} 
+                    style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 'bold' }}
+                  >
+                    {isEditingPayment ? 'Cancel' : '⚙️ Edit Info'}
+                  </button>
+                )}
+              </div>
+
+              {isEditingPayment ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.5rem' }}>
+                  <div>
+                    <label style={{ color: '#aaa', fontSize: '0.8rem', display: 'block', marginBottom: '0.2rem' }}>Accepted Payment Methods</label>
+                    <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                      {['UPI', 'Bank', 'Razorpay'].map(method => {
+                        const isChecked = editPaymentForm.paymentMethods.includes(method);
+                        return (
+                          <label key={method} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#fff', fontSize: '0.85rem', cursor: 'pointer' }}>
+                            <input 
+                              type="checkbox" 
+                              checked={isChecked}
+                              onChange={(e) => {
+                                let updated = [...editPaymentForm.paymentMethods];
+                                if (e.target.checked) {
+                                  if (!updated.includes(method)) updated.push(method);
+                                } else {
+                                  updated = updated.filter(m => m !== method);
+                                }
+                                setEditPaymentForm({ ...editPaymentForm, paymentMethods: updated });
+                              }}
+                            />
+                            {method}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {editPaymentForm.paymentMethods.includes('UPI') && (
+                    <div>
+                      <input 
+                        type="text" 
+                        placeholder="UPI ID (e.g. user@okaxis)" 
+                        value={editPaymentForm.upiId}
+                        onChange={e => setEditPaymentForm({ ...editPaymentForm, upiId: e.target.value })}
+                        style={{ width: '100%', padding: '0.6rem 0.8rem', background: '#09090b', border: '1px solid #27272a', color: '#fff', borderRadius: '6px', fontSize: '0.85rem' }}
+                      />
+                    </div>
+                  )}
+
+                  {editPaymentForm.paymentMethods.includes('Bank') && (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                      <input 
+                        type="text" 
+                        placeholder="Bank Name" 
+                        value={editPaymentForm.bankName}
+                        onChange={e => setEditPaymentForm({ ...editPaymentForm, bankName: e.target.value })}
+                        style={{ padding: '0.6rem 0.8rem', background: '#09090b', border: '1px solid #27272a', color: '#fff', borderRadius: '6px', fontSize: '0.85rem' }}
+                      />
+                      <input 
+                        type="text" 
+                        placeholder="IFSC Code" 
+                        value={editPaymentForm.ifscCode}
+                        onChange={e => setEditPaymentForm({ ...editPaymentForm, ifscCode: e.target.value })}
+                        style={{ padding: '0.6rem 0.8rem', background: '#09090b', border: '1px solid #27272a', color: '#fff', borderRadius: '6px', fontSize: '0.85rem' }}
+                      />
+                      <input 
+                        type="text" 
+                        placeholder="Account Number" 
+                        value={editPaymentForm.bankAccount}
+                        onChange={e => setEditPaymentForm({ ...editPaymentForm, bankAccount: e.target.value })}
+                        style={{ gridColumn: 'span 2', padding: '0.6rem 0.8rem', background: '#09090b', border: '1px solid #27272a', color: '#fff', borderRadius: '6px', fontSize: '0.85rem' }}
+                      />
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem' }}>
+                    <input 
+                      type="checkbox" 
+                      id="rzpToggle"
+                      checked={editPaymentForm.razorpayEnabled}
+                      onChange={e => setEditPaymentForm({ ...editPaymentForm, razorpayEnabled: e.target.checked })}
+                    />
+                    <label htmlFor="rzpToggle" style={{ color: '#fff', fontSize: '0.85rem', cursor: 'pointer' }}>Enable Razorpay Gateway Direct checkout</label>
+                  </div>
+
+                  <button 
+                    onClick={() => handleSavePaymentInfo(detailsProject.id)}
+                    style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '0.6rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem', marginTop: '0.25rem' }}
+                  >
+                    Save Payment Options
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  {(() => {
+                    let methods: string[] = [];
+                    try {
+                      if (detailsProject.paymentMethods) {
+                        methods = typeof detailsProject.paymentMethods === 'string' ? JSON.parse(detailsProject.paymentMethods) : detailsProject.paymentMethods;
+                      }
+                    } catch (e) {}
+
+                    if (!methods || methods.length === 0) {
+                      return <span style={{ color: '#71717a', fontSize: '0.85rem' }}>No direct payment options listed by seller. Use standard checkout.</span>;
+                    }
+
+                    return (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          {methods.map(m => (
+                            <span key={m} style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', border: '1px solid rgba(59, 130, 246, 0.2)', padding: '0.2rem 0.6rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600 }}>
+                              {m === 'Bank' ? '🏦 Bank Transfer' : m === 'UPI' ? '📱 UPI Pay' : '💳 Razorpay'}
+                            </span>
+                          ))}
+                        </div>
+
+                        {methods.includes('UPI') && detailsProject.upiId && (
+                          <div style={{ background: '#09090b', padding: '0.6rem 0.8rem', borderRadius: '6px', border: '1px solid #27272a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div>
+                              <span style={{ color: '#71717a', fontSize: '0.75rem', display: 'block' }}>UPI ID</span>
+                              <code style={{ color: '#e4e4e7', fontSize: '0.85rem' }}>{detailsProject.upiId}</code>
+                            </div>
+                            <button 
+                              onClick={() => { navigator.clipboard.writeText(detailsProject.upiId); alert('UPI ID Copied!'); }}
+                              style={{ background: '#222', border: '1px solid #333', color: '#fff', fontSize: '0.75rem', padding: '0.25rem 0.5rem', borderRadius: '4px', cursor: 'pointer' }}
+                            >
+                              Copy
+                            </button>
+                          </div>
+                        )}
+
+                        {methods.includes('Bank') && detailsProject.bankName && (
+                          <div style={{ background: '#09090b', padding: '0.6rem 0.8rem', borderRadius: '6px', border: '1px solid #27272a' }}>
+                            <span style={{ color: '#71717a', fontSize: '0.75rem', display: 'block', marginBottom: '0.25rem' }}>Bank Account Details</span>
+                            <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '0.25rem', fontSize: '0.8rem', color: '#e4e4e7' }}>
+                              <span style={{ color: '#71717a' }}>Bank Name:</span>
+                              <strong>{detailsProject.bankName}</strong>
+                              <span style={{ color: '#71717a' }}>Account No:</span>
+                              <strong>{detailsProject.bankAccount}</strong>
+                              <span style={{ color: '#71717a' }}>IFSC Code:</span>
+                              <strong>{detailsProject.ifscCode}</strong>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+            </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #222', paddingTop: '1.2rem', marginTop: '1rem' }}>
               <div>

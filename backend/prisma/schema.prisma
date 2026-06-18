@@ -92,6 +92,7 @@ model User {
   ideaVotes          IdeaVote[]
   ideaTeamMembers    IdeaTeamMember[]
   chatRoomMessages   ChatRoomMessage[]      @relation("ChatRoomMessageSender")
+  chatRoomMembers    ChatRoomMember[]
 }
 
 model ThemePreference {
@@ -218,6 +219,7 @@ model Event {
   price       Float?                           // ticket price in INR (null = free)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  tickets     EventTicket[]
 
   @@index([category])
   @@index([isFree])
@@ -236,6 +238,8 @@ model InterviewResult {
   id          String   @id @default(uuid())
   score       Int
   feedback    String
+  transcript  String?
+  role        String   @default("Technical Role")
   userId      String
   user        User     @relation(fields: [userId], references: [id])
   createdAt   DateTime @default(now())
@@ -252,6 +256,14 @@ model FundGrant {
   deadline     String   @default("Rolling")
   creatorId    String
   creator      User     @relation(fields: [creatorId], references: [id])
+  pitchDeck    String?  // URL to pitch deck
+  website      String?
+  stage        String?  // Idea | MVP | Growth
+  sector       String?
+  targetAmount Float?
+  raisedAmount Float    @default(0)
+  status       String   @default("OPEN") // OPEN | FUNDED | CLOSED
+  investorId   String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -304,6 +316,12 @@ model DigitalService {
   sales        Int      @default(0)
   sellerId     String
   seller       User     @relation(fields: [sellerId], references: [id])
+  paymentMethods String? // JSON array of accepted payment methods
+  upiId          String?
+  bankName       String?
+  bankAccount    String?
+  ifscCode       String?
+  razorpayEnabled Boolean @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -339,6 +357,12 @@ model Project {
   sellerId    String
   seller      User     @relation(fields: [sellerId], references: [id])
   videoUrl    String?
+  paymentMethods String? // JSON array of accepted payment methods
+  upiId          String?
+  bankName       String?
+  bankAccount    String?
+  ifscCode       String?
+  razorpayEnabled Boolean @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -850,6 +874,7 @@ model EventTicket {
   status          String   @default("PENDING")
   createdAt       DateTime @default(now())
   user            User     @relation(fields: [userId], references: [id])
+  event           Event    @relation(fields: [eventId], references: [id])
   @@index([userId])
   @@index([eventId])
 }
@@ -947,6 +972,7 @@ model ChatRoomMember {
   joinedAt   DateTime  @default(now())
   leftAt     DateTime?                              // null = active member
   room       ChatRoom  @relation(fields: [roomId], references: [id])
+  user       User      @relation(fields: [userId], references: [id])
   @@index([roomId])
   @@index([userId])
 }

@@ -85,6 +85,11 @@ router.post('/register', async (req: Request, res: Response): Promise<any> => {
       data: { email, password: hashed, name, role: role || 'BUYER' },
     });
 
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('new_user', { id: user.id, name: user.name, email: user.email, role: user.role });
+    }
+
     res.status(201).json({ message: 'Account created', userId: user.id });
   } catch (err) {
     console.error(err);

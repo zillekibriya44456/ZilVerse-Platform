@@ -698,6 +698,16 @@ const verifyPaymentHandler = async (req: any, res: any) => {
           }
         });
 
+        const io = req.app.get('io');
+        if (io) {
+          io.emit('new_order', {
+            id: transaction?.id,
+            userId,
+            amount: usdAmount,
+            description: finalDescription || description
+          });
+        }
+
         emitWalletUpdate(req, userId);
       }
     }

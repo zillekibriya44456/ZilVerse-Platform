@@ -101,13 +101,62 @@ export default function AdminDashboard() {
       setSentNotifs(prev => [newNotif, ...prev]);
     };
 
+    const handleNewUser = (data: any) => {
+      console.log("[SOCKET] New user registered:", data);
+      setStats((prev: any) => prev ? { ...prev, totalUsers: (prev.totalUsers || 0) + 1 } : null);
+      setActivity(prev => [
+        { icon: "👥", text: `New user registered: ${data.name || data.email}`, color: "#7c3aed", time: new Date().toISOString() },
+        ...prev
+      ]);
+      showToast(`👥 New user registered: ${data.name || data.email}`);
+    };
+
+    const handleNewApplication = (data: any) => {
+      console.log("[SOCKET] New job application received:", data);
+      setActivity(prev => [
+        { icon: "📋", text: `New job application submitted`, color: "#22d3ee", time: new Date().toISOString() },
+        ...prev
+      ]);
+      setApplications(prev => [data, ...prev]);
+      showToast(`📋 New job application submitted`);
+    };
+
+    const handleNewReport = (data: any) => {
+      console.log("[SOCKET] New safety report filed:", data);
+      setReports(prev => [data, ...prev]);
+      setReportsTotal(prev => prev + 1);
+      setActivity(prev => [
+        { icon: "🚨", text: `Safety Report Filed: ${data.reason}`, color: "#ef4444", time: new Date().toISOString() },
+        ...prev
+      ]);
+      showToast(`🚨 ALERT: New safety report filed for: ${data.reason}`);
+    };
+
+    const handleNewOrder = (data: any) => {
+      console.log("[SOCKET] New payment order completed:", data);
+      setStats((prev: any) => prev ? { ...prev, totalRevenue: (prev.totalRevenue || 0) + data.amount } : null);
+      setActivity(prev => [
+        { icon: "💰", text: `Order completed: $${data.amount.toFixed(2)} - ${data.description}`, color: "#10b981", time: new Date().toISOString() },
+        ...prev
+      ]);
+      showToast(`💰 Payment Received: $${data.amount.toFixed(2)}`);
+    };
+
     socket.connect();
     socket.on('admin_payment_update', handlePayUpdate);
     socket.on('new_notification', handleNotifUpdate);
+    socket.on('new_user', handleNewUser);
+    socket.on('new_application', handleNewApplication);
+    socket.on('new_report', handleNewReport);
+    socket.on('new_order', handleNewOrder);
 
     return () => {
       socket.off('admin_payment_update', handlePayUpdate);
       socket.off('new_notification', handleNotifUpdate);
+      socket.off('new_user', handleNewUser);
+      socket.off('new_application', handleNewApplication);
+      socket.off('new_report', handleNewReport);
+      socket.off('new_order', handleNewOrder);
     };
   }, [token]);
 

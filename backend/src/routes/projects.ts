@@ -127,4 +127,42 @@ router.post('/upload-video', authenticateToken, uploadVideo.single('video'), asy
   }
 });
 
+// PATCH /api/projects/:id/payment-info (authenticated, owner-only)
+router.patch('/:id/payment-info', authenticateToken, async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { id } = req.params as Record<string, string>;
+    const { paymentMethods, upiId, bankName, bankAccount, ifscCode, razorpayEnabled } = req.body;
+    const sellerId = (req as any).user?.id;
+
+    if (!sellerId) return res.status(401).json({ error: 'Unauthorized user context.' });
+
+    const project = await prisma.project.findUnique({
+      where: { id },
+    });
+
+    if (!project) return res.status(404).json({ error: 'Project not found' });
+    if (project.sellerId !== sellerId) return res.status(403).json({ error: 'Forbidden: You do not own this project' });
+
+    const updatedProject = await prisma.project.update({
+      where: { id },
+      data: {
+        paymentMethods: paymentMethods ? JSON.stringify(paymentMethods) : null,
+        upiId: upiId || null,
+        bankName: bankName || null,
+        bankAccount: bankAccount || null,
+        ifscCode: ifscCode || null,
+        razorpayEnabled: typeof razorpayEnabled === 'boolean' ? razorpayEnabled : false,
+      },
+    });
+
+    // Invalidate cache
+    cachedProjects = null;
+
+    return res.json(updatedProject);
+  } catch (error) {
+    console.error('[PROJECT PAYMENT INFO UPDATE ERROR]', error);
+    return res.status(500).json({ error: 'Failed to update payment info' });
+  }
+});
+
 export default router;

@@ -116,6 +116,8 @@ router.post('/apply', authenticateToken, uploadImage.single('resume'), async (re
       if (io) {
         // Notify the employer specifically
         io.to(existingJob.employerId).emit('new_application', application);
+        // Notify admins globally
+        io.emit('new_application', application);
       }
 
       return res.status(201).json(application);

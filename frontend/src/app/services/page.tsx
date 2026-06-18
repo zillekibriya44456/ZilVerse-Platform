@@ -76,6 +76,52 @@ export default function ServicesPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
+  const [managedService, setManagedService] = useState<any | null>(null);
+  const [editPaymentForm, setEditPaymentForm] = useState({
+    paymentMethods: [] as string[],
+    upiId: "",
+    bankName: "",
+    bankAccount: "",
+    ifscCode: "",
+    razorpayEnabled: false
+  });
+
+  const handleManagePaymentsClick = (service: any) => {
+    setManagedService(service);
+    let parsedMethods: string[] = [];
+    try {
+      if (service.paymentMethods) {
+        parsedMethods = typeof service.paymentMethods === 'string' ? JSON.parse(service.paymentMethods) : service.paymentMethods;
+      }
+    } catch (e) {}
+    setEditPaymentForm({
+      paymentMethods: Array.isArray(parsedMethods) ? parsedMethods : [],
+      upiId: service.upiId || "",
+      bankName: service.bankName || "",
+      bankAccount: service.bankAccount || "",
+      ifscCode: service.ifscCode || "",
+      razorpayEnabled: !!service.razorpayEnabled
+    });
+  };
+
+  const handleSaveServicePayment = async () => {
+    if (!managedService) return;
+    try {
+      const token = localStorage.getItem('zilverse_token');
+      await axios.patch(`${API_BASE}/api/services/${managedService.id}/payment-info`, editPaymentForm, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert("Service payment details updated successfully!");
+      setManagedService(null);
+      
+      const res = await axios.get(API);
+      const raw = res.data?.data ?? res.data;
+      setDbServices(Array.isArray(raw) ? raw : []);
+    } catch (err: any) {
+      alert("Failed to update payment details: " + (err.response?.data?.error || err.message));
+    }
+  };
+
   useEffect(() => {
     setServicesLoading(true);
     // API now returns {data, total, ...} or flat array (legacy)
@@ -97,10 +143,21 @@ export default function ServicesPage() {
   }, [user]);
 
   const formattedDbServices = dbServices.map((s: any) => ({
-    icon: "💻", title: s.title, desc: s.description,
+    id: s.id,
+    icon: "💻", 
+    title: s.title, 
+    desc: s.description,
     price: `From $${s.price}`,
+    rawPrice: s.price,
     features: [`Delivery: ${s.deliveryTime}`, `Rating: ${s.rating}★`, `${s.sales} Sales`, "Custom Build"],
     color: "linear-gradient(135deg, #10b981, #3b82f6)",
+    sellerId: s.sellerId,
+    paymentMethods: s.paymentMethods,
+    upiId: s.upiId,
+    bankName: s.bankName,
+    bankAccount: s.bankAccount,
+    ifscCode: s.ifscCode,
+    razorpayEnabled: s.razorpayEnabled,
   }));
 
   const services = [...formattedDbServices, ...MOCK_SERVICES];
@@ -356,9 +413,15 @@ export default function ServicesPage() {
                 <button className="btn btn-secondary" style={{ flex: 1, padding: "0.6rem" }} onClick={() => handleQuoteClick(s.title)}>
                   Quote
                 </button>
-                <button className="btn btn-primary" style={{ flex: 1, padding: "0.6rem" }} onClick={() => handleOrderClick(s)}>
-                  Buy Now
-                </button>
+                {(s as any).sellerId === user?.id ? (
+                  <button className="btn btn-primary" style={{ flex: 1, padding: "0.6rem", background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)' }} onClick={() => handleManagePaymentsClick(s)}>
+                    ⚙️ Payments
+                  </button>
+                ) : (
+                  <button className="btn btn-primary" style={{ flex: 1, padding: "0.6rem" }} onClick={() => handleOrderClick(s)}>
+                    Buy Now
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -505,6 +568,47 @@ export default function ServicesPage() {
               </span>
             </div>
 
+            {/* Display Seller Payment Details if available */}
+            {(() => {
+              let methods: string[] = [];
+              try {
+                if (selectedService.paymentMethods) {
+                  methods = typeof selectedService.paymentMethods === 'string' 
+                    ? JSON.parse(selectedService.paymentMethods) 
+                    : selectedService.paymentMethods;
+                }
+              } catch (e) {}
+
+              if (!methods || methods.length === 0) return null;
+
+              return (
+                <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "10px", padding: "1rem", marginBottom: "1rem" }}>
+                  <span style={{ fontSize: "0.75rem", color: "#a1a1aa", display: "block", marginBottom: "0.4rem" }}>Direct Payment Methods:</span>
+                  <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
+                    {methods.map(m => (
+                      <span key={m} style={{ background: 'rgba(59, 130, 246, 0.15)', color: '#3b82f6', border: '1px solid rgba(59, 130, 246, 0.2)', padding: '0.15rem 0.5rem', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 600 }}>
+                        {m === 'Bank' ? '🏦 Bank' : m === 'UPI' ? '📱 UPI' : '💳 Razorpay'}
+                      </span>
+                    ))}
+                  </div>
+                  {methods.includes('UPI') && selectedService.upiId && (
+                    <div style={{ fontSize: '0.8rem', color: '#e4e4e7', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#09090b', padding: '0.4rem 0.6rem', borderRadius: '6px', marginBottom: '0.4rem' }}>
+                      <span>UPI ID: <code>{selectedService.upiId}</code></span>
+                      <button type="button" onClick={() => { navigator.clipboard.writeText(selectedService.upiId); alert('UPI ID Copied!'); }} style={{ background: '#222', border: '1px solid #333', color: '#fff', fontSize: '0.7rem', padding: '0.15rem 0.4rem', borderRadius: '4px', cursor: 'pointer' }}>Copy</button>
+                    </div>
+                  )}
+                  {methods.includes('Bank') && selectedService.bankName && (
+                    <div style={{ fontSize: '0.8rem', color: '#e4e4e7', background: '#09090b', padding: '0.5rem 0.6rem', borderRadius: '6px' }}>
+                      <div style={{ color: '#71717a', fontSize: '0.7rem', marginBottom: '0.2rem' }}>Bank Details:</div>
+                      <div>Bank: {selectedService.bankName}</div>
+                      <div>A/C: {selectedService.bankAccount}</div>
+                      <div>IFSC: {selectedService.ifscCode}</div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
               <input type="text" placeholder="Your Name *" value={purchaseForm.name}
                 onChange={e => setPurchaseForm({ ...purchaseForm, name: e.target.value })}
@@ -532,6 +636,116 @@ export default function ServicesPage() {
                 opacity: isSubmitting ? 0.7 : 1, transition: "all 0.2s"
               }}>
               {isSubmitting ? "Processing Checkout..." : `💳 Pay ${RATES[currency].symbol}{(parsePrice(selectedService.price) * RATES[currency].rate).toFixed(2)} Now`}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Manage Service Payments Modal (Owner) */}
+      {managedService && (
+        <div style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", zIndex: 99999,
+          display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)"
+        }} onClick={() => setManagedService(null)}>
+          <div style={{
+            background: "rgba(18,18,20,0.98)", borderRadius: "20px",
+            border: "1px solid rgba(255,255,255,0.08)", padding: "2rem",
+            width: "90%", maxWidth: "480px", maxHeight: "85vh", overflowY: "auto",
+            backdropFilter: "blur(30px)"
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+              <h2 style={{ color: "#fff", fontSize: "1.25rem", fontWeight: 800, margin: 0 }}>
+                ⚙️ Manage Service Payment Options
+              </h2>
+              <button onClick={() => setManagedService(null)} style={{
+                background: "none", border: "none", color: "#71717a", fontSize: "1.2rem", cursor: "pointer"
+              }}>✕</button>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div>
+                <label style={{ color: '#aaa', fontSize: '0.8rem', display: 'block', marginBottom: '0.4rem' }}>Accepted Payment Methods</label>
+                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                  {['UPI', 'Bank', 'Razorpay'].map(method => {
+                    const isChecked = editPaymentForm.paymentMethods.includes(method);
+                    return (
+                      <label key={method} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#fff', fontSize: '0.85rem', cursor: 'pointer' }}>
+                        <input 
+                          type="checkbox" 
+                          checked={isChecked}
+                          onChange={(e) => {
+                            let updated = [...editPaymentForm.paymentMethods];
+                            if (e.target.checked) {
+                              if (!updated.includes(method)) updated.push(method);
+                            } else {
+                              updated = updated.filter(m => m !== method);
+                            }
+                            setEditPaymentForm({ ...editPaymentForm, paymentMethods: updated });
+                          }}
+                        />
+                        {method}
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {editPaymentForm.paymentMethods.includes('UPI') && (
+                <div>
+                  <input 
+                    type="text" 
+                    placeholder="UPI ID (e.g. user@okaxis)" 
+                    value={editPaymentForm.upiId}
+                    onChange={e => setEditPaymentForm({ ...editPaymentForm, upiId: e.target.value })}
+                    style={inputStyle}
+                  />
+                </div>
+              )}
+
+              {editPaymentForm.paymentMethods.includes('Bank') && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <input 
+                    type="text" 
+                    placeholder="Bank Name" 
+                    value={editPaymentForm.bankName}
+                    onChange={e => setEditPaymentForm({ ...editPaymentForm, bankName: e.target.value })}
+                    style={inputStyle}
+                  />
+                  <input 
+                    type="text" 
+                    placeholder="IFSC Code" 
+                    value={editPaymentForm.ifscCode}
+                    onChange={e => setEditPaymentForm({ ...editPaymentForm, ifscCode: e.target.value })}
+                    style={inputStyle}
+                  />
+                  <input 
+                    type="text" 
+                    placeholder="Account Number" 
+                    value={editPaymentForm.bankAccount}
+                    onChange={e => setEditPaymentForm({ ...editPaymentForm, bankAccount: e.target.value })}
+                    style={inputStyle}
+                  />
+                </div>
+              )}
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <input 
+                  type="checkbox" 
+                  id="srvRzpToggle"
+                  checked={editPaymentForm.razorpayEnabled}
+                  onChange={e => setEditPaymentForm({ ...editPaymentForm, razorpayEnabled: e.target.checked })}
+                />
+                <label htmlFor="srvRzpToggle" style={{ color: '#fff', fontSize: '0.85rem', cursor: 'pointer' }}>Enable Razorpay Gateway direct checkout</label>
+              </div>
+            </div>
+
+            <button onClick={handleSaveServicePayment}
+              style={{
+                width: "100%", padding: "1rem", marginTop: "1.5rem", border: "none",
+                borderRadius: "12px", fontWeight: 700, fontSize: "1rem", cursor: "pointer",
+                background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", color: "#fff",
+              }}>
+              Save Payment Details
             </button>
           </div>
         </div>
