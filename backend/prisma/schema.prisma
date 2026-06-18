@@ -91,6 +91,7 @@ model User {
   innovationIdeas    InnovationIdea[]
   ideaVotes          IdeaVote[]
   ideaTeamMembers    IdeaTeamMember[]
+  chatRoomMessages   ChatRoomMessage[]      @relation("ChatRoomMessageSender")
 }
 
 model ThemePreference {
@@ -214,6 +215,7 @@ model Event {
   description String?
   category    String   @default("Full Stack")
   isFree      Boolean  @default(true)
+  price       Float?                           // ticket price in INR (null = free)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -613,6 +615,8 @@ model Message {
   receiverId  String
   content     String   @default("")
   messageType String   @default("text") // text | file | audio | system
+  type        String   @default("TEXT") // alias used by voice note API
+  duration    Float    @default(0)      // voice note duration in seconds
   fileUrl     String?  // for file/audio messages
   fileType    String?  // image | pdf | doc | audio | zip
   fileName    String?  // original filename
@@ -839,9 +843,10 @@ model EventTicket {
   id              String   @id @default(uuid())
   eventId         String
   userId          String
+  ticketCode      String?                      // unique ticket identifier
   razorpayOrderId String?
   razorpayPayId   String?
-  amount          Float
+  amount          Float    @default(0)
   status          String   @default("PENDING")
   createdAt       DateTime @default(now())
   user            User     @relation(fields: [userId], references: [id])
@@ -925,6 +930,8 @@ model ChatRoom {
   description String?
   avatar      String?
   creatorId   String
+  createdBy   String?                               // alias — set same as creatorId
+  updatedAt   DateTime          @default(now()) @updatedAt
   createdAt   DateTime          @default(now())
   members     ChatRoomMember[]
   messages    ChatRoomMessage[]
@@ -932,26 +939,32 @@ model ChatRoom {
 }
 
 model ChatRoomMember {
-  id       String   @id @default(uuid())
-  roomId   String
-  userId   String
-  role     String   @default("MEMBER")
-  joinedAt DateTime @default(now())
-  room     ChatRoom @relation(fields: [roomId], references: [id])
-  @@unique([roomId, userId])
+  id         String    @id @default(uuid())
+  roomId     String
+  chatRoomId String?                                // alias FK used by newer API
+  userId     String
+  role       String    @default("MEMBER")
+  joinedAt   DateTime  @default(now())
+  leftAt     DateTime?                              // null = active member
+  room       ChatRoom  @relation(fields: [roomId], references: [id])
   @@index([roomId])
+  @@index([userId])
 }
 
 model ChatRoomMessage {
   id          String   @id @default(uuid())
   roomId      String
+  chatRoomId  String?                               // alias FK used by newer API
   senderId    String
   content     String?
   fileUrl     String?
   fileType    String?
   messageType String   @default("text")
+  type        String   @default("TEXT")             // alias used by newer API
+  duration    Float    @default(0)                  // for voice notes (seconds)
   isDeleted   Boolean  @default(false)
   createdAt   DateTime @default(now())
   room        ChatRoom @relation(fields: [roomId], references: [id])
+  sender      User     @relation("ChatRoomMessageSender", fields: [senderId], references: [id])
   @@index([roomId, createdAt])
 }

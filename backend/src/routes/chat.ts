@@ -296,4 +296,222 @@ router.post('/mark-read/:partnerId', requireAuth, async (req: Request, res: Resp
   }
 });
 
+
+// ══════════════════════════════════════════════════════════════
+// GROUP CHAT (ChatRoom) ENDPOINTS
+// ══════════════════════════════════════════════════════════════
+
+// Voice upload dir
+const voiceDir = path.join(process.cwd(), 'uploads', 'voice');
+if (!fs.existsSync(voiceDir)) fs.mkdirSync(voiceDir, { recursive: true });
+const voiceUpload = multer({
+  storage: multer.diskStorage({
+    destination: (_req: any, _file: any, cb: any) => cb(null, voiceDir),
+    filename:    (_req: any, file: any, cb: any) => cb(null, `voice-${Date.now()}${path.extname(file.originalname)}`),
+  }),
+  fileFilter: (_req: any, file: any, cb: any) => {
+    if (file.mimetype.startsWith('audio/')) cb(null, true);
+    else cb(new Error('Only audio files allowed'), false);
+  },
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+});
+
+// ── POST /api/chat/rooms — create group chat room ──────────────────────────────
+router.post('/rooms', requireAuth, async (req: Request, res: Response): Promise<any> => {
+  try {
+    const uid  = String((req as any).user.id);
+    const { name, description, memberIds = [] } = req.body;
+    if (!name) return res.status(400).json({ error: 'Room name is required' });
+
+    const allMembers = Array.from(new Set([uid, ...memberIds]));
+
+    const room = await prisma.chatRoom.create({
+      data: {
+        name, description: description || '',
+        creatorId: uid, createdBy: uid,
+        members: {
+          create: allMembers.map((id: string) => ({ userId: id, role: id === uid ? 'ADMIN' : 'MEMBER' })),
+        },
+      },
+      include: { members: { include: { user: { select: { id: true, name: true, avatar: true } } } } },
+    });
+
+    // Notify all members via Socket.IO
+    const io = (req as any).app.get('io');
+    if (io) {
+      allMembers.forEach((id: string) => io.to(id).emit('room_created', { room }));
+    }
+
+    return res.status(201).json(room);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Failed to create room' });
+  }
+});
+
+// ── GET /api/chat/rooms — list user's group rooms ──────────────────────────────
+router.get('/rooms', requireAuth, async (req: Request, res: Response): Promise<any> => {
+  try {
+    const uid = String((req as any).user.id);
+    const rooms = await prisma.chatRoom.findMany({
+      where:   { members: { some: { userId: uid, leftAt: null } } },
+      include: {
+        members: { where: { leftAt: null }, include: { user: { select: { id: true, name: true, avatar: true } } } },
+        messages: { orderBy: { createdAt: 'desc' }, take: 1 },
+      },
+      orderBy: { updatedAt: 'desc' },
+    });
+    return res.json(rooms);
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to fetch rooms' });
+  }
+});
+
+// ── GET /api/chat/rooms/:id/messages — paginated room messages ─────────────────
+router.get('/rooms/:id/messages', requireAuth, async (req: Request, res: Response): Promise<any> => {
+  try {
+    const uid    = String((req as any).user.id);
+    const { id } = req.params as Record<string, string>;
+    const page   = parseInt(String(req.query.page ?? '1')) || 1;
+    const limit  = 50;
+
+    // Verify membership
+    const member = await prisma.chatRoomMember.findFirst({ where: { roomId: id, userId: uid, leftAt: null } });
+    if (!member) return res.status(403).json({ error: 'Not a member of this room' });
+
+    const messages = await prisma.chatRoomMessage.findMany({
+      where:   { roomId: id },
+      orderBy: { createdAt: 'desc' },
+      skip:    (page - 1) * limit,
+      take:    limit,
+      include: { sender: { select: { id: true, name: true, avatar: true } } },
+    });
+    return res.json(messages.reverse());
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to fetch messages' });
+  }
+});
+
+// ── POST /api/chat/rooms/:id/messages — send message to group room ─────────────
+router.post('/rooms/:id/messages', requireAuth, async (req: Request, res: Response): Promise<any> => {
+  try {
+    const uid    = String((req as any).user.id);
+    const { id } = req.params as Record<string, string>;
+    const { content, type = 'TEXT' } = req.body;
+    if (!content) return res.status(400).json({ error: 'Content is required' });
+
+    const member = await prisma.chatRoomMember.findFirst({ where: { roomId: id, userId: uid, leftAt: null } });
+    if (!member) return res.status(403).json({ error: 'Not a member of this room' });
+
+    const message = await prisma.chatRoomMessage.create({
+      data:    { roomId: id, senderId: uid, content, type },
+      include: { sender: { select: { id: true, name: true, avatar: true } } },
+    });
+
+    // Update room's updatedAt
+    await prisma.chatRoom.update({ where: { id }, data: { updatedAt: new Date() } });
+
+    // Broadcast to room via Socket.IO
+    const io = (req as any).app.get('io');
+    if (io) io.to(`room:${id}`).emit('group_message', message);
+
+    return res.status(201).json(message);
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to send message' });
+  }
+});
+
+// ── POST /api/chat/rooms/:id/invite — invite members to room ──────────────────
+router.post('/rooms/:id/invite', requireAuth, async (req: Request, res: Response): Promise<any> => {
+  try {
+    const uid    = String((req as any).user.id);
+    const { id } = req.params as Record<string, string>;
+    const { userIds } = req.body;
+
+    // Check admin
+    const admin = await prisma.chatRoomMember.findFirst({ where: { roomId: id, userId: uid, role: 'ADMIN' } });
+    if (!admin) return res.status(403).json({ error: 'Only admins can invite members' });
+
+    const added = await Promise.all(
+      (userIds as string[]).map(async (userId: string) => {
+        const existing = await prisma.chatRoomMember.findFirst({ where: { roomId: id, userId } });
+        if (existing) {
+          if (existing.leftAt) return prisma.chatRoomMember.update({ where: { id: existing.id }, data: { leftAt: null } });
+          return existing;
+        }
+        return prisma.chatRoomMember.create({ data: { roomId: id, userId, role: 'MEMBER' } });
+      })
+    );
+
+    const io = (req as any).app.get('io');
+    if (io) userIds.forEach((uid2: string) => io.to(uid2).emit('room_invited', { roomId: id }));
+
+    return res.json({ added });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to invite members' });
+  }
+});
+
+// ── DELETE /api/chat/rooms/:id/leave — leave a group room ─────────────────────
+router.delete('/rooms/:id/leave', requireAuth, async (req: Request, res: Response): Promise<any> => {
+  try {
+    const uid    = String((req as any).user.id);
+    const { id } = req.params as Record<string, string>;
+    await prisma.chatRoomMember.updateMany({
+      where: { roomId: id, userId: uid },
+      data:  { leftAt: new Date() },
+    });
+    return res.json({ message: 'Left room' });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to leave room' });
+  }
+});
+
+// ══════════════════════════════════════════════════════════════
+// VOICE NOTES
+// ══════════════════════════════════════════════════════════════
+
+// ── POST /api/chat/voice — upload voice note (DM or group) ────────────────────
+router.post('/voice', requireAuth, voiceUpload.single('audio'), async (req: Request, res: Response): Promise<any> => {
+  try {
+    const uid  = String((req as any).user.id);
+    const file = (req as any).file;
+    if (!file) return res.status(400).json({ error: 'No audio file uploaded' });
+
+    const { receiverId, roomId } = req.body;
+    const audioUrl = `/uploads/voice/${file.filename}`;
+    const duration = req.body.duration || 0;
+
+    if (roomId) {
+      // Group voice note
+      const member = await prisma.chatRoomMember.findFirst({ where: { roomId: roomId, userId: uid, leftAt: null } });
+      if (!member) return res.status(403).json({ error: 'Not a member' });
+
+      const message = await prisma.chatRoomMessage.create({
+        data:    { roomId: roomId, senderId: uid, content: audioUrl, type: 'VOICE', duration: parseFloat(duration) },
+        include: { sender: { select: { id: true, name: true, avatar: true } } },
+      });
+      const io = (req as any).app.get('io');
+      if (io) io.to(`room:${roomId}`).emit('group_message', message);
+      return res.status(201).json({ message, audioUrl });
+    }
+
+    if (receiverId) {
+      // DM voice note
+      const msg = await prisma.message.create({
+        data: { senderId: uid, receiverId, content: audioUrl, type: 'VOICE', duration: parseFloat(duration) },
+        include: { sender: { select: { id: true, name: true, avatar: true } } },
+      });
+      const io = (req as any).app.get('io');
+      if (io) io.to(receiverId).emit('new_message', msg);
+      return res.status(201).json({ message: msg, audioUrl });
+    }
+
+    return res.status(400).json({ error: 'Provide receiverId or roomId' });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Voice upload failed' });
+  }
+});
+
 export default router;

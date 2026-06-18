@@ -141,20 +141,57 @@ router.post('/apply', authenticateToken, uploadImage.single('resume'), async (re
   }
 });
 
-export default router;
 
-// Get user's applications
-router.get('/applications', authenticateToken, async (req, res) => {
+// ── PATCH /api/jobs/application/:id/status — update application status ────────
+router.patch('/application/:id/status', authenticateToken, async (req: any, res: any) => {
   try {
-    const uid = (req as any).user?.id;
-    if (!uid) return res.status(401).json({ error: 'Unauthorized context.' });
+    const uid = String(req.user?.id);
+    const { id } = req.params as Record<string, string>;
+    const { status } = req.body; // PENDING | APPLIED | REVIEWING | INTERVIEW | OFFERED | ACCEPTED | REJECTED
+
+    const VALID = ['PENDING','APPLIED','REVIEWING','INTERVIEW','OFFERED','ACCEPTED','REJECTED'];
+    if (!VALID.includes(status)) return res.status(400).json({ error: 'Invalid status' });
+
+    // Applicant can update their own; employer can update applications to their jobs
+    const app = await prisma.jobApplication.findUnique({
+      where: { id },
+      include: { job: { select: { employerId: true } } },
+    });
+    if (!app) return res.status(404).json({ error: 'Application not found' });
+
+    const isApplicant = app.applicantId === uid;
+    const isEmployer  = app.job?.employerId === uid;
+    if (!isApplicant && !isEmployer) return res.status(403).json({ error: 'Forbidden' });
+
+    const updated = await prisma.jobApplication.update({
+      where: { id },
+      data: { status },
+    });
+
+    // Real-time update via Socket.IO
+    const io = req.app.get('io');
+    if (io) {
+      io.to(app.applicantId).emit('application_status_update', { applicationId: id, status });
+    }
+
+    res.json(updated);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to update status' });
+  }
+});
+
+
+// ── GET /api/jobs/applications — get user's own applications ──────────────
+router.get('/applications', authenticateToken, async (req: any, res: any) => {
+  try {
+    const uid = String(req.user?.id);
+    if (!uid) return res.status(401).json({ error: 'Unauthorized' });
 
     const apps = await prisma.jobApplication.findMany({
-      where: { applicantId: uid },
-      include: {
-        job: true
-      },
-      orderBy: { createdAt: 'desc' }
+      where:   { applicantId: uid },
+      include: { job: true },
+      orderBy: { createdAt: 'desc' },
     });
     res.json(apps);
   } catch (error) {
@@ -162,3 +199,5 @@ router.get('/applications', authenticateToken, async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch applications' });
   }
 });
+
+export default router;

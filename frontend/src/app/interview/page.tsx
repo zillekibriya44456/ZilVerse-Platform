@@ -7,7 +7,7 @@ import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
 import styles from "./interview.module.css";
 import AIInterviewRoom from "@/components/AIInterviewRoom";
-import { Award, Briefcase, Code, GraduationCap, ShieldAlert, Sparkles, Trophy, Users } from "lucide-react";
+import { Award, Briefcase, Code, Download, GraduationCap, ShieldAlert, Sparkles, Trophy, Users } from "lucide-react";
 
 // Recruiter list
 const INTERVIEWERS = [
@@ -304,7 +304,20 @@ export default function InterviewPortal() {
                               <p>{new Date(res.createdAt).toLocaleDateString()} — {parsedFeedback.readiness || "Evaluated"}</p>
                             </div>
                           </div>
-                          <button className={styles.viewReportBtn}>View Replay Report</button>
+                          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                            <button className={styles.viewReportBtn} onClick={() => setSelectedResult(res)}>View Report</button>
+                            {res.id && !res.id.startsWith('m') && (
+                              <a
+                                href={`${API_BASE}/api/interview/${res.id}/pdf`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem", background: "rgba(139,92,246,0.15)", border: "1px solid rgba(139,92,246,0.3)", color: "#a78bfa", borderRadius: 8, padding: "0.4rem 0.75rem", fontSize: "0.75rem", fontWeight: 700, textDecoration: "none", cursor: "pointer" }}
+                                title="Download PDF Report"
+                              >
+                                <Download size={12} /> PDF
+                              </a>
+                            )}
+                          </div>
                         </div>
                       );
                     })}
@@ -400,6 +413,19 @@ export default function InterviewPortal() {
                         </div>
                       );
                     })()}
+                    {/* PDF Download Button */}
+                    {selectedResult?.id && !selectedResult.id.startsWith('m') && (
+                      <div style={{ marginTop: "1.5rem", display: "flex", justifyContent: "center" }}>
+                        <a
+                          href={`${API_BASE}/api/interview/${selectedResult.id}/pdf`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", background: "linear-gradient(135deg,#6D28D9,#4F46E5)", color: "#fff", borderRadius: 12, padding: "0.75rem 1.5rem", fontSize: "0.9rem", fontWeight: 700, textDecoration: "none", boxShadow: "0 8px 24px rgba(109,40,217,0.3)" }}
+                        >
+                          <Download size={16} /> Download Full PDF Report
+                        </a>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
