@@ -158,12 +158,14 @@ router.post('/login', async (req: Request, res: Response): Promise<any> => {
       accessToken,
       refreshToken,
       user: {
-        id:       user.id,
-        email:    user.email,
-        name:     user.name,
-        role:     user.role,
-        avatar:   user.avatar   || null,
-        verified: user.verified || false,
+        id:             user.id,
+        email:          user.email,
+        name:           user.name,
+        role:           user.role,
+        roles:          (() => { try { return JSON.parse(user.roles || '[]'); } catch { return []; } })(),
+        membershipTier: user.membershipTier || 'FREE',
+        avatar:         user.avatar   || null,
+        verified:       user.verified || false,
       },
     });
   } catch (err) {

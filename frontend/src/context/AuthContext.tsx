@@ -10,6 +10,8 @@ interface User {
   email: string;
   name: string;
   role: string;
+  roles?: string[];
+  membershipTier?: string;
   avatar?: string;
   verified?: boolean;
   twoFactorEnabled?: boolean;
