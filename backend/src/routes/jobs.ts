@@ -1,6 +1,6 @@
 import express from 'express';
 import prisma from '../lib/prisma';
-import { authenticateToken } from '../middleware/auth';
+import { requireAuth as authenticateToken } from '../middleware/auth';
 import { uploadImage, getFileUrl } from '../config/cloudinary';
 
 const router = express.Router();

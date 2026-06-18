@@ -1,6 +1,6 @@
 import prisma from '../lib/prisma';
 import express, { Request, Response } from 'express';
-import { authenticateToken } from '../middleware/auth';
+import { requireAuth as authenticateToken } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -109,7 +109,7 @@ router.post('/reply', authenticateToken, async (req: Request, res: Response): Pr
 // POST /api/discussions/:id/upvote (auth required)
 router.post('/:id/upvote', authenticateToken, async (req: Request, res: Response): Promise<any> => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as Record<string, string>;
     const post = await prisma.discussionPost.update({
       where: { id },
       data: { upvotes: { increment: 1 } },

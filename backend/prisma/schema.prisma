@@ -14,10 +14,18 @@ model User {
   name      String?
   avatar    String?
   bio       String?
+  headline  String?  // Professional headline
+  country   String?
+  skills    String?  // Comma-separated global skills (supplement to FreelancerProfile)
   role      String   @default("USER")
+  roles     String   @default("[]")  // JSON array: ["FREELANCER","STUDENT","DEVELOPER",...]
   verified  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // ── Membership ────────────────────────────────────────
+  membershipTier    String    @default("FREE")  // FREE | PRO | ELITE
+  membershipExpiry  DateTime?
 
   // ── Security fields ──────────────────────────────────
   twoFactorEnabled  Boolean  @default(false)
@@ -75,6 +83,14 @@ model User {
   blockedUsers       Block[]           @relation("Blocker")
   blockedBy          Block[]           @relation("Blocked")
   backupCodes        TwoFactorBackupCode[]
+
+  // ── New platform relations ─────────────────────────────
+  certifications     UserCertification[]
+  eventTickets       EventTicket[]
+  membershipTxns     MembershipTransaction[]
+  innovationIdeas    InnovationIdea[]
+  ideaVotes          IdeaVote[]
+  ideaTeamMembers    IdeaTeamMember[]
 }
 
 model ThemePreference {
@@ -780,4 +796,162 @@ model TwoFactorBackupCode {
   createdAt DateTime @default(now())
 
   @@index([userId])
+}
+
+// ══════════════════════════════════════════════════════════════
+// CERTIFICATIONS TRACKER
+// ══════════════════════════════════════════════════════════════
+
+model Certification {
+  id          String   @id @default(uuid())
+  title       String
+  provider    String
+  category    String   @default("Technology")
+  description String?
+  duration    String?
+  level       String   @default("Beginner")
+  imageUrl    String?
+  url         String?
+  createdAt   DateTime @default(now())
+  userCerts   UserCertification[]
+  @@index([category])
+}
+
+model UserCertification {
+  id              String        @id @default(uuid())
+  userId          String
+  certificationId String
+  progress        Int           @default(0)
+  status          String        @default("IN_PROGRESS")
+  completedAt     DateTime?
+  createdAt       DateTime      @default(now())
+  user            User          @relation(fields: [userId], references: [id])
+  certification   Certification @relation(fields: [certificationId], references: [id])
+  @@unique([userId, certificationId])
+  @@index([userId])
+}
+
+// ══════════════════════════════════════════════════════════════
+// EVENT TICKETS
+// ══════════════════════════════════════════════════════════════
+
+model EventTicket {
+  id              String   @id @default(uuid())
+  eventId         String
+  userId          String
+  razorpayOrderId String?
+  razorpayPayId   String?
+  amount          Float
+  status          String   @default("PENDING")
+  createdAt       DateTime @default(now())
+  user            User     @relation(fields: [userId], references: [id])
+  @@index([userId])
+  @@index([eventId])
+}
+
+// ══════════════════════════════════════════════════════════════
+// PREMIUM MEMBERSHIP
+// ══════════════════════════════════════════════════════════════
+
+model MembershipTransaction {
+  id              String   @id @default(uuid())
+  userId          String
+  tier            String
+  amount          Float
+  currency        String   @default("USD")
+  razorpayOrderId String?
+  razorpayPayId   String?
+  status          String   @default("PENDING")
+  expiresAt       DateTime
+  createdAt       DateTime @default(now())
+  user            User     @relation(fields: [userId], references: [id])
+  @@index([userId])
+}
+
+// ══════════════════════════════════════════════════════════════
+// INNOVATION HUB
+// ══════════════════════════════════════════════════════════════
+
+model InnovationIdea {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  category    String   @default("Product")
+  tags        String   @default("[]")
+  status      String   @default("OPEN")
+  upvotes     Int      @default(0)
+  downvotes   Int      @default(0)
+  creatorId   String
+  creator     User     @relation(fields: [creatorId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  votes       IdeaVote[]
+  teamMembers IdeaTeamMember[]
+  @@index([creatorId])
+  @@index([category])
+}
+
+model IdeaVote {
+  id      String         @id @default(uuid())
+  ideaId  String
+  userId  String
+  vote    Int
+  idea    InnovationIdea @relation(fields: [ideaId], references: [id])
+  user    User           @relation(fields: [userId], references: [id])
+  @@unique([ideaId, userId])
+  @@index([ideaId])
+}
+
+model IdeaTeamMember {
+  id        String         @id @default(uuid())
+  ideaId    String
+  userId    String
+  role      String         @default("Member")
+  status    String         @default("PENDING")
+  createdAt DateTime       @default(now())
+  idea      InnovationIdea @relation(fields: [ideaId], references: [id])
+  user      User           @relation(fields: [userId], references: [id])
+  @@unique([ideaId, userId])
+  @@index([ideaId])
+}
+
+// ══════════════════════════════════════════════════════════════
+// GROUP CHAT
+// ══════════════════════════════════════════════════════════════
+
+model ChatRoom {
+  id          String            @id @default(uuid())
+  name        String
+  description String?
+  avatar      String?
+  creatorId   String
+  createdAt   DateTime          @default(now())
+  members     ChatRoomMember[]
+  messages    ChatRoomMessage[]
+  @@index([creatorId])
+}
+
+model ChatRoomMember {
+  id       String   @id @default(uuid())
+  roomId   String
+  userId   String
+  role     String   @default("MEMBER")
+  joinedAt DateTime @default(now())
+  room     ChatRoom @relation(fields: [roomId], references: [id])
+  @@unique([roomId, userId])
+  @@index([roomId])
+}
+
+model ChatRoomMessage {
+  id          String   @id @default(uuid())
+  roomId      String
+  senderId    String
+  content     String?
+  fileUrl     String?
+  fileType    String?
+  messageType String   @default("text")
+  isDeleted   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  room        ChatRoom @relation(fields: [roomId], references: [id])
+  @@index([roomId, createdAt])
 }

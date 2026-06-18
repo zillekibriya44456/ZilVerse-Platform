@@ -9,8 +9,9 @@ import { API_BASE } from "@/utils/api";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 
 const SOCIAL_PROVIDERS = [
-  { id: "google", name: "Google", icon: "G", color: "#EA4335", bg: "rgba(234,67,53,0.1)", border: "rgba(234,67,53,0.25)" },
-  { id: "github", name: "GitHub", icon: "🐙", color: "#e4e4e7", bg: "rgba(255,255,255,0.06)", border: "rgba(255,255,255,0.12)" },
+  { id: "google",   name: "Google",   icon: "G",  color: "#EA4335", bg: "rgba(234,67,53,0.1)",    border: "rgba(234,67,53,0.25)"    },
+  { id: "github",   name: "GitHub",   icon: "🐙", color: "#e4e4e7", bg: "rgba(255,255,255,0.06)", border: "rgba(255,255,255,0.12)"  },
+  { id: "linkedin", name: "LinkedIn", icon: "in", color: "#0A66C2", bg: "rgba(10,102,194,0.1)",   border: "rgba(10,102,194,0.25)"   },
 ];
 
 export default function LoginPage() {

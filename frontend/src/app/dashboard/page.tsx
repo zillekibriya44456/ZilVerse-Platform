@@ -14,7 +14,8 @@ import {
   ArrowUpRight, Zap, ShieldCheck, ShieldOff, Bell, History
 } from "lucide-react";
 
-const DashboardAnalytics = dynamic(() => import("@/components/DashboardAnalytics"), { ssr: false });
+const DashboardAnalytics    = dynamic(() => import("@/components/DashboardAnalytics"),    { ssr: false });
+const AIOpportunityAgent    = dynamic(() => import("@/components/AIOpportunityAgent"),    { ssr: false });
 
 function getGreeting(name: string) {
   const hour = new Date().getHours();
@@ -239,6 +240,10 @@ export default function DashboardPage() {
         </h2>
         <p className={styles.badgesDesc}>Track your profile views and engagement over time.</p>
         <DashboardAnalytics role={user.role} />
+
+      {/* AI Opportunity Agent */}
+      <AIOpportunityAgent />
+
       </div>
 
       {/* Badges Section */}

@@ -1,5 +1,5 @@
 import { Router, Response } from 'express';
-import { authenticateToken, AuthenticatedRequest } from '../middleware/auth';
+import { requireAuth as authenticateToken } from '../middleware/auth';
 import { uploadImage, getFileUrl } from '../config/cloudinary';
 
 const router = Router();

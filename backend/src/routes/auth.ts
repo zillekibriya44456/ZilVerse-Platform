@@ -64,7 +64,10 @@ async function logLogin(userId: string, req: Request, status: 'SUCCESS' | 'FAILE
   const { browser, os, deviceName } = parseUserAgent(ua);
   const ip   = getClientIp(req);
   await prisma.loginHistory.create({
-    data: { userId, ipAddress: ip, browser, os, deviceName, status, failReason },
+    data: {
+      userId, ipAddress: ip, browser, os, deviceName, status,
+      ...(failReason !== undefined ? { failReason } : {}),
+    },
   });
 }
 
@@ -228,7 +231,7 @@ router.post('/logout', requireAuth, async (req: Request, res: Response): Promise
 
 router.post('/logout-all', requireAuth, async (req: Request, res: Response): Promise<any> => {
   try {
-    const userId = (req as any).user.id;
+    const userId = String((req as any).user.id);
     await prisma.userSession.updateMany({
       where: { userId },
       data:  { isRevoked: true },
@@ -243,7 +246,7 @@ router.post('/logout-all', requireAuth, async (req: Request, res: Response): Pro
 
 router.get('/sessions', requireAuth, async (req: Request, res: Response): Promise<any> => {
   try {
-    const userId = (req as any).user.id;
+    const userId = String((req as any).user.id);
     const sessions = await prisma.userSession.findMany({
       where:   { userId, isRevoked: false },
       orderBy: { lastActive: 'desc' },
@@ -259,8 +262,8 @@ router.get('/sessions', requireAuth, async (req: Request, res: Response): Promis
 
 router.delete('/sessions/:id', requireAuth, async (req: Request, res: Response): Promise<any> => {
   try {
-    const userId = (req as any).user.id;
-    const { id } = req.params;
+    const userId = String((req as any).user.id);
+    const { id } = req.params as Record<string, string>;
     const session = await prisma.userSession.findFirst({ where: { id, userId } });
     if (!session) return res.status(404).json({ message: 'Session not found' });
     await prisma.userSession.update({ where: { id }, data: { isRevoked: true } });
@@ -274,8 +277,8 @@ router.delete('/sessions/:id', requireAuth, async (req: Request, res: Response):
 
 router.get('/login-history', requireAuth, async (req: Request, res: Response): Promise<any> => {
   try {
-    const userId = (req as any).user.id;
-    const page   = parseInt(req.query.page as string) || 1;
+    const userId = String((req as any).user.id);
+    const page   = parseInt(String(req.query.page ?? "")) || 1;
     const limit  = 20;
     const history = await prisma.loginHistory.findMany({
       where:   { userId },
@@ -294,7 +297,7 @@ router.get('/login-history', requireAuth, async (req: Request, res: Response): P
 
 router.post('/2fa/setup', requireAuth, async (req: Request, res: Response): Promise<any> => {
   try {
-    const userId = (req as any).user.id;
+    const userId = String((req as any).user.id);
     const user   = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) return res.status(404).json({ message: 'User not found' });
 
@@ -317,7 +320,7 @@ router.post('/2fa/setup', requireAuth, async (req: Request, res: Response): Prom
 
 router.post('/2fa/verify', requireAuth, async (req: Request, res: Response): Promise<any> => {
   try {
-    const userId = (req as any).user.id;
+    const userId = String((req as any).user.id);
     const { code } = req.body;
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user?.twoFactorSecret) return res.status(400).json({ message: 'Run /2fa/setup first' });
@@ -351,7 +354,7 @@ router.post('/2fa/verify', requireAuth, async (req: Request, res: Response): Pro
 
 router.post('/2fa/disable', requireAuth, async (req: Request, res: Response): Promise<any> => {
   try {
-    const userId = (req as any).user.id;
+    const userId = String((req as any).user.id);
     const { code } = req.body;
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user?.twoFactorEnabled) return res.status(400).json({ message: '2FA is not enabled' });
@@ -425,7 +428,7 @@ router.get('/:provider', (req: Request, res: Response) => {
 
 router.get('/theme', requireAuth, async (req: Request, res: Response): Promise<any> => {
   try {
-    const userId = (req as any).user.id;
+    const userId = String((req as any).user.id);
     const theme = await prisma.themePreference.findUnique({ where: { userId } });
     res.json({ theme });
   } catch { res.status(500).json({ message: 'Error fetching theme' }); }
@@ -433,7 +436,7 @@ router.get('/theme', requireAuth, async (req: Request, res: Response): Promise<a
 
 router.post('/theme', requireAuth, async (req: Request, res: Response): Promise<any> => {
   try {
-    const userId = (req as any).user.id;
+    const userId = String((req as any).user.id);
     const { name, mode, primary, secondary, accent, background, cardStyle, borderStyle } = req.body;
     const theme = await prisma.themePreference.upsert({
       where:  { userId },

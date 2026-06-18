@@ -8,7 +8,7 @@ const router = Router();
 // ── POST /api/safety/report ───────────────────────────────────────────────────
 router.post('/report', requireAuth, async (req: Request, res: Response): Promise<any> => {
   try {
-    const reporterId     = (req as any).user.id;
+    const reporterId     = String((req as any).user.id);
     const { reportedUserId, reason, details } = req.body;
 
     if (!reportedUserId || !reason) {
@@ -50,8 +50,8 @@ router.post('/report', requireAuth, async (req: Request, res: Response): Promise
 // ── GET /api/safety/reports (admin) ──────────────────────────────────────────
 router.get('/reports', requireAdmin, async (req: Request, res: Response): Promise<any> => {
   try {
-    const status = req.query.status as string || 'PENDING';
-    const page   = parseInt(req.query.page as string) || 1;
+    const status = String(req.query.status ?? 'PENDING');
+    const page   = parseInt(String(req.query.page ?? '')) || 1;
     const limit  = 20;
 
     const [reports, total] = await prisma.$transaction([
@@ -77,7 +77,7 @@ router.get('/reports', requireAdmin, async (req: Request, res: Response): Promis
 // ── POST /api/safety/reports/:id/review (admin) ───────────────────────────────
 router.post('/reports/:id/review', requireAdmin, async (req: Request, res: Response): Promise<any> => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as Record<string, string>;
     const { status, adminNote } = req.body; // REVIEWED | DISMISSED | ACTION_TAKEN
     await prisma.userReport.update({ where: { id }, data: { status, adminNote } });
     res.json({ message: 'Report updated' });
@@ -89,7 +89,7 @@ router.post('/reports/:id/review', requireAdmin, async (req: Request, res: Respo
 // ── POST /api/safety/block ────────────────────────────────────────────────────
 router.post('/block', requireAuth, async (req: Request, res: Response): Promise<any> => {
   try {
-    const blockerId  = (req as any).user.id;
+    const blockerId  = String((req as any).user.id);
     const { blockedId } = req.body;
 
     if (blockerId === blockedId) return res.status(400).json({ message: 'Cannot block yourself' });
@@ -112,8 +112,8 @@ router.post('/block', requireAuth, async (req: Request, res: Response): Promise<
 // ── DELETE /api/safety/block/:blockedId ──────────────────────────────────────
 router.delete('/block/:blockedId', requireAuth, async (req: Request, res: Response): Promise<any> => {
   try {
-    const blockerId  = (req as any).user.id;
-    const { blockedId } = req.params;
+    const blockerId  = String((req as any).user.id);
+    const { blockedId } = req.params as Record<string, string>;
     await prisma.block.deleteMany({ where: { blockerId, blockedId } });
     res.json({ message: 'User unblocked' });
   } catch (err) {
@@ -124,7 +124,7 @@ router.delete('/block/:blockedId', requireAuth, async (req: Request, res: Respon
 // ── GET /api/safety/blocks ────────────────────────────────────────────────────
 router.get('/blocks', requireAuth, async (req: Request, res: Response): Promise<any> => {
   try {
-    const blockerId = (req as any).user.id;
+    const blockerId = String((req as any).user.id);
     const blocks = await prisma.block.findMany({
       where:   { blockerId },
       include: { blocked: { select: { id: true, name: true, email: true, avatar: true } } },
@@ -139,7 +139,7 @@ router.get('/blocks', requireAuth, async (req: Request, res: Response): Promise<
 // ── POST /api/safety/admin/suspend/:userId ────────────────────────────────────
 router.post('/admin/suspend/:userId', requireAdmin, async (req: Request, res: Response): Promise<any> => {
   try {
-    const { userId } = req.params;
+    const { userId } = req.params as Record<string, string>;
     const { reason } = req.body;
     const io = req.app.get('io');
 
@@ -166,7 +166,7 @@ router.post('/admin/suspend/:userId', requireAdmin, async (req: Request, res: Re
 // ── POST /api/safety/admin/ban/:userId ───────────────────────────────────────
 router.post('/admin/ban/:userId', requireAdmin, async (req: Request, res: Response): Promise<any> => {
   try {
-    const { userId } = req.params;
+    const { userId } = req.params as Record<string, string>;
     const { reason } = req.body;
     const io = req.app.get('io');
 
@@ -188,7 +188,7 @@ router.post('/admin/ban/:userId', requireAdmin, async (req: Request, res: Respon
 // ── POST /api/safety/admin/restore/:userId ────────────────────────────────────
 router.post('/admin/restore/:userId', requireAdmin, async (req: Request, res: Response): Promise<any> => {
   try {
-    const { userId } = req.params;
+    const { userId } = req.params as Record<string, string>;
     const io = req.app.get('io');
     await prisma.user.update({
       where: { id: userId },
@@ -204,9 +204,9 @@ router.post('/admin/restore/:userId', requireAdmin, async (req: Request, res: Re
 // ── GET /api/safety/admin/users (admin — fraud dashboard) ────────────────────
 router.get('/admin/users', requireAdmin, async (req: Request, res: Response): Promise<any> => {
   try {
-    const page  = parseInt(req.query.page as string) || 1;
+    const page  = parseInt(String(req.query.page ?? '')) || 1;
     const limit = 20;
-    const filter = req.query.filter as string; // banned | suspended | low-trust
+    const filter = String(req.query.filter ?? ''); // banned | suspended | low-trust
 
     const where: any = {};
     if (filter === 'banned')    where.isBanned    = true;

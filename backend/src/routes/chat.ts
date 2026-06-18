@@ -27,7 +27,7 @@ const upload = multer({
   fileFilter: (_req, file, cb) => {
     const allowed = /jpeg|jpg|png|gif|webp|pdf|doc|docx|zip|mp3|mp4|webm|ogg/;
     const extOk  = allowed.test(path.extname(file.originalname).toLowerCase());
-    const mimeOk = allowed.test(file.mimetype.split('/')[1]);
+    const mimeOk = allowed.test((file.mimetype.split('/')[1]) ?? '');
     if (extOk || mimeOk) cb(null, true);
     else cb(new Error('File type not allowed'));
   },
@@ -45,7 +45,7 @@ function getFileType(mime: string, ext: string): string {
 // ── GET /api/chat/contacts ────────────────────────────────────────────────────
 router.get('/contacts', requireAuth, async (req: Request, res: Response) => {
   try {
-    const userId = (req as any).user.id;
+    const userId = String((req as any).user.id);
 
     // Get blocked user IDs to exclude
     const blocks = await prisma.block.findMany({
@@ -99,9 +99,9 @@ router.get('/contacts', requireAuth, async (req: Request, res: Response) => {
 // ── GET /api/chat/history/:partnerId ─────────────────────────────────────────
 router.get('/history/:partnerId', requireAuth, async (req: Request, res: Response) => {
   try {
-    const userId    = (req as any).user.id;
-    const { partnerId } = req.params;
-    const page      = parseInt(req.query.page as string) || 1;
+    const userId    = String((req as any).user.id);
+    const { partnerId } = req.params as Record<string, string>;
+    const page      = parseInt(String(req.query.page ?? "")) || 1;
     const limit     = 50;
 
     const messages = await prisma.message.findMany({
@@ -132,7 +132,7 @@ router.get('/history/:partnerId', requireAuth, async (req: Request, res: Respons
 // ── POST /api/chat/send (text message) ────────────────────────────────────────
 router.post('/send', requireAuth, async (req: Request, res: Response): Promise<any> => {
   try {
-    const senderId   = (req as any).user.id;
+    const senderId   = String((req as any).user.id);
     const { receiverId, content } = req.body;
     if (!receiverId || !content?.trim()) {
       return res.status(400).json({ error: 'receiverId and content required' });
@@ -173,7 +173,7 @@ router.post('/send', requireAuth, async (req: Request, res: Response): Promise<a
 // ── POST /api/chat/upload (file message) ──────────────────────────────────────
 router.post('/upload', requireAuth, upload.single('file'), async (req: Request, res: Response): Promise<any> => {
   try {
-    const senderId   = (req as any).user.id;
+    const senderId   = String((req as any).user.id);
     const { receiverId } = req.body;
     const file = (req as any).file;
 
@@ -224,7 +224,7 @@ router.post('/upload', requireAuth, upload.single('file'), async (req: Request, 
 // ── POST /api/chat/react ──────────────────────────────────────────────────────
 router.post('/react', requireAuth, async (req: Request, res: Response): Promise<any> => {
   try {
-    const userId    = (req as any).user.id;
+    const userId    = String((req as any).user.id);
     const { messageId, emoji } = req.body;
     if (!messageId || !emoji) return res.status(400).json({ error: 'messageId and emoji required' });
 
@@ -262,8 +262,8 @@ router.post('/react', requireAuth, async (req: Request, res: Response): Promise<
 // ── DELETE /api/chat/message/:id (soft delete) ────────────────────────────────
 router.delete('/message/:id', requireAuth, async (req: Request, res: Response): Promise<any> => {
   try {
-    const userId = (req as any).user.id;
-    const { id } = req.params;
+    const userId = String((req as any).user.id);
+    const { id } = req.params as Record<string, string>;
     const msg = await prisma.message.findFirst({ where: { id, senderId: userId } });
     if (!msg) return res.status(404).json({ error: 'Message not found or unauthorized' });
     await prisma.message.update({ where: { id }, data: { isDeleted: true, content: 'This message was deleted' } });
@@ -282,8 +282,8 @@ router.delete('/message/:id', requireAuth, async (req: Request, res: Response): 
 // ── POST /api/chat/mark-read/:partnerId ──────────────────────────────────────
 router.post('/mark-read/:partnerId', requireAuth, async (req: Request, res: Response) => {
   try {
-    const userId    = (req as any).user.id;
-    const { partnerId } = req.params;
+    const userId    = String((req as any).user.id);
+    const { partnerId } = req.params as Record<string, string>;
     await prisma.message.updateMany({
       where: { senderId: partnerId, receiverId: userId, isRead: false },
       data:  { isRead: true },

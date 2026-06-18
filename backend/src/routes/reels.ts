@@ -3,7 +3,7 @@ import prisma from '../lib/prisma';
 import express from 'express';
 
 import { uploadVideo, getFileUrl } from '../config/cloudinary';
-import { authenticateToken } from '../middleware/auth';
+import { requireAuth as authenticateToken } from '../middleware/auth';
 
 const router = express.Router();
 

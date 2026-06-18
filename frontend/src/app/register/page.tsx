@@ -54,10 +54,15 @@ const CULTURES: Record<string, any> = {
 };
 
 const ROLES = [
-  { id: "STUDENT", label: "Student", icon: GraduationCap, desc: "Learn & grow" },
-  { id: "COMPANY", label: "Company", icon: Building2, desc: "Hire talent" },
-  { id: "FREELANCER", label: "Freelancer", icon: Briefcase, desc: "Offer services" },
-  { id: "CLIENT", label: "Client", icon: UserCircle, desc: "Buy services" }
+  { id: "STUDENT",    label: "Student",        icon: GraduationCap, desc: "Learn & grow"            },
+  { id: "FREELANCER", label: "Freelancer",      icon: Briefcase,     desc: "Offer services"          },
+  { id: "DEVELOPER",  label: "Developer",       icon: Sparkles,      desc: "Build products"          },
+  { id: "DESIGNER",   label: "Designer",        icon: Sparkles,      desc: "Create visuals"          },
+  { id: "STARTUP",    label: "Startup Founder", icon: Building2,     desc: "Build companies"         },
+  { id: "RESEARCHER", label: "Researcher",      icon: GraduationCap, desc: "Publish & collaborate"   },
+  { id: "MENTOR",     label: "Mentor",          icon: UserCircle,    desc: "Guide others"            },
+  { id: "EMPLOYER",   label: "Employer",        icon: Building2,     desc: "Hire talent"             },
+  { id: "CREATOR",    label: "Creator",         icon: Sparkles,      desc: "Share content & reels"   },
 ];
 
 // -- CUSTOM ANIMATED CURSOR --

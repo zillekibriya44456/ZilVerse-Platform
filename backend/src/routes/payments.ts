@@ -1,7 +1,7 @@
 import prisma from '../lib/prisma';
 import express from 'express';
 
-import { authenticateToken, requireAdmin, AuthenticatedRequest } from '../middleware/auth';
+import { requireAuth as authenticateToken, requireAdmin } from '../middleware/auth';
 // @ts-ignore
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
@@ -47,7 +47,7 @@ function emitWalletUpdate(req: any, userId: string) {
 // ==========================================
 
 // 1. Get Wallet Balance
-router.get('/wallet', authenticateToken, async (req: AuthenticatedRequest, res: any) => {
+router.get('/wallet', authenticateToken, async (req: any, res: any) => {
   try {
     const userId = (req as any).user?.id;
     if (!userId) return res.status(401).json({ error: 'Unauthorized user context.' });
@@ -62,7 +62,7 @@ router.get('/wallet', authenticateToken, async (req: AuthenticatedRequest, res: 
 
 
 // 3. Create Withdrawal Request
-router.post('/withdraw', authenticateToken, async (req: AuthenticatedRequest, res: any) => {
+router.post('/withdraw', authenticateToken, async (req: any, res: any) => {
   try {
     const userId = (req as any).user?.id;
     if (!userId) return res.status(401).json({ error: 'Unauthorized user context.' });
@@ -119,7 +119,7 @@ router.post('/withdraw', authenticateToken, async (req: AuthenticatedRequest, re
 });
 
 // 4. Create Escrow (Client locks funds for a freelancer)
-router.post('/escrow/create', authenticateToken, async (req: AuthenticatedRequest, res: any) => {
+router.post('/escrow/create', authenticateToken, async (req: any, res: any) => {
   try {
     const clientId = (req as any).user?.id;
     if (!clientId) return res.status(401).json({ error: 'Unauthorized user context.' });
@@ -185,7 +185,7 @@ router.post('/escrow/create', authenticateToken, async (req: AuthenticatedReques
 });
 
 // 5. Release Escrow (Authorized only for the Client who funded it)
-router.post('/escrow/release', authenticateToken, async (req: AuthenticatedRequest, res: any) => {
+router.post('/escrow/release', authenticateToken, async (req: any, res: any) => {
   try {
     const userId = (req as any).user?.id;
     const { escrowId } = req.body;
@@ -239,7 +239,7 @@ router.post('/escrow/release', authenticateToken, async (req: AuthenticatedReque
 });
 
 // 6. Dispute Escrow (Either client or freelancer involved can dispute)
-router.post('/escrow/dispute', authenticateToken, async (req: AuthenticatedRequest, res: any) => {
+router.post('/escrow/dispute', authenticateToken, async (req: any, res: any) => {
   try {
     const userId = (req as any).user?.id;
     const { escrowId, reason } = req.body;
@@ -283,7 +283,7 @@ router.post('/escrow/dispute', authenticateToken, async (req: AuthenticatedReque
 });
 
 // 7. Get Transaction Logs
-router.get('/transactions', authenticateToken, async (req: AuthenticatedRequest, res: any) => {
+router.get('/transactions', authenticateToken, async (req: any, res: any) => {
   try {
     const userId = (req as any).user?.id;
     const transactions = await prisma.transaction.findMany({
@@ -297,7 +297,7 @@ router.get('/transactions', authenticateToken, async (req: AuthenticatedRequest,
 });
 
 // 8. Get Escrow Logs (As Client or Freelancer)
-router.get('/escrows', authenticateToken, async (req: AuthenticatedRequest, res: any) => {
+router.get('/escrows', authenticateToken, async (req: any, res: any) => {
   try {
     const userId = (req as any).user?.id;
     const escrows = await prisma.escrow.findMany({
@@ -320,7 +320,7 @@ router.get('/escrows', authenticateToken, async (req: AuthenticatedRequest, res:
 });
 
 // 9. Get Withdrawal Requests
-router.get('/withdrawals', authenticateToken, async (req: AuthenticatedRequest, res: any) => {
+router.get('/withdrawals', authenticateToken, async (req: any, res: any) => {
   try {
     const userId = (req as any).user?.id;
     const requests = await prisma.withdrawalRequest.findMany({
@@ -334,7 +334,7 @@ router.get('/withdrawals', authenticateToken, async (req: AuthenticatedRequest, 
 });
 
 // 10. Get Invoices list
-router.get('/invoices', authenticateToken, async (req: AuthenticatedRequest, res: any) => {
+router.get('/invoices', authenticateToken, async (req: any, res: any) => {
   try {
     const userId = (req as any).user?.id;
     const invoices = await prisma.invoice.findMany({
@@ -355,7 +355,7 @@ router.get('/invoices', authenticateToken, async (req: AuthenticatedRequest, res
 // ==========================================
 
 // ADMIN 1: Get Payments Summary / Admin Panel Control
-router.get('/admin/summary', authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res: any) => {
+router.get('/admin/summary', authenticateToken, requireAdmin, async (req: any, res: any) => {
   try {
     const [transactions, escrows, withdrawals, disputes] = await Promise.all([
       prisma.transaction.findMany({ orderBy: { createdAt: 'desc' }, take: 100 }),
@@ -381,7 +381,7 @@ router.get('/admin/summary', authenticateToken, requireAdmin, async (req: Authen
 });
 
 // ADMIN 2: Approve Withdrawal Request
-router.post('/admin/withdrawals/:id/approve', authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res: any) => {
+router.post('/admin/withdrawals/:id/approve', authenticateToken, requireAdmin, async (req: any, res: any) => {
   try {
     const { id: idParam } = req.params;
     const id = idParam as string;
@@ -414,7 +414,7 @@ router.post('/admin/withdrawals/:id/approve', authenticateToken, requireAdmin, a
 });
 
 // ADMIN 3: Reject Withdrawal Request
-router.post('/admin/withdrawals/:id/reject', authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res: any) => {
+router.post('/admin/withdrawals/:id/reject', authenticateToken, requireAdmin, async (req: any, res: any) => {
   try {
     const { id: idParam } = req.params;
     const id = idParam as string;
@@ -454,7 +454,7 @@ router.post('/admin/withdrawals/:id/reject', authenticateToken, requireAdmin, as
 });
 
 // ADMIN 4: Resolve Escrow Dispute
-router.post('/admin/disputes/:id/resolve', authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res: any) => {
+router.post('/admin/disputes/:id/resolve', authenticateToken, requireAdmin, async (req: any, res: any) => {
   try {
     const { id: idParam } = req.params;
     const id = idParam as string;
@@ -539,7 +539,7 @@ router.post('/admin/disputes/:id/resolve', authenticateToken, requireAdmin, asyn
 // RAZORPAY STANDARD CHECKOUT API ENDPOINTS
 // ==========================================
 
-const createOrderHandler = async (req: AuthenticatedRequest, res: any) => {
+const createOrderHandler = async (req: any, res: any) => {
   try {
     const userId = (req as any).user?.id;
     if (!userId) return res.status(401).json({ error: 'Unauthorized user context.' });
@@ -577,7 +577,7 @@ const createOrderHandler = async (req: AuthenticatedRequest, res: any) => {
   }
 };
 
-const verifyPaymentHandler = async (req: AuthenticatedRequest, res: any) => {
+const verifyPaymentHandler = async (req: any, res: any) => {
   try {
     const userId = (req as any).user?.id;
     if (!userId) return res.status(401).json({ error: 'Unauthorized user context.' });

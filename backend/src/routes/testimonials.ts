@@ -27,7 +27,7 @@ router.get('/', async (req: Request, res: Response): Promise<any> => {
     }
 
     let testimonials = await prisma.testimonial.findMany({
-      where: onlyVerified ? { verified: true } : undefined,
+      ...(onlyVerified ? { where: { verified: true } } : {}),
       orderBy: [{ stars: 'desc' }, { createdAt: 'desc' }],
       take: 20
     });
@@ -35,7 +35,7 @@ router.get('/', async (req: Request, res: Response): Promise<any> => {
     if (testimonials.length === 0) {
       await prisma.testimonial.createMany({ data: INITIAL_TESTIMONIALS });
       testimonials = await prisma.testimonial.findMany({
-        where: onlyVerified ? { verified: true } : undefined,
+        ...(onlyVerified ? { where: { verified: true } } : {}),
         orderBy: [{ stars: 'desc' }, { createdAt: 'desc' }],
         take: 20
       });

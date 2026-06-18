@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import prisma from '../lib/prisma';
-import { authenticateToken } from '../middleware/auth';
+import { requireAuth as authenticateToken } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -65,7 +65,7 @@ router.get('/types', async (_req: Request, res: Response): Promise<any> => {
 // GET /api/events/:id
 router.get('/:id', async (req: Request, res: Response): Promise<any> => {
   try {
-    const event = await prisma.event.findUnique({ where: { id: req.params.id } });
+    const event = await prisma.event.findUnique({ where: { id: String(req.params.id) } });
     if (!event) return res.status(404).json({ error: 'Event not found' });
     return res.json(event);
   } catch {

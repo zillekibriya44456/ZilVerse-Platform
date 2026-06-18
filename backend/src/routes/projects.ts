@@ -1,6 +1,6 @@
 import prisma from '../lib/prisma';
 import { Router, Request, Response } from 'express';
-import { authenticateToken } from '../middleware/auth';
+import { requireAuth as authenticateToken } from '../middleware/auth';
 import { uploadVideo, getFileUrl } from '../config/cloudinary';
 
 const router = Router();
@@ -73,7 +73,7 @@ router.get('/', async (req: Request, res: Response): Promise<any> => {
 router.get('/:id', async (req: Request, res: Response): Promise<any> => {
   try {
     const project = await prisma.project.findUnique({
-      where: { id: req.params.id },
+      where: { id: String(req.params.id) },
       include: { seller: { select: { name: true, email: true, avatar: true, verified: true } } },
     });
     if (!project) return res.status(404).json({ error: 'Project not found' });

@@ -46,6 +46,10 @@ import newsletterRoutes from './routes/newsletter';
 import dashboardRoutes from './routes/dashboard';
 import notificationRoutes from './routes/notifications';
 import safetyRoutes from './routes/safety';
+import agentRoutes from './routes/opportunities-agent';
+import membershipRoutes from './routes/membership';
+import certificationRoutes from './routes/certifications';
+import innovationRoutes from './routes/innovation';
 const app = express();
 const PORT = process.env.PORT || 5002;
 
@@ -109,6 +113,11 @@ app.use('/api/newsletter', newsletterRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/safety', safetyRoutes);
+app.use('/api/agent', agentRoutes);
+app.use('/api/membership', membershipRoutes);
+app.use('/api/certifications', certificationRoutes);
+app.use('/api/innovation', innovationRoutes);
+
 
 app.get('/', (req, res) => {
   res.send('ZilVerse API is running...');

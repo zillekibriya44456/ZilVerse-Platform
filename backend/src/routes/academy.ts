@@ -1,6 +1,6 @@
 import prisma from '../lib/prisma';
 import express, { Request, Response } from 'express';
-import { authenticateToken } from '../middleware/auth';
+import { requireAuth as authenticateToken } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -68,7 +68,7 @@ router.get('/categories', async (_req: Request, res: Response): Promise<any> => 
 // GET /api/academy/:id
 router.get('/:id', async (req: Request, res: Response): Promise<any> => {
   try {
-    const course = await prisma.academyCourse.findUnique({ where: { id: req.params.id } });
+    const course = await prisma.academyCourse.findUnique({ where: { id: String(req.params.id) } });
     if (!course) return res.status(404).json({ error: 'Course not found' });
     return res.json(course);
   } catch {
